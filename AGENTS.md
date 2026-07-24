@@ -13,6 +13,8 @@ The primary integration mechanism is **MCP (Model Context Protocol) servers** pl
 
 AI coding agents working here should treat MCP tools as the canonical way to invoke BytePlus models, and skills as the canonical way to package reusable content recipes. Do not call the Ark REST API directly from skills — go through the MCP tools.
 
+**Always save generated files locally.** Every asset produced via MCP (video, image, audio) must be downloaded and saved to the appropriate path under `projects/<project>/assets/` inside this workspace — never rely solely on a remote URL or ephemeral link. Remote URLs expire; the local `assets/` tree is the durable source of truth for generated content.
+
 ## Model catalog
 
 All models are accessed through **BytePlus ModelArk** (the international surface of Volcano Engine Ark). Authentication uses a single API key (`ARK_API_KEY`). Several surfaces are OpenAI-compatible and can be driven by the OpenAI SDK pointed at the Ark base URL.
@@ -50,7 +52,7 @@ flowchart LR
   A -->|expand prompt / script| H[Seed LLM]
 ```
 
-- MCP tools submit an Ark task, poll until completion, and return the resulting asset URL (downloading to the relevant `projects/<project>/assets/...` path when appropriate).
+- MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/assets/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local `assets/` tree is the durable source of truth.
 - Generated assets are written to a **gitignored** project-scoped `assets/` directory (see [Project & asset directory structure](#project--asset-directory-structure)); never commit binary outputs.
 - The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
 
@@ -246,7 +248,7 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 ### Adding a new model tool (MCP)
 1. Define the tool with a clear, verb-noun name (e.g. `seedance.text_to_video`), a JSON Schema for inputs, and a single responsibility.
 2. Resolve key/region/base URL from env at runtime.
-3. Submit the Ark task, then poll for completion (video/audio are async). Return the asset URL and optionally download to `assets/`.
+3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct `assets/` path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
 4. Validate all prompt/reference inputs before calling the API.
 5. Normalize Ark error responses into actionable messages; surface `task_id` and retry guidance on failure.
 
