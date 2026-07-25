@@ -266,6 +266,8 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 - These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
 - Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
 - Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
+- **Default variant count:** When generating character sheets, location sheets, prop sheets, concept art, or storyboard keyframes, generate **at least 3 distinct variants (v01, v02, v03)** by default so the user has options to choose from. This applies to Seedream image generations in the Elements pipeline and concept/storyboard pipelines. Increase or decrease only when the user explicitly requests it.
+- **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
 
 ## Verification
