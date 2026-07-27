@@ -9,35 +9,46 @@ Write production-grade prompts for BytePlus Seed Audio 1.0 (model ID `seed-audio
 
 ## Source authority
 
-The public API reference is the authoritative source of truth for this skill. Prompting conventions (in-prompt speaker tags, timestamp syntax) originate from the BytePlus prompting guide (Lark wiki, updated July 20th 2026) and are labeled as such where they are not defined in the public API.
+The public API reference is the authoritative source of truth for request fields and limits. Prompt-writing conventions originate from the internal Seed Audio 1.0 prompting guide and are labeled where they are not defined in the public API.
 - [Seed Audio 1.0 API Reference](https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01) — authoritative
+- [Seed Audio 1.0 Prompting Guide](https://bytedance.larkoffice.com/wiki/WgU4wFVQ8iZgvjkHHdbcDmhCnug) — T2A/TA2A prompting conventions and examples, modified July 23, 2026
 - [Seed Audio 1.0 Pricing](https://docs.byteplus.com/en/docs/byteplusvoice/audiopricing) — authoritative
 
 Seed Audio 1.0 is in early access. Applications for early access are open via a whitelist form; confirm current access status before building.
 
 When the official API reference is updated, prefer the live page over this skill where they conflict.
 
-## Mandatory prompt structure
+## Prompt assembly
 
-Every Seed Audio 1.0 prompt must be assembled in this order. Do not skip sections that apply to the user's task.
+Build the shortest prompt that clearly communicates the requested result. Use plain-language headings only when they improve readability, and omit sections that do not apply.
 
-```
-=== INPUT REFERENCES ===
-=== TASK TYPE ===
-=== SCENE & ATMOSPHERE ===
-=== CHARACTERS & DIALOGUE ===
-=== CONSTRAINTS ===
-```
+For full-soundscape generation, cover the five ingredients recommended by the prompting guide:
 
-### 1. INPUT REFERENCES (always first)
+1. The environment: location, weather, context, and acoustic space
+2. Background music and sound effects
+3. Character actions or appearance when they affect the performance
+4. Each character's voice: age, gender, accent, emotion, tone, speed, and timbre as relevant
+5. The exact dialogue
 
-List every reference audio clip the user provides. Label them with `@Audio1`, `@Audio2`, `@Audio3` using sequential numbering starting from 1 (no space, no underscore). Include a short role or description for each reference so the model and the human reader know what each clip is for.
+Arrange those ingredients as one chronological audio scene, not as unrelated inventories. A typical prompt follows this order:
 
-```
-=== INPUT REFERENCES ===
-@Audio1: [role, e.g. "female protagonist voice timbre — Lux"]
-@Audio2: [role, e.g. "male antagonist voice timbre — Sylas"]
-@Audio3: [role, e.g. "male heroic voice timbre — Garen"]
+1. Input references, only when the request includes reference audio
+2. Opening environment, ambience, and music
+3. Dialogue, actions, and sound effects in the order they occur
+4. Ending behavior: resolve, fade, sustain, or cut
+5. Creative or quality constraints, only when the user supplies them
+
+Generation mode and request limits belong in request metadata or validation, not in model-facing prompt boilerplate.
+
+### Input references
+
+The API contract is the request's `references[]` array. For each supplied audio reference, add one `references[]` entry and identify its intended role. When the prompting guide's inline conventions are useful, map those entries sequentially to `@Audio1`, `@Audio2`, and `@Audio3` (no space or underscore) and describe each role for the model and human reader.
+
+```text
+Input references
+@Audio1: Female protagonist voice timbre — Lux
+@Audio2: Male antagonist voice timbre — Sylas
+@Audio3: Male heroic voice timbre — Garen
 ```
 
 Rules for references:
@@ -48,17 +59,13 @@ Rules for references:
 - Image format: 1 image, ≤10 MB, JPEG/PNG/WebP. In image mode, `text_prompt` contains ONLY the text to be synthesized (no scene/voice description).
 - Each clip serves exactly one purpose: voice timbre cloning, emotion reference, or SFX reference.
 - Per reference, provide exactly one of: `speaker` (a TTS 2.0 or cloned voice ID), `audio_data` (base64), or `audio_url`. For image mode, provide exactly one of: `image_data` (base64) or `image_url`.
-- Voice cloning uses `<<TGT_SPK1>>`, `<<TGT_SPK2>>`, `<<TGT_SPK3>>` in-prompt speaker tags mapped to `@Audio1`, `@Audio2`, `@Audio3` respectively. (Prompting-guide convention; the API-level reference token is `@AudioN`. Not documented in the public API reference.)
-- When no references are provided (text-only / T2A mode), skip this section or write "None."
+- `@AudioN` labels and `<<TGT_SPKN>>` speaker tags are prompting-guide conventions, not fields or tokens defined by the public API. The source-backed reference contract is `references[]`.
+- When using the prompting-guide convention for voice cloning, map `<<TGT_SPK1>>`, `<<TGT_SPK2>>`, and `<<TGT_SPK3>>` to the corresponding first, second, and third audio entries in `references[]`, labeled `@Audio1`, `@Audio2`, and `@Audio3` in the prompt.
+- When no references are provided (text-only / T2A mode), omit the input references section.
 
-### 2. TASK TYPE
+### Generation mode
 
-Declare which generation mode applies. Pick exactly one.
-
-```
-=== TASK TYPE ===
-T2A (Text-only)  |  TA2A (Reference-audio)  |  Reference-image
-```
+Determine which generation mode applies so the request is constructed correctly. Do not add a task-type heading to `text_prompt` unless the user asks for one.
 
 **T2A — Text-only generation**: Pure text prompt describing everything — environment, music, SFX, character voices, and dialogue. No reference audio clips. Best for one-off scenes, ambience beds, and standalone content where voice cloning is not needed.
 
@@ -66,16 +73,56 @@ T2A (Text-only)  |  TA2A (Reference-audio)  |  Reference-image
 
 **Reference-image generation**: Exactly 1 image (≤10 MB, JPEG/PNG/WebP). The model describes the scene in the image and generates appropriate sound. `text_prompt` contains ONLY the text to be synthesized. Image and audio references are mutually exclusive — cannot mix `image_data`/`image_url` with `audio_data`/`audio_url`/`speaker`.
 
-### 3. SCENE & ATMOSPHERE
+### Full-soundscape composition workflow
 
-Describe the acoustic environment, background music, and sound effects in rich detail. This section sets the sonic world before any character speaks.
+When the user wants dialogue, music, SFX, and ambience together, compose the prompt in this order:
 
+1. **Establish the acoustic world.** State the place, time, weather, room or outdoor acoustics, and persistent ambience.
+2. **Start the score.** Describe the background music's dramatic purpose, style, instruments, rhythm, mood, volume, and opening intensity.
+3. **Introduce characters.** Give each character a stable name and a distinct voice profile before or at their first line. Include a reference-speaker tag in TA2A.
+4. **Interleave events chronologically.** Write dialogue, physical actions, music changes, and discrete SFX in the order the listener should hear them.
+5. **Control the mix narratively.** Say when music ducks beneath speech, an effect dominates the foreground, ambience remains distant, or silence replaces the score.
+6. **Specify the ending.** Describe what fades, sustains, stops abruptly, or carries into silence.
+
+Use event-relative cues such as "as she opens the door," "under his line," and "after the impact" by default. Add exact second-level timestamps only when the user explicitly requests them.
+
+### Scene transitions and dynamic arcs
+
+When the scene changes mood or location, describe the transition as an audible
+state change rather than listing two sound palettes independently:
+
+```text
+Audio state A: [music, ambience, effects, intensity, and spatial character]
+Transition trigger: [visible action or story event]
+Transition behavior: [cut, resolve, crossfade, decay, or brief silence]
+Audio state B: [new music, ambience, effects, intensity, and spatial character]
+Forbidden carryover: [sounds from state A that must not continue]
 ```
-=== SCENE & ATMOSPHERE ===
-[Environment description: location, weather, time of day, ambient sounds, reverb characteristics]
-[Background music: genre, instruments, tempo, mood, dynamics, how it evolves over the scene]
-[Sound effects: specific sounds, their timing, distance, and acoustic quality]
+
+Tie the transition to an observable event such as crossing a doorway, landing,
+reaching safety, or a pursuer stopping. State what ends as well as what begins.
+For example, when an intense chase reaches a calm beach, let drums and threat
+sounds resolve at the boundary, then crossfade to surf, wind, birds, and a
+gentler score. Do not allow roars, impacts, or chase percussion to leak into the
+safe-location soundscape unless the story requires lingering threat.
+
+For native video audio, keep this arc inside the Seedance prompt so sound and
+picture share the same trigger. Use standalone Seed Audio when producing or
+replacing a separate soundtrack, dialogue stem, ambience bed, or mix element.
+
+### Scene and atmosphere
+
+Describe only the acoustic layers that matter to the request. This section can set the sonic world before any character speaks.
+
+```text
+Scene and atmosphere
+Environment: [location, weather, context, foreground/background layers, and acoustic space]
+Background music: [dramatic role, genre, instruments, tempo, mood, dynamics, relation to dialogue, and ending]
+Ambience: [persistent environmental bed and how it evolves]
+Sound effects: [source or action, acoustic character, distance or direction, relative cue, and decay]
 ```
+
+Omit this heading and any unused layers for simple speech-only requests.
 
 Rules for environment:
 - Be specific about acoustic quality: "hallway reverb," "stone corridor echo," "open field with distant wind."
@@ -83,21 +130,44 @@ Rules for environment:
 - Mention how the environment evolves: "the rain gradually intensifies," "footsteps fade from near to far."
 
 Rules for background music:
-- Describe genre, instruments, tempo, and mood.
-- Specify dynamics and when the music changes: "drums quicken," "choir swells," "music suddenly cuts out."
-- Use cinematic terminology: "deep war drums," "low brass," "mournful choir," "soaring strings."
+- State its dramatic role: underscore, tension bed, transition, reveal, celebration, or outro.
+- Describe style or genre, instruments and timbre, tempo or rhythmic feel, and mood.
+- Specify its dynamic arc: how it begins, swells, thins out, changes instrumentation, or stops.
+- Describe its relationship to speech and important effects: "softly under the dialogue," "ducks beneath her whisper," "drops out before the alarm," or "swells after the final line."
+- State how it ends: clean stop, held unresolved note, crossfade, or gradual fade into silence.
+- Prefer concrete musical language such as "low somber strings with distant war drums" over generic phrases such as "cinematic music."
+
+Background music template:
+
+```text
+Background music: A [dramatic role] in a [style/genre], led by [instruments/timbres] at a [tempo/rhythmic feel]. It begins [dynamic], stays [mix relationship] beneath the dialogue, then [change tied to an event], and ends by [ending behavior].
+```
+
+Rules for ambience:
+- Treat ambience as the persistent environmental bed, separate from one-off effects.
+- Name foreground, midground, and background layers only when they help establish space.
+- Describe distance, direction, room tone, echo, reverb, and gradual evolution.
+- Keep ambience subordinate to intelligible dialogue unless the scene requires otherwise.
 
 Rules for sound effects:
-- Write onomatopoeia in quotes: "ring-a-ling," "zzzip," "clack," "shhhk," "BOOM," "CLANG."
-- Describe the acoustic quality of each effect: "distant," "sharp," "muffled," "echoing."
-- Position effects in time relative to dialogue: "before speaking," "after the line," "underneath the conversation."
+- Describe the source or action, material, acoustic character, and spatial position: "a heavy iron chain scrapes harshly across stone from the rear left."
+- Position effects relative to actions or dialogue: "as the locker shuts," "under the last word," or "immediately after the impact."
+- Describe evolution or decay when important: approaches, recedes, rings out, echoes, rattles, or fades.
+- Use onomatopoeia in quotes when it clarifies the desired texture: "ring-a-ling," "zzzip," "clack," "shhhk," "BOOM," or "CLANG." Do not use it as a substitute for describing the sound.
+- Identify whether an effect sits in the foreground, midground, or background when the mix could otherwise be ambiguous.
 
-### 4. CHARACTERS & DIALOGUE
+Sound effect template:
 
-Define each character with a full voice profile, then script their dialogue in scene order. Use the character label format consistently across every line spoken by that character.
-
+```text
+As [triggering action], [sound source] produces a [acoustic character] "[optional onomatopoeia]" from [distance/direction or mix layer], then [decay/evolution].
 ```
-=== CHARACTERS & DIALOGUE ===
+
+### Characters and dialogue
+
+Define each character with the voice attributes needed to distinguish them, then script their dialogue in scene order. Use the same character name on every line. Give the complete voice profile on first mention; later lines may shorten the description but must preserve the name and, in TA2A, the same `<<TGT_SPKN>>` mapping.
+
+```text
+Characters and dialogue
 [Character Name] ([age/gender], [accent], [voice quality description], [emotional baseline], [delivery style]) says [delivery note]: "[dialogue]"
 ```
 
@@ -114,7 +184,7 @@ Aric (young prince, breathless but brave, fantasy war film style) says: "There a
 The commentator (middle-aged male, British accent, rich and penetrating voice, classic sports commentary, extremely exhilarated) shouts in a rapid, soaring tone: "OH, HE SCORES!!! WHAT A GOAL!"
 ```
 
-**Character voice profile format (TA2A)** with voice cloning tags (`<<TGT_SPKN>>` is a prompting-guide convention for in-prompt speaker assignment; the API-level reference token is `@AudioN`):
+**Character voice profile format (TA2A)** with voice cloning tags (`<<TGT_SPKN>>` and `@AudioN` are prompting-guide conventions for mapping in-prompt speakers to the ordered entries in `references[]`):
 
 ```
 Name (voice description, voiced by <<TGT_SPKN>>) says [delivery note]: "dialogue text"
@@ -140,34 +210,87 @@ Lux (clear, bright young female voice, resonant with a crystalline timbre, voice
 **Dialogue rules**:
 - Put spoken text in double quotes.
 - Describe delivery before the quote: "says playfully and teasingly," "shouts in a rapid, soaring tone," "whispers, voice cracking."
-- Include physical actions and sounds inline: "gasping then bursting out laughing," "slapping his knee with an audible clap."
-- For multi-character scenes, alternate characters naturally with stage-direction-like descriptions between lines.
+- Include physical actions or appearance when they affect delivery or generate sound: "gasping then bursting out laughing," "slapping his knee with an audible clap."
+- For multi-character scenes, alternate characters chronologically and place actions, music changes, and SFX between the lines where listeners should hear them.
+- Make each voice contrast with the others through useful traits such as pitch, timbre, accent, pacing, emotional baseline, or performance style.
+- For voices heard through a device or space, describe the filter or acoustics: television reverb, walkie-talkie compression, telephone band-limit, public-address echo, or whispered proximity.
+- Keep dialogue attribution explicit. Do not write an unlabeled block of alternating quotes.
 - Wrap ambient descriptions and non-speech sounds in square brackets: `[Ambient street sounds: passing cars, distant chatter.]`
 - Prompt language and script language should be the same language.
 
-**Timestamp control** (optional, T2A and TA2A — prompting-guide convention; not defined in the public API reference):
+Multi-character dialogue template:
 
-For precise timing of individual lines, use the `[start_time:end_time]` bracket notation immediately before the dialogue:
+```text
+Characters and dialogue
+[Name A] ([full voice profile, and voiced by <<TGT_SPK1>> in TA2A]) [action], then says [delivery]: "[dialogue]"
+
+[Music/SFX/ambience change triggered by the line or action.]
+
+[Name B] ([contrasting full voice profile, and voiced by <<TGT_SPK2>> in TA2A]) replies [delivery]: "[dialogue]"
+
+[Name A] (voiced by <<TGT_SPK1>> in TA2A) [brief delivery update]: "[next dialogue]"
+```
+
+For TA2A, make the reference plan unambiguous:
+
+1. State what audio scene will be generated.
+2. Identify each reference as `@Audio1`, `@Audio2`, or `@Audio3`.
+3. State the purpose of each reference, such as a character's voice timbre or emotional performance.
+4. Map each character to the matching ordered speaker tag, `<<TGT_SPK1>>` through `<<TGT_SPK3>>`, and never change that mapping within the prompt.
+
+**Timestamp control** (only when the user explicitly asks for second-level timing; T2A and TA2A prompting-guide convention, not defined in the public API reference):
+
+Do not add per-line timestamps by default. If the user explicitly requests second-level timing, use the `[start_time:end_time]` bracket notation immediately before the dialogue:
 
 ```
 Ryan (young adult male, warm voice) calls out anxiously: "[5.5s:8.0s] Maya! Wait—you're really leaving tonight?"
 Maya (young adult female, soft voice) answers softly: "[8.5s:11.5s] I have to. I've spent years chasing this… I can't walk away now."
 ```
 
-Timestamps are in seconds with decimal precision. The model will fit each character's spoken line within the specified time window.
+Timestamps are in seconds with decimal precision. Treat them as prompting guidance rather than an API guarantee, and ensure the requested windows fit within the validated output duration.
 
-### 5. CONSTRAINTS
+### Reusable full-soundscape template
 
-Close with any negative constraints or quality directives.
+Use only the sections and fields the request needs.
 
+```text
+Input references
+@Audio1: [character name] voice timbre — [purpose]
+@Audio2: [character name] voice timbre — [purpose]
+
+Scene and atmosphere
+Environment: [place, time, weather/context, acoustic space]
+Background music: [role, style, instruments, tempo, mood, dynamic arc, mix behavior, ending]
+Ambience: [persistent foreground/midground/background environmental bed]
+
+Characters and dialogue
+[Character A] ([full voice profile], voiced by <<TGT_SPK1>>) [action] and says [delivery]: "[dialogue]"
+
+[As the action occurs, describe the discrete SFX, position, acoustic quality, and decay. State any music or ambience change.]
+
+[Character B] ([contrasting full voice profile], voiced by <<TGT_SPK2>>) replies [delivery]: "[dialogue]"
+
+[Continue dialogue, actions, SFX, and score changes in chronological order.]
+
+Ending
+[Describe the final sound, music resolution or fade, ambience tail, and transition to silence.]
 ```
-=== CONSTRAINTS ===
-Max duration: [up to 120 seconds]
-Languages: [the prompt and dialogue language]
+
+For T2A, omit `Input references` and all `<<TGT_SPKN>>` tags, but retain complete text-based voice profiles.
+
+### Creative and quality constraints
+
+Add only constraints that affect the generated content and are supplied or clearly implied by the user's request.
+
+```text
+Creative and quality constraints
+Language: [the prompt and dialogue language]
 Quality notes: [any specific output requirements]
 ```
 
-Key limits (see Quick reference card for the authoritative table):
+Do not insert `Max duration: 120 seconds` into every prompt. Duration is a request and API validation concern: reject or split a requested generation longer than 120 seconds before sending it.
+
+Key request limits (see Quick reference card for the authoritative table):
 - `text_prompt` max 3000 characters.
 - Generated audio max 120 seconds per call (billing is based on `original_duration`).
 - Max 3 reference audio clips OR 1 reference image.
@@ -176,88 +299,87 @@ Key limits (see Quick reference card for the authoritative table):
 
 ## Full example: T2A — Sci-fi news broadcast
 
-```
-=== INPUT REFERENCES ===
-None
+```text
+Scene and atmosphere
+A deep synthesizer pad and sparse synth drums form a tense, uneasy underscore. A low electrical hum and sealed underground-room tone remain in the background. The score stays beneath speech and grows more urgent as the crisis escalates.
 
-=== TASK TYPE ===
-T2A
-
-=== SCENE & ATMOSPHERE ===
-A deep synthesizer pad underpins the entire scene with synth drum beats, creating a tense and uneasy mood. A low humming sound accompanies various electronic sound effects, evoking technology and crisis. An electronic chime signals a screen tap, followed by a data-loading chime. Later, alarm sounds burst in, the music stops, and a spacecraft engine roars in flight.
-
-=== CHARACTERS & DIALOGUE ===
+Characters and dialogue
 The narrator (female, slightly lower pitch, mechanical quality) says in a grave tone: "...with the rapid population growth and the problem of global warming, Earth will no longer be suitable for human habitation. Predictions show that Earth's lifespan is now facing a crisis."
 
-Then a voice comes as if from a television, with a slight reverberation: "Humanity has begun searching for a new habitable place."
+[The synthesizer holds a low unresolved note. A television relay clicks on in the midground.]
 
-The announcer (young female, English, slightly lower pitch, gentle temperament) reports in a steady tone: "The surface temperature today is seventy…"
+The television narrator (adult female, filtered through a television speaker with slight reverberation) continues gravely: "Humanity has begun searching for a new habitable place."
 
-A woman (young female, bright voice, energetic) says in a worried tone: "Ugh! If this keeps up, even down here underground won't be livable anymore."
+[A fingertip taps a glass screen with a crisp electronic chime; a short ascending data-loading sequence follows.]
 
-A voice comes as if from a walkie-talkie: "Looks like the Eden Project needs to speed up."
+The announcer (young female, English accent, slightly lower pitch, gentle temperament) reports steadily: "The surface temperature today is seventy…"
 
-The broadcaster (middle-aged male, deep resonant voice) announces in a serious tone: "Emergency notice, emergency notice. All technical personnel, please assemble in the command pod immediately."
+The technician (young adult female, bright energetic voice now tightened by worry) exhales sharply and says: "Ugh! If this keeps up, even down here underground won't be livable anymore."
+
+[A walkie-talkie crackles in the foreground with narrow-band compression.]
+
+The field operator (adult male, clipped delivery through the walkie-talkie) says urgently: "Looks like the Eden Project needs to speed up."
+
+[A harsh alarm bursts across the facility. The music cuts out immediately, leaving only the alarm and room hum.]
+
+The broadcaster (middle-aged male, deep resonant voice, heard through a public-address system with metallic echo) announces seriously: "Emergency notice, emergency notice. All technical personnel, please assemble in the command pod immediately."
 
 The broadcaster continues in a professional tone: "This planet, code-named 'New Eden,' has undergone preliminary exploration, which shows it possesses abundant water resources, a suitable atmospheric composition, and potential signs of life, making it one of the best candidate locations in the Eden Project."
 
-=== CONSTRAINTS ===
-Max duration: 120 seconds
-Languages: English
+Ending
+[The alarm stops. A spacecraft engine ignites with a deep mechanical roar that grows from the background to fill the soundstage; the low synthesizer returns beneath it and fades on an unresolved note.]
 ```
 
 ## Full example: TA2A — Multi-character fantasy battle dialogue
 
-```
-=== INPUT REFERENCES ===
+```text
+Input references
 @Audio1: female protagonist voice timbre — Lux (clear, bright, crystalline)
 @Audio2: male antagonist voice timbre — Sylas (raspy, low, gravelly)
 @Audio3: male heroic voice timbre — Garen (deep, powerful, booming)
 
-=== TASK TYPE ===
-TA2A
+Scene and atmosphere
+Low, somber strings and distant war drums underscore a ruined stone courtyard. Cold wind moans through broken arches. The music remains restrained beneath dialogue and swells only during attacks.
 
-=== SCENE & ATMOSPHERE ===
-Low, somber strings swell beneath the distant roar of war drums. A harsh, grinding metallic scraping of heavy chains dragging across stone fills the air, followed by a sharp clang of iron shackles striking together. A bright, ringing chime of gathering light energy resonates, clear like wind chimes and crystal on the verge of shattering. A whooshing surge of energy builds, then a beam of light fires with a sharp "shhhk!" — it explodes against the chains with a dazzling, ringing "CLANG!!", followed by a thunderous "BOOM!" as a shockwave scatters debris. The rushing "whoom, whoom, whoom" of a massive spinning blade slices through the air. A golden shield blooms with a resonant, sustained "diiing—". All sound suddenly cuts out, leaving only the moan of wind and heavy breathing. The music shifts into a long, lingering clarinet solo that slowly fades into silence.
+Characters and dialogue
+[Heavy iron chains scrape harshly across stone in the foreground, then shackles strike with a sharp, echoing "CLANG."]
 
-=== CHARACTERS & DIALOGUE ===
 Sylas (raspy, low, gravelly male voice, rough and menacing, like sand grinding over rusted iron, voiced by <<TGT_SPK2>>) speaks in a cold, taunting tone: "Lux. Did your brother send you to finish the job?"
 
 Lux (clear, bright young female voice, resonant with a crystalline timbre, voiced by <<TGT_SPK1>>) says firmly yet pleadingly: "Sylas, it's not too late to stop."
 
+[A bright chime of gathering light energy rings like crystal near breaking. The strings rise as the energy builds.]
+
+[A beam fires with a sharp "shhhk!" and strikes the chains in a dazzling "CLANG!!", followed immediately by a thunderous "BOOM!" Debris scatters and the shockwave briefly overwhelms the music.]
+
 Garen (deep, powerful, booming male voice, heroic and resolute, voiced by <<TGT_SPK3>>) roars: "DEMACIA!!"
+
+[A massive spinning blade rushes forward with repeated "whoom, whoom, whoom" passes across the foreground.]
 
 Sylas (voiced by <<TGT_SPK2>>) snarls through gritted teeth: "Demacia's dog—"
 
 Lux (voiced by <<TGT_SPK1>>) shouts urgently, throwing herself between them: "Stop! Both of you, STOP!"
 
+[A golden shield blooms with a resonant, sustained "diiing—". All music and battle noise cut out, leaving only cold wind and three characters breathing heavily.]
+
 Lux (voiced by <<TGT_SPK1>>) speaks softly, almost carried off by the wind: "He's our brother… he once was."
 
-=== CONSTRAINTS ===
-Max duration: 120 seconds
-Languages: English
+Ending
+[A sword slides into its sheath; loose chains settle against stone. A solitary clarinet enters over the wind and slowly fades into silence.]
 ```
 
-## Full example: T2A — Timestamp-controlled emotional dialogue
+## Full example: T2A — User-requested timestamp control
 
-```
-=== INPUT REFERENCES ===
-None
+Use this format only when the user explicitly asks for second-level timing.
 
-=== TASK TYPE ===
-T2A
-
-=== SCENE & ATMOSPHERE ===
+```text
+Scene and atmosphere
 A quiet evening room. Soft ambient room tone. Occasional distant traffic. The air is still and heavy with unspoken tension.
 
-=== CHARACTERS & DIALOGUE ===
+Characters and dialogue
 Ryan (young adult male, warm voice) calls out anxiously, slightly out of breath: "[5.5s:8.0s] Maya! Wait—you're really leaving tonight?"
 
 Maya (young adult female, soft voice) answers softly, forcing herself to stay composed: "[8.5s:11.5s] I have to. I've spent years chasing this… I can't walk away now."
-
-=== CONSTRAINTS ===
-Max duration: 15 seconds
-Languages: English
 ```
 
 ## Ideal use cases
@@ -266,7 +388,7 @@ Languages: English
 - **Video dubbing**: Generate character voices from text descriptions or reference audio. Human voice + SFX + background music in a single pass.
 - **Gaming**: Generate character voices and environmental sound effects for immersive player experiences.
 - **Podcast and radio drama**: Multi-character dialogue with full sound design from a single prompt.
-- **Language learning content**: Generate audio in multiple languages with precise timestamp control per sentence.
+- **Language learning content**: Generate audio in multiple languages, with per-sentence timestamp guidance when the user explicitly requests second-level timing.
 
 ## What makes Seed Audio 1.0 different from normal TTS
 
@@ -277,7 +399,7 @@ Languages: English
 | Text Prompt to Audio (T2A) — describe voice, atmosphere, BGM, SFX in free text | ✅ | ❌ |
 | Text Prompt + Audio to Audio (TA2A) — reference audio + text prompt for voice/emotion reference | ✅ | ❌ |
 | Multimodal soundscape (dialogue + music + SFX + ambience in one pass) | ✅ | ❌ |
-| Accurate time control per sentence | ✅ | ❌ |
+| Optional prompting-guide time control per sentence | ✅ | ❌ |
 | Multilingual generation | ✅ | Varies |
 
 ## Quick reference card
