@@ -310,7 +310,7 @@ polling.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `prompt` | `str` | No | 1–4000 characters |
+| `prompt` | `str` | No | 1–32,000 characters in the current local tool. BytePlus recommends staying under 1,000 words for focus; that recommendation is not a hard API limit. |
 | `images` | `list[SeedanceImageInput]` | No | Up to 9 images with roles: `first_frame`, `last_frame`, `reference_image` |
 | `videos` | `list[SeedanceVideoInput]` | No | Up to 3 videos with role: `reference_video` |
 | `audios` | `list[SeedanceAudioInput]` | No | Up to 3 audios with role: `reference_audio` |
@@ -506,12 +506,50 @@ default model for that product is used.
 
 ### Seedance Async Workflow
 
-1. Call `seedance_create_task` to create a task. Save the returned `task_id`.
-2. Poll `seedance_get_task` with the `task_id` until the status is terminal.
+1. Call `seedance_create_task` to create a task.
+2. Immediately persist the returned `task_id`, request parameters, prompt hash,
+   and intended output path to the shot manifest before polling.
+3. Poll `seedance_get_task` with the persisted `task_id` until the status is terminal.
    Respect the `polling_interval` from the creation response.
-3. On success, the video is automatically persisted to the artifact store.
-4. Optionally call `seedance_list_tasks` to browse recent tasks.
-5. Call `seedance_cancel_or_delete_task` to clean up.
+4. On a local timeout, disconnect, or client restart, retrieve and continue
+   polling the same task. Do not submit a replacement task because the provider
+   may still be running and a resubmission can create duplicate cost.
+5. On success, the video is automatically persisted to the artifact store.
+   Download it to the project asset path and record artifact ID, byte size,
+   SHA-256, provider timestamps, and usage.
+6. Optionally call `seedance_list_tasks` to browse recent tasks.
+7. Call `seedance_cancel_or_delete_task` only when cleanup is explicitly wanted.
+
+### Generation record lifecycle
+
+Use explicit manifest states so a generated take is never mistaken for an
+approved take:
+
+`ready → submitted → queued/running → review → approved/rejected`
+
+Use `failed`, `cancelled`, or `expired` for terminal failures. While a take is
+under review, record it under `outputs` or `generated_output`; reserve
+`selected_variant` and `approved` for an explicit user choice.
+
+If the provider returns null or incomplete settings, keep the submitted request
+as the source of intended parameters and use media inspection as the source of
+actual output properties.
+
+### Post-generation media QA
+
+After downloading a Seedance result:
+
+1. Use `ffprobe` to record actual resolution, duration, frame rate, codecs,
+   pixel format, and audio streams.
+2. Decode the full file with FFmpeg and fail QA on any decode error.
+3. Generate contact sheets around the opening, major transitions, and ending.
+4. Check story acceptance criteria such as subject order, travel direction,
+   boundary behavior, forbidden elements, and final location.
+5. When audio is enabled, verify the audio stream and inspect important dynamic
+   segments rather than inferring sound quality from the request.
+6. Set the manifest to `review`; only the user can provide creative approval.
+7. For HEVC or other review-host-sensitive masters, optionally generate a
+   lightweight H.264 proxy while preserving the original master.
 
 ### Parallel Variations
 
@@ -559,6 +597,11 @@ The server retries only explicitly retryable, non-ambiguous errors:
 - Timeouts are NOT retried (the operation may have succeeded server-side).
 - Provider errors with `retryable=true` are retried.
 
+For Seedance task polling, a local watcher timeout is not a generation failure.
+Resume `seedance_get_task` with the existing task ID. Only create a new task
+after the previous task reaches a terminal state and the user requests another
+take.
+
 ### Budget Rejections
 
 If `DAILY_BUDGET_USD` is configured (non-zero), the server tracks per-principal
@@ -587,25 +630,37 @@ Set to `0` (default) for record-only mode with no enforcement.
    `seedance_create_task` output. Don't poll faster than the interval — it wastes
    quota and can hit rate limits.
 
-3. **Use variation tools for choice.** When the user needs options (e.g., "show
+3. **Make polling resumable.** Save the task ID and request metadata before the
+   first poll. A process timeout must continue the existing task, not create a
+   duplicate.
+
+4. **Use variation tools for choice.** When the user needs options (e.g., "show
    me a few versions"), use a variation tool rather than calling the single
    generate tool multiple times. Variations run in parallel and handle partial
    failures gracefully.
 
-4. **Set seeds for reproducibility.** When the user wants consistent or
+5. **Set seeds for reproducibility.** When the user wants consistent or
    reproducible output, pass a fixed `seed` to `seedream_generate_image` or a
    `base_seed` to `seedream_generate_image_variations`.
 
-5. **Check health first.** Call `seed-health://status` to verify which products
+6. **Check health first.** Call `seed-health://status` to verify which products
    are configured before attempting generation.
 
-6. **Respect model capabilities.** Different models support different features
+7. **Respect model capabilities.** Different models support different features
    (batch generation, resolutions, reference counts). Check the capability
    registry before passing unsupported parameters.
 
-7. **Clean up Seedance tasks.** Use `seedance_cancel_or_delete_task` to clean up
+8. **Clean up Seedance tasks.** Use `seedance_cancel_or_delete_task` to clean up
    completed or queued tasks when they are no longer needed.
 
-8. **Validate input sizes.** Audio and image references are limited to 10 MiB
+9. **Validate input sizes.** Audio and image references are limited to 10 MiB
    each; video references are limited to 200 MiB. Base64 inputs are validated
    before submission.
+
+10. **Treat cost estimates as estimates.** Record estimated cost separately
+    from confirmed billing and usage. Do not infer actual cost solely from a
+    preflight estimate when resolution or token usage differs.
+
+11. **Verify the saved media.** Provider task success proves generation
+    completed, not that resolution, audio, narrative continuity, or playback
+    compatibility satisfy the production brief.
