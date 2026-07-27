@@ -17,28 +17,28 @@ The prompt structure and rules in this skill are sourced from:
 
 When the official guide is updated, prefer the live page over this skill where they conflict.
 
-## Mandatory prompt structure — Text-to-Image (T2I)
+## Recommended prompt structure — Image generation
 
-Every Seedream text-to-image prompt must be assembled in this order. Do not skip sections that apply to the user's task.
+Use this order for the sections that apply. Do not add empty boilerplate sections:
 
 ```
-=== INPUT REFERENCES ===
-=== TASK TYPE ===
-=== SUBJECT ===
-=== SETTING ===
-=== STYLE ===
-=== LIGHTING ===
-=== COMPOSITION ===
-=== TEXT IN IMAGE ===
-=== CONSTRAINTS ===
+References:          # only when images are provided
+Task:                # include when the mode needs clarification
+Subject:
+Setting:             # when environment matters
+Style:               # when style is specified or useful
+Lighting:            # when lighting matters
+Composition:         # when framing matters
+Text in image:       # only when readable text is requested
+Constraints:         # only useful quality or exclusion requirements
 ```
 
-### 1. INPUT REFERENCES (always first)
+### 1. References (when provided)
 
 List every reference image the user provides. Label them with `@Image 1`, `@Image 2`, ... using sequential numbering starting from 1 (space separator). Include a short role or description.
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: [role, e.g. "subject reference — female character portrait"]
 @Image 2: [role, e.g. "style reference — oil painting texture"]
 @Image 3: [role, e.g. "material reference — leather sofa"]
@@ -51,14 +51,21 @@ Rules for references:
 - Formats: JPEG, PNG, WebP, BMP, TIFF, GIF, HEIC, HEIF.
 - Up to 30 MB per image.
 - Input resolution: each dimension > 14px, aspect ratio [1/16, 16], total pixels ≤ 36,000,000 (per API reference).
-- When no references are provided, write "None."
+- When no references are provided, omit the References section.
+- The reference list is an inventory, not the instruction. Bind each reference
+  again where it affects the output, naming both its role and target:
+  `Use the face and hairstyle from @Image 1 for the main character, apply the
+  oil-paint texture from @Image 2 to the full scene, and use the leather from
+  @Image 3 on the sofa.`
+- Use the exact `@Image N` token every time; do not drop the `@` or replace the
+  token with an ambiguous phrase such as “the references.”
 
-### 2. TASK TYPE
+### 2. Task type
 
 Declare which generation mode applies.
 
 ```
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)  |  Image-to-Image (I2I)  |  Image Editing  |  Sequential Generation  |  Infographic / Information Visualization
 ```
 
@@ -80,12 +87,12 @@ Reference-based generation sub-types (Reference Target + Generated Scene Descrip
 
 **Infographic / Information Visualization**: Transform data, concepts, and dense text into professional layouts. Seedream 5.0 Pro is specifically optimized for this.
 
-### 3. SUBJECT
+### 3. Subject
 
 Describe the main subject clearly and concisely. Order matters — concepts placed earlier carry more weight.
 
 ```
-=== SUBJECT ===
+Subject:
 [Who or what. Key attributes: appearance, clothing, hair, expression, pose, motion, props.]
 ```
 
@@ -95,12 +102,12 @@ Rules:
 - For multi-subject images, list subjects in order of visual priority.
 - Describe pose, expression, and action: "standing confidently with arms crossed," "leaning forward, eyes wide with curiosity."
 
-### 4. SETTING
+### 4. Setting
 
 Describe the environment, time, weather, and background.
 
 ```
-=== SETTING ===
+Setting:
 [Location, time of day, season, weather, background elements, spatial context.]
 ```
 
@@ -109,12 +116,12 @@ Examples:
 - "A futuristic cyberpunk city at night, neon reflections on wet asphalt, holographic billboards flickering."
 - "A minimalist Scandinavian living room, morning light through sheer curtains, white walls and oak floors."
 
-### 5. STYLE
+### 5. Style
 
 Define the artistic direction, medium, rendering quality, and aesthetic keywords.
 
 ```
-=== STYLE ===
+Style:
 [Art style, medium, rendering quality, aesthetic keywords.]
 ```
 
@@ -130,12 +137,12 @@ Define the artistic direction, medium, rendering quality, and aesthetic keywords
 | Mood & atmosphere | Cinematic, Motion Blur, Out of Focus, Diagonal Composition, Symmetrical Composition, Rule of Thirds |
 | Genre | Cyberpunk, Retro Film, Minimalism, Japanese Fresh Style, Baroque, Art Deco, Brutalist |
 
-### 6. LIGHTING
+### 6. Lighting
 
 Describe light direction, quality, color temperature, and time of day.
 
 ```
-=== LIGHTING ===
+Lighting:
 [Direction, quality, color, time, key-to-fill ratio.]
 ```
 
@@ -144,12 +151,12 @@ Examples:
 - "Golden hour backlight, rim light on subject's hair, warm amber tones."
 - "Moody low-key lighting, single overhead source, deep shadows, cool blue moonlight through window."
 
-### 7. COMPOSITION
+### 7. Composition
 
 Specify shot type, viewing angle, and composition method.
 
 ```
-=== COMPOSITION ===
+Composition:
 [Shot type, angle, composition rule, framing.]
 ```
 
@@ -159,12 +166,12 @@ Specify shot type, viewing angle, and composition method.
 
 **Composition methods**: symmetric, diagonal, rule of thirds, leading lines, frame within a frame, negative space, golden ratio.
 
-### 8. TEXT IN IMAGE
+### 8. Text in image (when requested)
 
-If the image should contain rendered text, specify it here.
+Include this section only when the image should contain rendered text.
 
 ```
-=== TEXT IN IMAGE ===
+Text in image:
 "Exact text to render" — [surface it appears on, style, color, size hint]
 ```
 
@@ -174,28 +181,29 @@ Rules:
 - Seedream 5.0 Pro natively renders text in 14 languages: Arabic, Filipino, French, German, Indonesian, Japanese, Korean, Malay, Portuguese, Russian, Spanish, Thai, Turkish, Vietnamese. English is the base language. Other languages also work but with weaker in-image text rendering and cultural understanding.
 - Small text may still be unstable — manual refinement after generation is recommended.
 
-### 9. CONSTRAINTS
+### 9. Constraints (when useful)
 
-Close with quality directives and negative constraints.
+Close with only the quality directives and negative constraints that materially affect the output.
 
 ```
-=== CONSTRAINTS ===
+Constraints:
 Quality: [HD, 4K, 2K, rich details, cinematic texture]
 Negative: [no watermarks, no signatures, clean background, no text overlays, no distorted anatomy]
 ```
 
 All constraints go inline in the text prompt. The Seedream API has no separate `negative_prompt` field.
 
-## Mandatory prompt structure — Image Editing
+## Recommended prompt structure — Image Editing
 
 Seedream 5.0 Pro supports five editing modes. Pick one or combine multiple.
+Use only the sections needed for the edit:
 
 ```
-=== INPUT REFERENCES ===
-=== TASK TYPE ===
-=== EDITING MODE ===
-=== EDITING INSTRUCTIONS ===
-=== CONSTRAINTS ===
+References:          # required for image editing
+Task:                # include when the mode needs clarification
+Editing mode:        # include when it helps disambiguate the operation
+Edit instructions:
+Constraints:         # only preservation and exclusion requirements that matter
 ```
 
 ### Editing Modes
@@ -209,16 +217,16 @@ Position an edit using one of two official forms.
 **Form 1 — Free-form marker + natural-language location**: Mark the edit area with hand-drawn sketches, doodles, circles, or colored frames, then describe the marker and intent in natural language.
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: base image to edit
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Interactive Control — Free-form marker
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 In @Image 1, [describe exactly what to modify at the marked location]. [Describe what to add/remove/change].
 ```
 
@@ -240,8 +248,8 @@ Translate the menu into Chinese.
 **Form 2 — Precise coordinate location (Pro only)**: Use `<point>` or `<bbox>x1 y1 x2 y2</bbox>` inline coordinate tags to pin the edit to exact pixels. Coordinates are obtained via an annotation tool.
 
 ```
-=== EDITING INSTRUCTIONS ===
-Use the subject from Image 1 <bbox>118 331 933 871</bbox> to replace the subject in Image 2 <bbox>179 283 796 986</bbox>.
+Edit instructions:
+Use the subject from @Image 1 <bbox>118 331 933 871</bbox> to replace the subject in @Image 2 <bbox>179 283 796 986</bbox>.
 ```
 
 The model can also lock onto semantic regions without explicit coordinates — e.g., "Complete all the multiple-choice questions above and write out the corresponding calculation steps in the blank spaces below each question."
@@ -251,16 +259,16 @@ The model can also lock onto semantic regions without explicit coordinates — e
 Use doodles, color blocks, lines, or simple sketches as control signals. The model recognizes the intent of each block and renders it as a high-fidelity visual.
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: sketch / doodle / color block layout
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Sketch Rendering
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 Using the sketch in @Image 1 as the layout guide, generate [describe the final output]. [Describe what each block should become, e.g. "the red rectangle at the top becomes a title banner," "the blue circle on the left becomes a product photo"].
 ```
 
@@ -269,16 +277,16 @@ Using the sketch in @Image 1 as the layout guide, generate [describe the final o
 Split an image into independently editable layers output as PNGs with alpha (transparency) channels. Returns 2-20 images, billed per image.
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: composite image to separate
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Layer Separation
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 Separate @Image 1 into independent layers: [list desired layers, e.g. "background, main subject, text overlay, decorative elements"]. Output each layer as a PNG with transparent background.
 ```
 
@@ -289,18 +297,18 @@ Layers retain transparency and can be freely dragged, scaled, or recomposed. Bac
 The model accepts Hex color codes or external color swatches and replaces materials while preserving lighting and perspective.
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: material reference (e.g. velvet, wood, metal)
 @Image 2: color swatch reference (e.g. palette card)
 @Image 3: target image to modify
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Color & Material Replacement
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 Using the material from @Image 1 and the color swatch from @Image 2, modify the [specific object or region] in @Image 3. [Optional: specify Hex codes, e.g. "change to #3E4A2E dark green and #DB973E turmeric yellow in alternating pattern"].
 ```
 
@@ -309,18 +317,24 @@ Using the material from @Image 1 and the color swatch from @Image 2, modify the 
 Fuse objects, styles, and materials from multiple reference images into a target scene.
 
 ```
-=== INPUT REFERENCES ===
-@Image 1-7: individual objects on white backgrounds
-@Image 8: target scene / composition layout
+References:
+@Image 1: first object on a white background
+@Image 2: second object on a white background
+@Image 3: third object on a white background
+@Image 4: fourth object on a white background
+@Image 5: fifth object on a white background
+@Image 6: sixth object on a white background
+@Image 7: seventh object on a white background
+@Image 8: target scene and composition layout
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Multi-Image Fusion
 
-=== EDITING INSTRUCTIONS ===
-Precisely cut out the objects from my reference photos and compose them, per the specified layout, into a real still-life photograph. Ensure correct perspective, light-and-shadow, and spatial relationships. Faithfully reproduce material details such as wood grain, leather, lace, glass, and feathers.
+Edit instructions:
+Precisely cut out the first object from @Image 1, the second from @Image 2, the third from @Image 3, the fourth from @Image 4, the fifth from @Image 5, the sixth from @Image 6, and the seventh from @Image 7. Compose them into a real still-life photograph using the scene geometry and placement from @Image 8. Ensure correct perspective, light-and-shadow, and spatial relationships. Faithfully reproduce material details such as wood grain, leather, lace, glass, and feathers.
 ```
 
 ### Combining Editing Modes
@@ -333,31 +347,25 @@ Change the pumpkins to an alternating pattern of dark green #3E4A2E and turmeric
 ## Full example: T2I — Cinematic scene
 
 ```
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)
 
-=== SUBJECT ===
+Subject:
 A young woman in a flowing red dress, windswept dark hair, standing at the edge of a cliff, arms slightly raised, face turned toward the horizon with a serene expression.
 
-=== SETTING ===
+Setting:
 A dramatic coastal cliff at golden hour. The ocean stretches endlessly below, waves crashing against rocks. Distant seabirds circle. A lighthouse is visible on a far promontory.
 
-=== STYLE ===
+Style:
 Cinematic, photorealistic, widescreen anamorphic look. Kodak Portra 400 film stock aesthetic.
 
-=== LIGHTING ===
+Lighting:
 Golden hour backlight, warm amber and rose tones, soft rim light on the subject's hair and dress, gentle fill from the ocean reflection. God rays breaking through scattered clouds.
 
-=== COMPOSITION ===
+Composition:
 Wide shot, eye level, rule of thirds — subject positioned on the left third line, horizon on the lower third, negative space to the right filled by the ocean and sky.
 
-=== TEXT IN IMAGE ===
-None
-
-=== CONSTRAINTS ===
+Constraints:
 Quality: 4K, rich textures, cinematic depth of field
 Negative: no watermarks, no text overlays, no distorted anatomy, natural skin texture
 ```
@@ -365,32 +373,29 @@ Negative: no watermarks, no text overlays, no distorted anatomy, natural skin te
 ## Full example: Infographic
 
 ```
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Infographic / Information Visualization
 
-=== SUBJECT ===
+Subject:
 A visual infographic chronicling scientific research at Antarctica's Qinling Station. Place the main Qinling Station building at the center. Surround it with a timeline of research station development, a bar chart comparing the sizes of five research stations, a pie chart of the station's energy sources, and a line chart of monthly sunshine. Supplement with realistic photos of research equipment, a summer weather panel, a seven-step fieldwork flowchart, and on-site sampling photography.
 
-=== SETTING ===
+Setting:
 Clean, academic presentation layout. Antarctic landscape references in the background — ice shelves, penguin colonies, aurora.
 
-=== STYLE ===
+Style:
 Scientific infographic, National Geographic editorial style, clean data visualization, modern sans-serif typography.
 
-=== LIGHTING ===
+Lighting:
 Even, bright studio lighting for charts and diagrams. Dramatic natural lighting for the landscape elements.
 
-=== COMPOSITION ===
+Composition:
 Central anchor (research station) with radial layout. Timeline along the top, charts on the left, flowchart on the right, photos in the bottom section.
 
-=== TEXT IN IMAGE ===
+Text in image:
 "Qinling Station" — main title
 Chart labels and data values as appropriate
 
-=== CONSTRAINTS ===
+Constraints:
 Quality: 2K, crisp text rendering, professional color palette
 Negative: no distorted charts, no misaligned text, consistent font sizes
 ```
@@ -398,21 +403,21 @@ Negative: no distorted charts, no misaligned text, consistent font sizes
 ## Full example: Image Editing — Color & Material Replacement
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: velvet fabric swatch (material reference)
 @Image 2: color palette card — teal and gold
 @Image 3: living room photo — brown leather sofa to modify
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Color & Material Replacement
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 Using the velvet material from @Image 1 and the teal color from @Image 2, modify the sofa in @Image 3. Replace the brown leather with teal velvet. Keep the wood frame, surrounding decor, and room lighting unchanged. The new material should catch light naturally with the same highlights and shadows as the original.
 
-=== CONSTRAINTS ===
+Constraints:
 Quality: 2K, photorealistic material rendering
 Negative: do not change the room background, do not alter the sofa's shape or proportions
 ```
@@ -420,7 +425,7 @@ Negative: do not change the room background, do not alter the sofa's shape or pr
 ## Full example: Multi-image fusion
 
 ```
-=== INPUT REFERENCES ===
+References:
 @Image 1: wooden desk on white background
 @Image 2: leather-bound journal on white background
 @Image 3: brass desk lamp on white background
@@ -429,16 +434,16 @@ Negative: do not change the room background, do not alter the sofa's shape or pr
 @Image 6: composition layout sketch
 @Image 7: window light reference photo
 
-=== TASK TYPE ===
+Task:
 Image Editing
 
-=== EDITING MODE ===
+Editing mode:
 Multi-Image Fusion
 
-=== EDITING INSTRUCTIONS ===
+Edit instructions:
 Precisely cut out the objects from @Image 1 through @Image 5 and compose them according to the layout in @Image 6 into a real still-life photograph on the desk. Use the window lighting from @Image 7 as the scene lighting reference. Ensure correct perspective, light-and-shadow, and spatial relationships. Faithfully reproduce material details — wood grain, leather texture, polished brass, glazed ceramic.
 
-=== CONSTRAINTS ===
+Constraints:
 Quality: 2K, photorealistic, natural shadow casting
 Negative: no floating objects, no mismatched lighting directions
 ```
