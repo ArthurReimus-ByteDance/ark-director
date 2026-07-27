@@ -51,62 +51,59 @@ This layout is optimized for downstream identity consistency:
 Compared with a five-view turnaround, this structure is simpler, easier to
 read, and more stable for later Seedance and Seedream reference use.
 
-## Mandatory prompt structure
+## Flexible prompt structure
 
-Assemble every character-sheet prompt in this order:
+Use this order for the sections that apply. Do not add empty boilerplate:
 
-```text
-=== INPUT REFERENCES ===
-=== TASK TYPE ===
-=== SUBJECT ===
-=== SETTING ===
-=== STYLE ===
-=== LIGHTING ===
-=== COMPOSITION ===
-=== TEXT IN IMAGE ===
-=== CONSTRAINTS ===
-```
+- **References** only when images are provided
+- **Task** when the mode needs clarification
+- **Subject** and **Composition** for every character sheet
+- **Setting**, **Style**, and **Lighting** when they add relevant direction
+- **Text in image** only when labels or other readable text are requested
+- **Constraints** only for useful quality, continuity, and exclusion requirements
 
-## 1. INPUT REFERENCES
+## 1. References (when provided)
 
 List every reference image the user provides.
 
 ```text
-=== INPUT REFERENCES ===
+References:
 @Image 1: character face or approved identity reference
 @Image 2: wardrobe or costume reference
 @Image 3: style or film still reference
 ```
 
 Rules:
-- Use `None` when no references are provided.
+- Omit the References section when no images are provided.
 - If an approved character sheet already exists, use it as `@Image 1` for
   continuity.
 - If the user has a preferred costume or hair reference, separate those by role
   rather than blending them ambiguously into one description.
+- Bind every reference again where it affects the output: for example, “Use the
+  identity and facial traits from @Image 1,” “use the wardrobe from @Image 2,”
+  and “use the photographic treatment from @Image 3.” A reference inventory
+  alone is not sufficient.
 
-## 2. TASK TYPE
+## 2. Task type
 
-Usually this is:
+Use **Text-to-Image (T2I)** only when the prompt uses no reference images.
 
-```text
-=== TASK TYPE ===
-Text-to-Image (T2I)
-```
+Use **Image-to-Image (I2I)** whenever any reference image guides identity,
+wardrobe, hair, style, composition, or another visible output property. This
+includes first-pass character sheets assembled from face, costume, or style
+references; it is not limited to revisions of an already-approved sheet.
 
-Use **Image-to-Image (I2I)** only when preserving an already-approved
-character identity while changing wardrobe, lighting, or sheet quality.
-
-## 3. SUBJECT
+## 3. Subject
 
 Describe the person and the exact three-panel requirement.
 
 ```text
-=== SUBJECT ===
+Subject:
 [Character identity, age, ethnicity, facial features, hair, clothing, accessories, same person in all panels, three panels only: back full-body, front full-body, face close-up.]
 ```
 
 Always include:
+- an inline binding for each supplied reference in the section it controls
 - age
 - ethnicity / cultural identity when relevant
 - 2–4 stable facial traits
@@ -115,12 +112,12 @@ Always include:
 - key accessories
 - explicit statement that it is the **same person in all panels**
 
-## 4. SETTING
+## 4. Setting
 
 The setting for character sheets is typically simple and controlled.
 
 ```text
-=== SETTING ===
+Setting:
 Clean light gray studio background, consistent across all three panels.
 ```
 
@@ -132,12 +129,12 @@ Default:
 
 Only deviate if the user explicitly wants a stylized or filmic sheet background.
 
-## 5. STYLE
+## 5. Style
 
 Define the image language.
 
 ```text
-=== STYLE ===
+Style:
 [Photorealistic, cinematic, editorial, film still, grounded realism, wardrobe-reference quality.]
 ```
 
@@ -148,12 +145,12 @@ Recommended anchors:
 - grounded realism
 - film-photo finish
 
-## 6. LIGHTING
+## 6. Lighting
 
 Character sheets should be stable and readable.
 
 ```text
-=== LIGHTING ===
+Lighting:
 [Soft studio light, even fill, no harsh shadows, consistent across all panels.]
 ```
 
@@ -167,12 +164,12 @@ Default:
 If the user asks for a filmic or moodier sheet, keep the lighting consistent
 across the three panels even when the mood is more cinematic.
 
-## 7. COMPOSITION
+## 7. Composition
 
 Explicitly enforce the three-panel structure.
 
 ```text
-=== COMPOSITION ===
+Composition:
 Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels.
 ```
 
@@ -185,24 +182,18 @@ Core rules:
 - readable costume silhouette in the body panels
 - close-up panel is the face authority
 
-## 8. TEXT IN IMAGE
+## 8. Text in image
 
-Default:
+Omit this section by default. Include it only when the user requests
+labels or other readable text. For production character sheets, avoid text
+overlays unless requested.
 
-```text
-=== TEXT IN IMAGE ===
-None
-```
-
-For production character sheets, avoid text overlays unless the user asks for
-labels.
-
-## 9. CONSTRAINTS
+## 9. Constraints
 
 Use quality + negative constraints together:
 
 ```text
-=== CONSTRAINTS ===
+Constraints:
 Quality: 4K, consistent character identity across all panels
 Negative: no extra panels, no side profile, no 3/4 view, no props, no text overlays, no watermarks, no distorted anatomy
 ```
@@ -220,31 +211,25 @@ Common negatives:
 ## Standard prompt template
 
 ```text
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)
 
-=== SUBJECT ===
+Subject:
 Character reference sheet, single character [name / description]. Same person in all panels, consistent identity. Three-panel sheet only: one full-body back view, one full-body front view, and one face close-up panel.
 
-=== SETTING ===
+Setting:
 Clean light gray studio background, consistent across all three panels. No props, no furniture, no background variation.
 
-=== STYLE ===
+Style:
 Photorealistic, cinematic, professional character-sheet quality, consistent skin tone and wardrobe detail across all panels.
 
-=== LIGHTING ===
+Lighting:
 Soft studio key light at 45 degrees left, gentle fill from the right, even illumination, neutral white balance, no dramatic shadows.
 
-=== COMPOSITION ===
+Composition:
 Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels.
 
-=== TEXT IN IMAGE ===
-None
-
-=== CONSTRAINTS ===
+Constraints:
 Quality: 4K, rich skin texture, natural hair detail, consistent character identity across all panels
 Negative: no props in hands, no background variation, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
 ```
@@ -254,31 +239,25 @@ Negative: no props in hands, no background variation, no extra panels, no side p
 This example mirrors the user-provided sample image in `examples/`.
 
 ```text
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)
 
-=== SUBJECT ===
+Subject:
 3-view character reference sheet for a film character. The same man in all three views: youthful attractive man in his early 30s, warm olive-brown skin, dark thick curly hair, thin mustache with a small soul-patch under the lip, faint stubble along the jaw, two small silver hoop earrings on the left ear, thin silver chain necklace, subtly asymmetrical face, a small subtle healed scar near the right eye. Age-of-sail pirate costume: faded mustard-yellow durag tied at the back with the tails hanging down, small shark tooth pendant attached to the durag above the left temple, open off-white linen shirt, worn dark leather vest, wide sash belt, baggy dark breeches, scuffed leather boots, weathered and dirty fabrics. Three panels only: full-body back view, full-body front view, and frontal face close-up.
 
-=== SETTING ===
+Setting:
 Neutral medium-gray seamless studio backdrop, consistent across all three panels, with thin subtle vertical divider lines separating the panels.
 
-=== STYLE ===
+Style:
 Gritty cinematic 35mm film photograph, naturalistic editorial reference, fine film grain, organic matte skin texture, never plastic CGI skin.
 
-=== LIGHTING ===
+Lighting:
 Very soft, low, diffused natural light, like soft shade or thin overcast through a scrim, wrapping gently around the face with extremely smooth gradual falloff. Slightly underexposed, moody, low-key, no harsh shadows, no hotspots, no blown highlights, no hard edges of light.
 
-=== COMPOSITION ===
+Composition:
 Three panels side by side in a single horizontal row. Left panel: full-body back view. Center panel: full-body front view. Right panel: frontal close-up portrait from the chest up, face square to camera. Consistent identity, costume, scar, accessories, proportions, and lighting across all panels.
 
-=== TEXT IN IMAGE ===
-None
-
-=== CONSTRAINTS ===
+Constraints:
 Quality: 16:9 horizontal sheet, film-photo finish, consistent identity across all panels
 Negative: no extra panels, no 3/4 view, no profile view, no props, no missing limbs, no prosthesis, no glossy skin, no watermarks, no text overlays
 ```
