@@ -17,13 +17,18 @@ AI coding agents working here should treat MCP tools as the canonical way to inv
 
 ## Model catalog
 
-All models are accessed through **BytePlus ModelArk** (the international surface of Volcano Engine Ark). Authentication uses a single API key (`ARK_API_KEY`). Several surfaces are OpenAI-compatible and can be driven by the OpenAI SDK pointed at the Ark base URL.
+Models are accessed through **BytePlus ModelArk** and the BytePlus Seed Speech
+surface. Resolve credentials from the environment at runtime:
+`BYTEPLUS_MODELARK_API_KEY` for Seedream and Seedance, and
+`BYTEPLUS_SEED_AUDIO_API_KEY` for Seed Audio. Compatibility aliases may exist
+in individual tools, but project documentation and new integrations should use
+the canonical names.
 
 | Family | Model(s) | Modality | Key capabilities | Ark API surface |
 |---|---|---|---|---|
-| Seedance | Dreamina Seedance 2.0, Seedance 1.5 Pro, Seedance 1.0 Pro / Fast | Video | Text-to-video, image-to-video (first frame; first+last frame), multimodal reference generation, video editing, video extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
-| Seedream | `seedream-4-5-251128` (4.5), `seedream-4-0-250828` (4.0) | Image | Text-to-image, image-to-image editing, multi-reference fusion (2–10 refs), sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
-| Seed Audio | Seed Audio 1.0 (`doubao-seed-audio`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, zero-shot voice cloning, cross-lingual, ~2 min/clip | Volcano Ark audio generation task API |
+| Seedance | Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`); configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
+| Seedream | Seedream 5.0 Pro (`dola-seedream-5-0-pro-260628`); configured Lite/4.x bindings | Image | Text-to-image, reference-based generation/editing, multi-reference fusion, sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
+| Seed Audio | Seed Audio 1.0 (`seed-audio-1.0`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, voice references, cross-lingual generation, up to ~2 min/clip | BytePlus Seed Speech audio generation API |
 | Seed / Doubao | `seed-2-0-lite-260228` and siblings | Text | Prompt expansion, scene scripting, structured output for pipelines | `POST /responses` (OpenAI-compatible) |
 
 **Region base URLs** (read from environment, never hard-coded):
@@ -55,6 +60,33 @@ flowchart LR
 - MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/assets/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local `assets/` tree is the durable source of truth.
 - Generated assets are written to a **gitignored** project-scoped `assets/` directory (see [Project & asset directory structure](#project--asset-directory-structure)); never commit binary outputs.
 - The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
+
+## Production gates
+
+Treat expensive media generation as a gated production workflow:
+
+1. **Brief and creative locks** — record approved identities, environments,
+   props, tone, forbidden behavior, target resolution, duration, and audio mode.
+2. **Reference preflight** — classify each asset as visible identity, visible
+   environment, motion/camera reference, or control-only. Control-only images
+   can leak into output; translate them to text and omit them by default.
+3. **Spatial and temporal preflight** — for movement-heavy scenes, record start,
+   travel axis, subject order, boundary behavior, end state, and forbidden
+   transitions. Resolve contradictions between the brief, references, and
+   prompt before generation.
+4. **Low-cost prototype** — validate motion, geography, anatomy, camera,
+   boundary behavior, and audio at the lowest suitable resolution and variant.
+5. **Creative review** — preserve user-approved decisions and write the single
+   requested delta plus observable acceptance criteria for the next take.
+6. **Final candidate** — increase resolution only after the important creative
+   behavior is approved.
+7. **Technical and semantic QA** — inspect actual streams, decode integrity,
+   contact sheets, key story transitions, and audio before requesting approval.
+
+For tightly controlled 15-second scenes, do not overload one generation with
+too many cuts, action beats, close encounters, and location changes. Split the
+scene into separate shots and chain approved frames when continuity risk is
+higher than the benefit of a single generation.
 
 ## Project & asset directory structure
 
@@ -207,6 +239,18 @@ Individual generated files use **structured token prefixes** (underscore-separat
 
 Every project, element, scene, and shot carries a Markdown file (`project.md`, `character.md`, `scene.md`, `shot.md`) with YAML frontmatter so generations are **reproducible** — model, prompt, references, seed, params, cost, and status are recorded alongside the asset. Reproducibility is a first-class requirement: a later agent must be able to re-create any asset from its manifest alone.
 
+Use these generation lifecycle states:
+
+`draft → ready → submitted → queued/running → review → approved/rejected`
+
+Use `failed`, `cancelled`, or `expired` for terminal failures. Save the
+provider task ID immediately after submission so polling can resume after a
+timeout or client restart. A local polling timeout does not authorize a second
+generation; continue the existing task unless it has reached a terminal state.
+
+Reserve `selected_variant` and `approved` for an explicit user choice. While a
+take is awaiting review, record it under `outputs` or `generated_output`.
+
 Minimal `shot.md` frontmatter:
 
 ```yaml
@@ -226,14 +270,29 @@ params:
   audio: true
 take: t01
 version: v01
-status: approved   # draft | review | approved | rejected
+status: review
 cost_usd: 0.14
 ---
 ```
 
+For generated video and audio, also record when available:
+
+- Prompt file and SHA-256
+- Provider task and artifact IDs
+- Submitted request parameters
+- Estimated cost, confirmed cost, and usage as separate fields
+- Output path, byte size, and SHA-256
+- Actual media properties from inspection
+- Locked decisions, requested delta, acceptance criteria, and known rejections
+
 ### Prompt files
 
-In addition to the `prompt` field embedded in each manifest's frontmatter, the **full prompt text** used for every generation is also saved as a standalone Markdown file inside the project directory — alongside the asset it produced (e.g., `assets/video/shots/s01/s01_sh010/s01_sh010_t01_v01_prompt.md` next to the MP4, or `s01_sh010_prompt.md` next to `shot.md`). The file is plain Markdown, human-readable, and named to mirror its source asset so prompts stay easy to share, review, and iterate on without parsing YAML frontmatter.
+In addition to the prompt referenced by the shot manifest, save an immutable
+snapshot of the exact submitted prompt beside every generated asset. Name it to
+mirror the media file, for example
+`s01_sh010_t01_v01_prompt.md` beside `s01_sh010_t01_v01.mp4`. Store its hash in
+the manifest. The editable working prompt may also remain beside `shot.md`, but
+it does not replace the asset-side snapshot.
 
 ### Sub-projects
 
@@ -242,7 +301,7 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 ## Conventions
 
 ### Secrets
-- Load `ARK_API_KEY`, `ARK_BASE_URL`, and `ARK_REGION` from environment variables or a local `.env` (gitignored). Never hard-code keys or base URLs.
+- Load `BYTEPLUS_MODELARK_API_KEY`, `BYTEPLUS_SEED_AUDIO_API_KEY`, base URL, and region from environment variables or a local `.env` (gitignored). Never hard-code keys or base URLs.
 - Keep a `.env.example` with placeholder values only. Never commit real credentials.
 
 ### Adding a new model tool (MCP)
@@ -251,11 +310,21 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct `assets/` path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
 4. Validate all prompt/reference inputs before calling the API.
 5. Normalize Ark error responses into actionable messages; surface `task_id` and retry guidance on failure.
+6. Persist the task ID before polling and support resuming the same task after a timeout or restart.
+7. On success, record provider metadata and inspect the saved media instead of trusting incomplete response settings.
 
 ### Adding a new content skill
 - Compose existing MCP tools; do not call Ark directly.
 - Prefer deterministic, parameterized recipes over free-form prompts.
 - Document inputs, outputs, expected cost, latency, and failure modes.
+
+### Lumina (web workspace) workflow
+- **Default workflow is local, not Lumina.** Unless the user explicitly says they are working in Lumina, assume the normal MCP-driven, local-`assets/` workflow. Lumina mode is opt-in only.
+- Lumina is BytePlus's all-in-one AI creative workspace at `https://ai.byteplus.com/lumina` (image page: `https://ai.byteplus.com/lumina/en/model/image?mode=image`), where a human drives Seedream/Seedance generation directly in the browser rather than via the API/MCP.
+- When the user indicates they are working in Lumina (e.g. "I'm in Lumina", "use Lumina", "paste this into Lumina", or they share a `ai.byteplus.com/lumina/...` URL), do NOT call MCP/Ark generation tools or write local `assets/`. Instead, write the ready-to-use prompt(s) directly in chat so the user can copy-paste them into Lumina's prompt box.
+- Deliver clean, final, copy-pasteable prompts as plain text or fenced code blocks. Offer multiple variants (e.g. v01/v02/v03) as separate blocks when useful.
+- This is an explicit exception to the "MCP is canonical" rule: in Lumina mode the human runs the model; the assistant only authors prompts.
+- If the user later asks to programmatically generate or download assets, resume the normal MCP-driven workflow.
 
 ### Code style
 - Match the conventions of neighboring files; keep functions small and single-purpose.
@@ -266,13 +335,19 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 - These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
 - Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
 - Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
+- For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.
+- Treat preflight cost figures as estimates. Keep estimated cost, confirmed billing, and provider usage separate.
 - **Default variant count:** When generating character sheets, location sheets, prop sheets, concept art, or storyboard keyframes, generate **at least 3 distinct variants (v01, v02, v03)** by default so the user has options to choose from. This applies to Seedream image generations in the Elements pipeline and concept/storyboard pipelines. Increase or decrease only when the user explicitly requests it.
 - **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
 
 ## Verification
 - Every MCP tool needs: (a) a **smoke test** against the live Ark API using the fast/low-cost variant, and (b) mocked unit tests for input validation, the task-polling state machine, and error handling.
-- Skills must assert end-to-end that an asset is produced and saved.
+- Skills must assert end-to-end that an asset is produced, saved, hashed, and associated with its exact submitted prompt.
+- For video, record `ffprobe` output, run a full decode check, and inspect contact sheets covering the opening, major transitions, and ending.
+- For native audio, confirm the audio stream exists and evaluate the requested sound arc. Loudness measurements support but do not replace listening.
+- Technical success sets a take to `review`; only explicit user approval sets it to `approved`.
+- Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface.
 - Run the project's linter and type checker before finalizing any change. Record the exact commands in `.trae/rules/project_rules.md` once the runtime is established.
 
 ## References
