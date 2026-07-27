@@ -37,22 +37,17 @@ location/environment generation.
 When official documentation changes, prefer the live docs over this skill where
 they conflict.
 
-## Recommended prompt structure — Location Asset
+## Flexible prompt structure — Location Asset
 
-Every Seedream location-asset prompt should be assembled in this order:
+Use this order for the sections that apply. Do not add empty boilerplate:
 
-```text
-=== INPUT REFERENCES ===
-=== TASK TYPE ===
-=== LOCATION ===
-=== ERA & WORLD RULES ===
-=== SET DRESSING & OBJECTS ===
-=== STYLE ===
-=== LIGHTING & ATMOSPHERE ===
-=== COMPOSITION & LENS ===
-=== TEXT IN IMAGE ===
-=== CONSTRAINTS ===
-```
+- **References** only when images are provided
+- **Task** when the mode needs clarification
+- **Location** for every location asset
+- **Era and world rules**, **Set dressing and objects**, **Style**,
+  **Lighting and atmosphere**, and **Composition and lens** when relevant
+- **Text in image** only when signage or labels are requested
+- **Constraints** only for useful quality, continuity, and exclusion requirements
 
 This keeps the prompt grounded in:
 1. **What the place is**
@@ -60,45 +55,44 @@ This keeps the prompt grounded in:
 3. **What objects and materials define it**
 4. **How it is photographed**
 
-## 1. INPUT REFERENCES
+## 1. References (when provided)
 
 List every reference image the user provides. Label them in order:
 
 ```text
-=== INPUT REFERENCES ===
+References:
 @Image 1: location reference
 @Image 2: style reference
 @Image 3: material or prop reference
 ```
 
 Rules:
-- Use `None` when no references are provided.
+- Omit the References section when no images are provided.
 - For a reusable location asset, separate references by role:
   - **location geometry**
   - **lighting mood**
   - **material / dressing detail**
 - If the user provides a prior approved location still, treat it as the
   highest-priority identity reference.
+- Bind every reference again in the instruction it controls. For example:
+  “Use the architecture and spatial layout from @Image 1, the lighting mood
+  from @Image 2, and the wood and brass materials from @Image 3.” A reference
+  inventory alone is not sufficient.
 
-## 2. TASK TYPE
+## 2. Task type
 
-Declare the mode:
+- Use **Text-to-Image (T2I)** only when the prompt uses no reference images.
+- Use **Image-to-Image (I2I)** whenever any reference guides location geometry,
+  dressing, materials, style, lighting, composition, or another visible output
+  property. This includes first-pass locations built from mood boards or set
+  references, not only revisions of an approved location.
 
-```text
-=== TASK TYPE ===
-Text-to-Image (T2I) | Image-to-Image (I2I)
-```
-
-- **T2I** for first-pass location creation.
-- **I2I** when the user wants to preserve an already-approved location identity
-  while iterating angle, dressing, weather, or lighting.
-
-## 3. LOCATION
+## 3. Location
 
 Describe the place itself first, clearly and concretely.
 
 ```text
-=== LOCATION ===
+Location:
 [What the location is, interior/exterior, architectural character, spatial feel.]
 ```
 
@@ -113,12 +107,12 @@ Examples:
 - "A narrow neon-lit alley behind a 24-hour noodle bar."
 - "A humid colonial-era trading office with tall louvered windows."
 
-## 4. ERA & WORLD RULES
+## 4. Era and world rules
 
 Anchor the image in the correct historical, cultural, or fictional logic.
 
 ```text
-=== ERA & WORLD RULES ===
+Era and world rules:
 [Time period, geography, technology level, cultural context, realism rules.]
 ```
 
@@ -133,12 +127,12 @@ Examples:
 - "Late-1990s Manila urban realism, analog signage, no smartphones."
 - "Near-future Asian megacity, grounded cyberpunk, practical infrastructure not fantasy magic."
 
-## 5. SET DRESSING & OBJECTS
+## 5. Set dressing and objects
 
 List the objects, materials, and dressing elements that define the location.
 
 ```text
-=== SET DRESSING & OBJECTS ===
+Set dressing and objects:
 [Foreground objects, hero props, wall details, materials, clutter, wear, environmental storytelling.]
 ```
 
@@ -154,12 +148,12 @@ Examples:
 - "A weathered sea-chart pinned to the plank wall above a waxed-oak table strewn with brass navigation instruments."
 - "Tarred rope, a barrel in the foreground edge, smoke-stained beams, brittle parchment, tarnished brass."
 
-## 6. STYLE
+## 6. Style
 
 Describe the image language.
 
 ```text
-=== STYLE ===
+Style:
 [Photorealistic, cinematic, editorial, painterly, film-stock feel, realism level.]
 ```
 
@@ -173,12 +167,12 @@ Recommended style anchors for location assets:
 
 Avoid vague style stacks. Pick 2–4 strong anchors.
 
-## 7. LIGHTING & ATMOSPHERE
+## 7. Lighting and atmosphere
 
 Define the actual light sources and environmental mood.
 
 ```text
-=== LIGHTING & ATMOSPHERE ===
+Lighting and atmosphere:
 [Practical sources, time of day, weather, haze, smoke, dust, shadow behavior, emotional tone.]
 ```
 
@@ -194,12 +188,12 @@ Examples:
 - "Thin hard daylight slivers leaking through plank gaps."
 - "Slightly underexposed, hushed, conspiratorial, enclosed."
 
-## 8. COMPOSITION & LENS
+## 8. Composition and lens
 
 Tell the model how the location is being photographed.
 
 ```text
-=== COMPOSITION & LENS ===
+Composition and lens:
 [Shot type, angle, lens, aspect ratio, camera feel, depth of field.]
 ```
 
@@ -214,23 +208,17 @@ Examples:
 - "Wide three-quarter interior establishing shot, eye-level, 24mm, 2.39:1 Cinemascope."
 - "Location sheet, straight-on, symmetrical, front elevation reference."
 
-## 9. TEXT IN IMAGE
+## 9. Text in image
 
-Use only when the user explicitly wants signage or readable labels.
+Include this section only when the user explicitly wants signage or readable
+labels. Otherwise omit it.
 
-```text
-=== TEXT IN IMAGE ===
-None
-```
-
-For reusable location assets, default to `None`.
-
-## 10. CONSTRAINTS
+## 10. Constraints
 
 Close with quality directives and negatives:
 
 ```text
-=== CONSTRAINTS ===
+Constraints:
 Quality: [2K / 4K, rich material detail, consistent location identity]
 Negative: [no characters, no modern objects, no bright white walls, no text overlays, no watermarks]
 ```
@@ -268,7 +256,8 @@ Focus on:
 
 ### C. Reference-preserving iteration
 
-Use I2I when a location is approved and the next task is:
+Use I2I for every reference-guided location prompt. A common case is an
+approved location whose next iteration needs:
 - new time of day
 - weather shift
 - additional dressing
@@ -278,34 +267,28 @@ Use I2I when a location is approved and the next task is:
 ## Full example: Maritime captain's cabin
 
 ```text
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)
 
-=== LOCATION ===
+Location:
 A cramped below-deck captain's cabin on an old wooden sailing ship.
 
-=== ERA & WORLD RULES ===
+Era and world rules:
 Early 18th-century Golden Age of Piracy, Caribbean privateer vessel, grounded period maritime realism, lantern-and-candle era, no modern objects.
 
-=== SET DRESSING & OBJECTS ===
+Set dressing and objects:
 A large weathered sea-chart pinned to the rough plank back wall above a heavy waxed-oak table strewn with brass navigation instruments including dividers and a sextant. A gimbaled brass lantern hangs low in the upper frame. Tarred coiled rope and a barrel fill the foreground edges. Low heavy-beamed ceiling, rough plank walls and floor, hand-hewn waxed oak grain, tarred rough hemp, tarnished brass, brittle creased parchment, coarse canvas.
 
-=== STYLE ===
+Style:
 Photorealistic cinematic movie still, grounded period maritime realism, naturalistic editorial reference, painterly low-key cinematography, fine low-intensity 35mm grain, organic texture.
 
-=== LIGHTING & ATMOSPHERE ===
+Lighting and atmosphere:
 Mid-morning, calm weather, warm and enclosed tropical maritime atmosphere. Warm tungsten lantern as the single key practical from frame-left, soft Rembrandt pooling, deep shadow falloff into the corners, thin hard daylight slivers leaking through plank gaps. Color palette of aged oak brown, tarred black, oxidized brass amber, sun-bleached parchment cream, shadowed sea-grey — warm-leaning but desaturated, muted period grade. Drifting dust motes in the lantern beam, faint smoke haze, intimate and conspiratorial mood.
 
-=== COMPOSITION & LENS ===
+Composition and lens:
 Wide three-quarter interior establishing shot, eye-level, slow push-in feel. Shot on a modern digital cinema camera with vintage spherical prime lenses, 24mm, 2.39:1 Cinemascope. Gentle anamorphic horizontal flare off the lantern, soft bokeh, mild halation on the flame. Deep depth of field, bow-to-stern interior in focus, slight falloff only in the darkest corners.
 
-=== TEXT IN IMAGE ===
-None
-
-=== CONSTRAINTS ===
+Constraints:
 Quality: 4K, rich material realism, strong environmental storytelling, consistent period authenticity
 Negative: no people, no modern objects, no electric light fixtures, no plastic surfaces, no text overlays, no watermarks
 ```
@@ -321,34 +304,28 @@ The user provided a canonical pirate-era location example for this skill:
 The supplied sample prompt maps directly to the structure above:
 
 ```text
-=== INPUT REFERENCES ===
-None
-
-=== TASK TYPE ===
+Task:
 Text-to-Image (T2I)
 
-=== LOCATION ===
+Location:
 A cramped below-deck captain's cabin on an old wooden sailing ship.
 
-=== ERA & WORLD RULES ===
+Era and world rules:
 Early 18th-century Golden Age of Piracy, Caribbean privateer vessel, grounded period maritime realism, lantern-and-candle era, tropical maritime setting, no modern objects.
 
-=== SET DRESSING & OBJECTS ===
+Set dressing and objects:
 A large weathered sea-chart is pinned to the rough plank back wall above a heavy waxed-oak table strewn with brass navigation instruments including dividers and a sextant. A gimbaled brass lantern hangs low in the upper frame, swaying gently with ship motion. Tarred coiled rope and a barrel fill the foreground edges. Low heavy-beamed ceiling, rough plank walls and floor. Hand-hewn waxed oak grain, tarred rough hemp, tarnished brass, brittle creased parchment, coarse canvas.
 
-=== STYLE ===
+Style:
 Photorealistic cinematic movie still, grounded period maritime realism, painterly low-key cinematography, warm-leaning but desaturated muted period grade, fine low-intensity 35mm grain, organic texture.
 
-=== LIGHTING & ATMOSPHERE ===
+Lighting and atmosphere:
 Mid-morning, calm weather, warm and enclosed tropical maritime atmosphere. Warm tungsten lantern as the single key practical from frame-left, soft Rembrandt pooling, deep shadow falloff into the corners, thin hard daylight slivers leaking through plank gaps. Color palette of aged oak brown, tarred black, oxidized brass amber, sun-bleached parchment cream, shadowed sea-grey. Drifting dust motes in the lantern beam, faint smoke haze. Mood: enclosed, hushed, conspiratorial, weathered, anticipatory, intimate.
 
-=== COMPOSITION & LENS ===
+Composition and lens:
 Wide three-quarter interior establishing shot, eye-level, slow push-in feel. Shot on a modern digital cinema camera with vintage spherical prime lenses, 24mm, 2.39:1 Cinemascope. Gentle anamorphic horizontal flare off the lantern, soft bokeh, mild halation on the flame. Deep depth of field, bow-to-stern interior in focus, slight falloff in the darkest corners. In-camera practical lantern light with film emulation, slight chromatic aberration at the light edge, soft vignetting.
 
-=== TEXT IN IMAGE ===
-None
-
-=== CONSTRAINTS ===
+Constraints:
 Quality: 4K, rich material realism, strong environmental storytelling, consistent period authenticity
 Negative: no people, no modern objects, no electric light fixtures, no plastic surfaces, no bright white walls, no text overlays, no watermarks
 ```
