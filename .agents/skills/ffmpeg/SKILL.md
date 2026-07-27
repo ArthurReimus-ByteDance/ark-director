@@ -137,6 +137,61 @@ ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:no
 ffprobe -v quiet -print_format json -show_format -show_streams input.mp4
 ```
 
+### Generated-Video QA
+
+For AI-generated production assets, verify technical integrity and sample the
+story transitions before marking a take ready for review.
+
+```bash
+# Record actual streams, duration, frame rate, resolution, pixel format, codecs
+ffprobe -v quiet -print_format json -show_format -show_streams input.mp4
+
+# Decode the entire file; any output indicates an error
+ffmpeg -v error -i input.mp4 -f null -
+
+# Full-scene contact sheet sampled every two seconds
+ffmpeg -y -v error -i input.mp4 \
+  -vf "fps=1/2,scale=480:-1,tile=4x2" \
+  -frames:v 1 full-contact-sheet.jpg
+
+# Transition contact sheet starting at a known boundary
+ffmpeg -y -v error -ss 8 -i input.mp4 \
+  -vf "fps=1,scale=480:-1,tile=4x2" \
+  -frames:v 1 ending-contact-sheet.jpg
+```
+
+Choose sampling intervals that cover the opening, each major action or
+location transition, and the ending. Contact sheets support semantic review;
+they do not replace watching the video at normal speed.
+
+When native audio is requested, confirm an audio stream exists and compare
+important segments:
+
+```bash
+# First eight seconds
+ffmpeg -v info -t 8 -i input.mp4 -vn -af volumedetect -f null -
+
+# Final five seconds
+ffmpeg -v info -ss 10 -i input.mp4 -t 5 -vn -af volumedetect -f null -
+```
+
+Volume measurements can confirm a requested energy change, but they cannot
+prove that the music, ambience, or effects are creatively correct. Listen
+before approval and report measured loudness separately from subjective sound
+quality.
+
+For a 4K HEVC or 10-bit master, preserve the original file. If the review
+surface cannot play it reliably, create a separately named H.264 proxy rather
+than replacing the master:
+
+```bash
+ffmpeg -i master-4k.mp4 \
+  -vf "scale=1920:-2" \
+  -c:v libx264 -crf 22 -preset medium -pix_fmt yuv420p \
+  -c:a aac -b:a 160k -movflags +faststart \
+  review-proxy-1080p.mp4
+```
+
 ## Remotion-Specific Patterns
 
 ### Video Speed Adjustment for Remotion
