@@ -284,6 +284,45 @@ Constraints: keep Girl @Image 1's face and clothing stable without deformation; 
 - **First + last frame (FLF2V)**: two images lock start and end visual state.
 - **Multimodal reference-to-video (R2V)**: 0-9 images + 0-3 videos + 0-3 audio as references.
 
+### Storyboard-to-video handoff
+
+Treat a storyboard panel as a derivative composition and continuity anchor, not
+as the canonical identity source. Character, location, and prop sheets remain
+the source of truth. Require explicit approval before using a panel as a video
+input, and verify that its recorded source-asset variants and hashes still
+match the current approved assets.
+
+Choose the mode from the production need:
+
+| Need | Mode | Reference rule |
+|---|---|---|
+| Reproduce the exact approved opening frame | I2V | Submit only the promoted panel as `first_frame` |
+| Lock approved start and end states | FLF2V | Submit only the two promoted panels as `first_frame` and `last_frame` |
+| Preserve explicit character, location, and prop references while following storyboard composition | R2V | Submit the approved panel and the smallest sufficient canonical asset set as `reference_image` inputs |
+
+These modes are mutually exclusive. Do not combine I2V or FLF2V frame roles
+with an R2V bundle unless the live model and tool explicitly confirm that
+combination.
+
+For R2V, index the panel and canonical assets separately:
+
+```text
+Asset preparation:
+@Image 1: approved storyboard panel — composition, blocking, lighting, and visible state
+@Image 2: approved character sheet — identity and wardrobe only
+@Image 3: approved location sheet — geometry and production design only
+@Image 4: approved prop sheet — shape, materials, and markings only
+```
+
+Bind the panel where composition matters and each canonical asset where its
+identity must persist. If an asset changed after the panel was generated,
+return the panel to review instead of silently combining stale composition with
+new identity. Omit rough boards, contact sheets, and control diagrams from the
+request; translate their useful choreography to text.
+
+Record the chosen mode, ordered reference roles, paths, hashes, selected
+variants, and approval states in the shot manifest before submission.
+
 ### Model IDs
 | Variant | Model ID |
 |---|---|
@@ -315,6 +354,10 @@ Model IDs are version-dated and change on release. Always copy the live ID from 
 
 ### Consistency rules
 - Lock character sheets, prop sheets, and scene sheets with Seedream before spending video credits.
+- Generate storyboard panels from those approved assets when composition,
+  blocking, or shot-to-shot continuity must be reviewed before motion.
+- Promote only approved panels to video keyframes; a panel still in `review` is
+  not a production video input.
 - Reuse the same reference bundle across every shot in a scene (seed guidance above).
 - Preserve a written locked-decisions and requested-delta record for every retry.
 - Change only one of {prompt wording, reference bundle, motion design} per retry when practical.

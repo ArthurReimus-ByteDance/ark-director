@@ -1,0 +1,69 @@
+{
+  "skill_name": "seedream-storyboard",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a Seedream storyboard plan and exact prompts for a 15-second chase shot. A rider on a giant eagle flees through a rainforest, a serpent emerges behind them, they weave through vines, and the rider reaches a beach while the serpent stops at the tree line. Use 16:9 and do not invent timestamps.",
+      "expected_output": "A multi-panel continuity board that splits the action into decisive states, preserves lead-pursuer order and the forest boundary, and provides exact Seedream prompts without mandatory timecodes.",
+      "files": [],
+      "expectations": [
+        "The output creates more than one panel because the shot contains several meaningful state changes.",
+        "The output establishes the eagle ahead of the serpent and keeps the travel direction stable.",
+        "The output makes the serpent stop at the inland tree line and remain absent from beach panels.",
+        "The output does not add second-level timestamps.",
+        "Each panel prompt describes one frozen decisive moment."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Generate one coherent set of six storyboard images from my character, location, and prop references. Use Seedream 5.0 Pro and return all six images in one API call.",
+      "expected_output": "A capability-aware response that explains Pro is single-image output, then either switches to a configured sequence-capable Seedream model or generates the Pro panels individually without inventing a binding.",
+      "files": [],
+      "expectations": [
+        "The output does not claim that Seedream 5.0 Pro supports six-image batch output.",
+        "The output offers a configured Lite or 4.x sequence path or individual Pro calls.",
+        "The output checks that references plus generated outputs remain within the selected model limit.",
+        "The output preserves explicit roles for character, location, and prop references."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use my three-panel character sheet, church reference, and hand-drawn blocking sketch to write the prompt for a close confrontation. The sketch is layout-only and its colored boxes, arrows, and labels must not appear. The character sheet includes three visible copies of the same person.",
+      "expected_output": "A reference preflight and exact prompt that identifies leakage risks, assigns each reference a single role, and prevents sketch or character-sheet artifacts from appearing in the frame.",
+      "files": [],
+      "expectations": [
+        "The output identifies the three-panel character sheet as a possible duplicate-face leakage risk.",
+        "The output recommends a clean single-subject derivative or crop when needed.",
+        "The output uses the blocking sketch only for composition.",
+        "The prompt explicitly removes sketch lines, arrows, colored boxes, and labels.",
+        "The prompt binds every reference with an exact @Image N token."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Revise panel p030. The camera, pose, character identity, left-to-right screen direction, lighting, and church geometry are approved. Change only the broken oil vial so it lies behind the hunter's right boot. Prepare a precise Seedream edit prompt.",
+      "expected_output": "A narrow local-edit contract that changes only the prop position and preserves every approved property.",
+      "files": [],
+      "expectations": [
+        "The output separates the requested delta from the locked decisions.",
+        "The output uses a point or bounding-box edit path when coordinates are available.",
+        "The acceptance criteria place the vial behind the hunter's right boot.",
+        "The output preserves camera, pose, identity, screen direction, lighting, and geometry.",
+        "The output does not mark the edited panel approved without explicit user approval."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Generate a storyboard panel from approved character, kitchen-location, and branded-jar sheets, then prepare its metadata for later video use. The character and location are approved, but the jar sheet is still in review. Do not generate the video.",
+      "expected_output": "An asset-bound storyboard package that records canonical source provenance and leaves video handoff ineligible because one source asset is not approved.",
+      "files": [],
+      "expectations": [
+        "The output binds the character, location, and jar to separate exact @Image N roles.",
+        "The output records each source path, role, selected variant, approval state, and SHA-256.",
+        "The output leaves the generated panel in review.",
+        "The output sets video handoff eligibility to false because the jar is unapproved.",
+        "The output does not invoke or claim video generation."
+      ]
+    }
+  ]
+}

@@ -172,16 +172,59 @@ projects/
 
 ```mermaid
 flowchart TD
-  E[elements/ - reusable Elements] -->|reference| S
+  E[elements/ - canonical characters, locations, props] -->|reference| S
   S[scenes/scene-N - scene definition] -->|break into| SH[shots/sNN_shNNN - shot definition]
-  SH -->|keyframe| IMG1[assets/image/storyboard]
+  E -->|identity, geometry, prop references| IMG1[assets/image/storyboard]
+  SH -->|panel plan| IMG1
+  IMG1 -->|review and explicit approval| KF[approved video keyframe]
   SH -->|generate video| VID[assets/video/shots]
   SH -->|generate audio| AUD[assets/audio/dialogue]
-  IMG1 -->|image-to-video| VID
+  KF -->|I2V, FLF2V, or R2V composition anchor| VID
   VID -->|assemble| R[renders/ - final deliverable]
   AUD -->|mix| R
-  E -->|consistency ref| VID
+  E -->|R2V canonical references| VID
 ```
+
+### Storyboard-to-video handoff
+
+Use the project-local `seedream-storyboard` skill to create or revise
+storyboard panels when a video depends on visualized composition, blocking, or
+continuity. Coordination belongs in this project contract; the storyboard skill
+remains independently usable.
+
+Treat references in this order:
+
+1. **Elements are canonical** — approved character, location, and prop assets
+   define identity, geometry, materials, and persistent design.
+2. **Storyboard panels are derivative** — they combine canonical Elements with
+   shot composition, staging, lighting, and visible state.
+3. **Video keyframes are approved promotions** — only a panel that has passed
+   storyboard and visual-anchor review may become a video input.
+
+Choose one Seedance image mode per generation:
+
+| Need | Mode | Image bundle |
+|---|---|---|
+| Lock the exact opening composition | I2V | One approved keyframe as `first_frame` |
+| Lock exact opening and ending states | FLF2V | Two approved keyframes as `first_frame` and `last_frame` |
+| Keep canonical assets explicit while using storyboard composition | R2V | Approved panel plus the smallest sufficient character, location, and prop set as `reference_image` inputs |
+
+Do not mix I2V/FLF2V frame roles with an R2V reference bundle unless the live
+model and tool explicitly support that combination. In R2V, assign stable
+`@Image N` indices and repeat each applicable binding inside the relevant shot.
+
+Before video submission:
+
+- require explicit approval or `selected_variant` for every storyboard panel
+  used as a video input;
+- verify the panel's recorded source asset paths, selected variants, and hashes
+  still match the current approved Elements;
+- return the panel to `review` if any source Element changed after generation;
+- omit rough or control-only boards from the request and translate their
+  choreography into text;
+- record the chosen mode, ordered image roles, panel path/hash, canonical
+  Element paths/hashes, and approval status in `shot.md`;
+- respect the live reference-count and face-input restrictions.
 
 ### Folder & project naming
 

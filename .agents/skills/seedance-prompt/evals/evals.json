@@ -46,6 +46,19 @@
         "The output recommends cleaning or replacing the reference rather than relying only on negative constraints.",
         "The output preserves identity traits while removing the conflicting visual effects."
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "Prepare a Seedance video request from an approved storyboard panel plus approved character, kitchen-location, and branded-jar sheets. Identity must remain explicit, but the opening frame does not need pixel-perfect locking. The storyboard manifest records an older rejected jar variant. Decide the image mode and perform the handoff preflight.",
+      "expected_output": "A blocked R2V handoff that treats the storyboard as a composition anchor, keeps canonical assets separate, and returns the stale panel to review until it is regenerated or corrected against the approved jar.",
+      "files": [],
+      "expectations": [
+        "The output selects R2V rather than mixing first_frame with reference_image roles.",
+        "The output assigns separate indexed roles to the panel, character, location, and prop assets.",
+        "The output identifies the rejected jar variant as stale provenance.",
+        "The output returns the dependent panel to review and does not submit video generation.",
+        "The output requires paths, hashes, selected variants, roles, and approval states in the shot manifest."
+      ]
     }
   ]
 }
