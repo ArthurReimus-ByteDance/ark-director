@@ -64,18 +64,30 @@ flowchart TD
 ## Step 1 — Write the VFX prompt
 
 Use the `seedance-vfx-prompt` skill to write the prompt. The prompt must follow
-the `@source:` lock-header structure with all applicable sections:
+the natural-language heading structure with all applicable sections:
 
-```
-@source: [source clip description]
-=== LOCKS ===
-=== CHANGE ===
-=== NEW WORLD ===
-=== LIGHTING (embedded) ===
-=== SPACE (layered) ===
-=== TIMING === (if applicable)
-=== AUDIO (diegetic only) ===
-=== GUARDS ===
+```text
+Asset preparation:
+@Video 1: source clip — [subject, action, camera motion, duration]
+@Image 1: [element reference] — [role]
+
+Subject definitions:
+Define the [features] in @Video 1 as [Label]
+
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify [what changes] at [timestamp]. Preserve [locks].
+
+[New world — full description of the replacement or added environment/element]
+
+Lighting: [embedded lighting]
+Space: [foreground, midground, background depth]
+Timing: [if applicable]
+Audio: [diegetic only]
+
+Quality and constraints:
+Quality: photoreal, 4K, [look/grade]
+Constraints: [NON-IP, face protection, no-warp, camera-motion lock]
 ```
 
 Pass the user's `change_description` to the prompt skill. The prompt skill will
@@ -92,8 +104,9 @@ Before submitting, verify:
    file exists under `projects/<project>/elements/`. Each reference should be
    a character sheet, location sheet, or prop sheet image.
 3. **Prompt is complete** — run through the VFX prompt checklist from
-   `seedance-vfx-prompt` (all applicable sections present, `@source:` header
-   first, face protection in guards if faces are present).
+   `seedance-vfx-prompt` (all applicable sections present, `Asset preparation:`
+   first with `@Video 1` source clip, face protection in constraints if faces
+   are present).
 4. **4K check** — if the source clip contains a human face, `resolution` must
    be `4k`. Only allow `1080p` for pure landscape/environment shots with no
    human faces.
@@ -155,7 +168,7 @@ Key parameters for VFX:
 - **`resolution = "4k"`** — face protection; preserves skin texture, prevents
   waxy warping.
 - **`generate_audio = true`** — Seedance 2.0 native audio. The prompt's
-  `=== AUDIO (diegetic only) ===` section guides the audio generation.
+  `Audio:` section guides the audio generation.
 - **`return_last_frame = true`** — returns the last frame image, enabling
   shot chaining for multi-shot VFX sequences.
 - **`safety_identifier`** — set to `<project>-<scene>-<shot>` for
@@ -338,9 +351,9 @@ Also write a copy at the shot level:
 projects/<project>/scenes/<scene>/shots/<shot>/<shot>_prompt.md
 ```
 
-The file is plain Markdown containing the full VFX prompt text (the `@source:`
-header through `=== GUARDS ===`), human-readable and shareable without parsing
-YAML frontmatter.
+The file is plain Markdown containing the full VFX prompt text (from
+`Asset preparation:` through `Quality and constraints:`), human-readable and
+shareable without parsing YAML frontmatter.
 
 ## Step 8 — Report results
 
@@ -369,12 +382,12 @@ If the task failed, report:
 
 | Error | Cause | Action |
 |---|---|---|
-| Content safety rejection | Source clip or prompt flagged by moderation | Review source clip content; simplify the `=== NEW WORLD ===` description; remove any borderline language |
+| Content safety rejection | Source clip or prompt flagged by moderation | Review source clip content; simplify the `New world:` description; remove any borderline language |
 | Invalid reference format | Video URL unreachable, image not valid PNG/JPEG | Verify file paths; re-encode images as PNG; use `kind: "base64"` for local files |
-| Prompt too long | Exceeds 4000 character limit | Condense `=== NEW WORLD ===` and `=== LIGHTING ===` sections; remove redundant detail |
+| Prompt too long | Exceeds 4000 character limit | Condense `New world:` and `Lighting:` sections; remove redundant detail |
 | Task timeout / expired | `execution_expires_after` too short | Resubmit with `execution_expires_after: 7200` (2 hours) |
-| Face warp in output | Resolution too low or face protection not in guards | Ensure `resolution: "4k"` and face protection guard is present; resubmit |
-| Camera motion drift | Camera lock too vague in `=== LOCKS ===` | Specify exact motion type (handheld bob, lateral sway, tracking speed) and add "frame-for-frame" lock; resubmit |
+| Face warp in output | Resolution too low or face protection not in constraints | Ensure `resolution: "4k"` and face protection guard is present; resubmit |
+| Camera motion drift | Camera lock too vague in `Locks:` | Specify exact motion type (handheld bob, lateral sway, tracking speed) and add "frame-for-frame" lock; resubmit |
 
 Always surface the `task_id` in error reports — it is the reference for support
 and debugging.
@@ -417,8 +430,8 @@ Chaining procedure:
 2. On success, save the last-frame PNG to the shot's asset directory.
 3. For Shot 2, submit the source clip as `reference_video` AND the last-frame
    PNG as an image with `role: "first_frame"`.
-4. In Shot 2's prompt `@source:` header, note that the first frame is inherited
-   from Shot 1's last frame.
+4. In Shot 2's prompt `Asset preparation:` section, note that the first frame
+   is inherited from Shot 1's last frame.
 5. Repeat for each subsequent shot.
 
 This ensures visual continuity across cuts — the environment and subject
@@ -428,7 +441,7 @@ position carry forward seamlessly.
 
 Before declaring a VFX shot complete, verify:
 
-- [ ] **Prompt written** — full `@source:` lock-header structure, all applicable
+- [ ] **Prompt written** — full natural-language heading structure, all applicable
       sections, VFX prompt checklist passed
 - [ ] **4K resolution** — if faces or fine detail are present
 - [ ] **`return_last_frame: true`** — if chaining to a subsequent shot

@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-prompt
-description: Write structured Seedance 2.0 video-to-video VFX prompts using the @source lock-header pattern, the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting, layered space, timing triggers, diegetic audio, and 4K face protection. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements, rebuild environments on moving camera, or apply any footage-driven visual effect with Seedance.
+description: Write structured Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar, the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers, timed camera moves synced to dialogue (crash zoom, smooth push-in, reveal pull-back, lip-sync), diegetic audio, 4K face protection, photoreal creature integration with species behavior and texture-reference fallback, prepended-intro duration budgeting, source-clip inspection, and iteration discipline. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements or creatures, rebuild environments on moving camera, sync camera moves to spoken lines, or apply any footage-driven visual effect with Seedance.
 ---
 
 # Seedance VFX Prompt
@@ -45,7 +45,10 @@ motion) and describe only what should change. Never write a VFX prompt that
 re-describes the entire scene from scratch — that tells the model to ignore the
 source footage.
 
-The `@source:` lock-header pattern enforces this discipline.
+The `@Video N` source-clip binding plus the `Locks:` heading enforce this
+discipline. VFX prompts use the same natural-language heading style as the
+general `seedance-prompt` skill — short descriptive words followed by a colon,
+never decorative delimiters.
 
 A VFX prompt is only as good as the source footage. **Shoot each clip already
 knowing the effect you want** — stable, well-lit, single-subject footage with a
@@ -53,65 +56,140 @@ clear, describable camera motion locks more reliably than improvised footage.
 That one habit makes every downstream prompt easier to write and more likely to
 hold.
 
-## Mandatory prompt structure — VFX Edit
+## Recommended prompt structure — VFX Edit
 
-Every Seedance VFX prompt must be assembled in this order. Do not skip
-sections that apply to the task.
+Every Seedance VFX prompt follows the same heading convention as the general
+`seedance-prompt` skill: short natural-language headings with a colon, no
+decorative delimiters. Assemble in this order. Omit a heading only when it does
+not apply to the task.
 
 ```text
-@source: [describe the source clip — what is in it, what the camera does]
+Asset preparation:
+@Video 1: source clip — [subject, action, camera motion, duration]
+@Image 1: [element reference] — [role: character/location/prop sheet]
+@Image 2: [texture reference] — [role: texture only, ignore background/lighting]
 
-=== LOCKS ===
-[what must be preserved from the source]
+Subject definitions:
+Define the [2-3 core static features] in @Video 1 as [Subject_Label]
 
-=== CHANGE ===
-[what should change, with timestamp if the change is localized]
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify [what changes] at [timestamp]. Preserve [locks].
 
-=== NEW WORLD ===
-[full description of the replacement or added environment/element]
+[New world — full description of the replacement or added environment/element]
 
-=== LIGHTING (embedded) ===
-[lighting that lives inside the world, never a pasted-on layer]
+Lighting: [lighting that lives inside the world, never a pasted-on layer]
 
-=== SPACE (layered) ===
-[foreground, midground, background depth]
+Space: [foreground, midground, background depth]
 
-=== TIMING (if applicable) ===
-[when the change triggers, how it progresses]
+Timing: [when the change triggers, how it progresses — if applicable]
 
-=== AUDIO (diegetic only) ===
-[sound that physically exists in the new world]
+Audio: [diegetic sound that physically exists in the new world]
 
-=== GUARDS ===
-[NON-IP, face protection, no-warp constraints]
+Quality and constraints:
+Quality: photoreal, 4K, [look/grade]
+Constraints: [NON-IP, face protection, no-warp, camera-motion lock, etc.]
 ```
 
-## 1. @source: lock-header
+## 1. Asset preparation (always first)
 
-**Always first. Always one line.** This is the single most important element of
-a VFX prompt — it tells the model that the source clip is the reference to
-match.
+List every reference asset the user provides, using the same `@Video N`,
+`@Image N`, `@Audio N` index convention as the general `seedance-prompt` skill.
+For VFX, the source clip being edited is always `@Video 1`.
 
 ```text
-@source: A man in a yellow raincoat walks down a wet city sidewalk at night, handheld camera following from behind, slight vertical bob, 5 seconds.
+Asset preparation:
+@Video 1: source clip — a man in a yellow raincoat walks down a wet city sidewalk at night, handheld camera following from behind, slight vertical bob, 5 seconds.
+@Image 1: character sheet — man's face and wardrobe reference.
+@Image 2: texture reference — real fur/face photo for the creature (appearance and texture only; ignore background and lighting, do not use for the environment).
 ```
 
 Rules:
+- The source clip is `@Video 1`. Use `Strictly edit @Video 1` in the Prompt
+  section to declare the editing mode — do not write "Reference @Video 1" or
+  the model treats it as a multimodal reference task, not an edit.
 - Describe the **subject, action, camera motion, and duration** of the source
-  clip in one or two sentences.
-- Do not describe what you want to change here — that goes in `=== CHANGE ===`.
+  clip in the role description.
 - If the source clip has notable motion (handheld, whip-pan, dolly), state it
   explicitly so the model knows to transfer that motion to the new world.
+- Element references (character sheets, location sheets, prop sheets) are
+  `@Image N` with a role description. These provide identity, not pixels.
+- A texture reference for a creature or material is also `@Image N`, but its role
+  must say **texture only** — "appearance and fur/skin texture reference only;
+  ignore the photo's background and lighting, do not use it for the
+  environment."
 
-## 2. === LOCKS ===
+Before writing the asset preparation for a clip you can open, **inspect it**:
+probe its duration, fps, and aspect ratio, and extract a few frames. Build the
+`@Video 1` role description and the prompt duration from what the footage
+actually shows — subject, wardrobe, framing, camera move, time of day, key light
+direction — not from the user's one-line summary. Set the prompt duration to the
+probed runtime by default. If no source clip is available, ask what footage
+they're starting from before writing.
 
-Declare what must be preserved from the source footage. This prevents the model
-from reinterpreting the subject or camera.
+## 2. Subject definitions
+
+Define every distinct subject that appears in the references using the `Define`
+keyword, exactly as the general `seedance-prompt` skill requires. Use 2-3 clear,
+stable static features (clothing, hairstyle, appearance, category) to uniquely
+identify each subject.
 
 ```text
-=== LOCKS ===
-Lock the man's face, body, raincoat, and walking cadence exactly.
-Lock the camera's handheld follow motion and vertical bob frame-for-frame.
+Subject definitions:
+Define the man in the yellow raincoat and dark boots in @Video 1 as Man
+```
+
+For single subjects across multiple references:
+
+```text
+Subject definitions:
+Define the man with short dark hair and a yellow raincoat in @Video 1 and @Image 1 as Man
+```
+
+Rules:
+- Static features only: clothing, hairstyle, build, species. Do not use mutable
+  attributes like expression or pose.
+- Reuse the same label in every shot and section that features that character.
+- For simple scenarios without definitions, use `<Subject>@Video 1` inline to
+  bind subject to asset (e.g. `Man@Video 1`).
+- Do not use Asset IDs directly; always use `@Video 1` / `@Image 1`.
+
+## 3. Prompt and task type
+
+Start the main prompt by declaring the editing mode. VFX is always
+`Video Editing`.
+
+```text
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify [Original] in it to [New]. [Unmentioned parts stay unchanged.]
+```
+
+For VFX, the editing pattern is:
+
+```text
+Strictly edit @Video 1, and modify the city sidewalk and buildings to a dense alien jungle path at 0:00. The man continues walking the same path; only the environment changes.
+```
+
+If adding an element rather than replacing:
+
+```text
+Strictly edit @Video 1. At 0:02, add a small bioluminescent creature that emerges from the foliage on the right and follows the man for the remaining 3 seconds. The man does not notice it.
+```
+
+Then continue with the new-world description, lighting, space, timing, and audio
+as natural-language prose sections under their headings — not as delimited
+blocks.
+
+## 4. Locks
+
+Declare what must be preserved from the source footage. This prevents the model
+from reinterpreting the subject or camera. State the locks in natural language
+under the `Prompt:` heading or as a dedicated `Locks:` paragraph.
+
+```text
+Locks: Man@Video 1's face, body, raincoat, and walking cadence locked exactly.
+Camera handheld follow motion and vertical bob locked frame-for-frame.
 ```
 
 Lock categories:
@@ -120,20 +198,18 @@ Lock categories:
 - **Camera**: motion type (handheld, dolly, static, whip-pan), framing, lens, bob
 - **Continuity**: anything that must match a prior or subsequent shot
 
-## 3. === CHANGE ===
+## 5. Change
 
 Name the exact change and **when it happens** if it is localized in time.
 
 ```text
-=== CHANGE ===
 At 0:00, replace the city sidewalk and buildings with a dense alien jungle path.
-The man continues walking the same path; only the environment changes.
+Man@Video 1 continues walking the same path; only the environment changes.
 ```
 
 ```text
-=== CHANGE ===
 At 0:02, a small bioluminescent creature emerges from the foliage on the right
-and follows the man for the remaining 3 seconds. The man does not notice it.
+and follows Man@Video 1 for the remaining 3 seconds. The man does not notice it.
 ```
 
 Rules:
@@ -141,39 +217,36 @@ Rules:
 - State whether the subject reacts or does not react.
 - If the change is global (entire environment swap), say so at `0:00`.
 
-## 4. === NEW WORLD ===
+## 6. New world
 
 Describe the replacement or added environment/element in full detail. This is
 where cinematic richness lives.
 
 ```text
-=== NEW WORLD ===
-A dense alien jungle path, towering bioluminescent fungi in deep blues and
-purples, mist rolling low across the ground, enormous fern-like fronds arching
-overhead. The path is a narrow dirt trail, wet and glistening. Distant
-waterfall sounds. The atmosphere is humid and otherworldly.
+New world: A dense alien jungle path, towering bioluminescent fungi in deep
+blues and purples, mist rolling low across the ground, enormous fern-like
+fronds arching overhead. The path is a narrow dirt trail, wet and glistening.
+Distant waterfall sounds. The atmosphere is humid and otherworldly.
 ```
 
 For element additions (Level 2), describe only the added element:
 
 ```text
-=== NEW WORLD ===
-A small bioluminescent creature, roughly the size of a cat, with translucent
-skin showing glowing blue veins, six legs, large curious eyes, and a
-sinuous tail. It moves with a skittish, darting gait, low to the ground.
+New world: A small bioluminescent creature, roughly the size of a cat, with
+translucent skin showing glowing blue veins, six legs, large curious eyes, and
+a sinuous tail. It moves with a skittish, darting gait, low to the ground.
 ```
 
-## 5. === LIGHTING (embedded) ===
+## 7. Lighting (embedded)
 
 **Lighting must live inside the world.** Never describe lighting as a layer
 pasted on top of the footage — the model will produce a flat, artificial look.
 
 ```text
-=== LIGHTING (embedded) ===
-The bioluminescent fungi cast cool blue light upward onto the man's raincoat
-and face from below. Warm amber light leaks from distant fire-spores deep in
-the jungle, creating a warm-cool contrast. The mist catches the light as a
-soft volumetric haze. No flat ambient fill.
+Lighting: The bioluminescent fungi cast cool blue light upward onto Man@Video 1's
+raincoat and face from below. Warm amber light leaks from distant fire-spores
+deep in the jungle, creating a warm-cool contrast. The mist catches the light
+as a soft volumetric haze. No flat ambient fill.
 ```
 
 Embedded lighting rules:
@@ -184,15 +257,56 @@ Embedded lighting rules:
   reflections on wet surfaces, shadows cast by foreground elements).
 - Never say "cinematic lighting" or "dramatic lighting" alone — name the source.
 
-## 6. === SPACE (layered) ===
+### The integration fork
+
+Decide explicitly which of these two paths the shot takes — it changes the
+lighting instruction and the identity risk. State the choice in the `Lighting:`
+section.
+
+- **Preserve the subject's lighting; grade only the new elements.** Lock the
+  subject's original key light; light and grade the added environment/creature
+  to match that existing key so they integrate. Lowest identity risk — use this
+  as the default.
+- **Relight the whole frame under one look.** Subject included. Use this for a
+  unified cinematic or commercial grade. Higher risk to the face — keep
+  identity, expression, and wardrobe explicitly locked in the `Locks:` section
+  while only lighting and grade change.
+
+### The "looks pasted in" failure
+
+Color matching alone is **not enough** to make a preserved subject sit in a new
+world — that is the most common composite failure. When integrating a subject
+(or a creature) into a plate, go beyond color with this recipe:
+
+- **Light:** same key direction (name it — screen-left or screen-right), same
+  softness, same shadow density and direction across the subject.
+- **Environmental bounce:** let the world spill onto the subject — cool skylight
+  from above, a warm bounce from sunlit ground or foliage, subtle ambient
+  occlusion where forms meet.
+- **Optics & atmosphere:** match lens character and micro-contrast; add a touch
+  of the scene's atmospheric haze over the subject so they aren't unnaturally
+  crisp against a hazy background; match depth of field, focus falloff, and film
+  grain to the rest of the frame.
+- **Edges & grounding:** remove hard cut-out edges, halos, and mismatched rims;
+  ground the subject with believable depth so they occupy the same space.
+
+State the time of day and key direction concretely: "soft, diffused midday
+daylight with the key from screen-right." "Softer" means a larger, more diffuse
+source — gentle soft-edged shadows, low contrast, smooth highlight rolloff,
+light haze. **Warm, directional daylight worlds are safer** for face/identity
+consistency than night or neon — those force a full relight of the subject and
+raise drift risk. Flag this tradeoff and bake the relight instruction in when
+the user wants night or neon anyway.
+
+## 8. Space (layered)
 
 Build depth with explicit foreground, midground, and background layers.
 
 ```text
-=== SPACE (layered) ===
-Foreground: wet fern fronds and low mist passing close to camera as it moves.
-Midground: the man on the jungle path, the bioluminescent fungi lining both sides.
-Background: towering fungal columns receding into blue-black fog, distant waterfall.
+Space: Foreground — wet fern fronds and low mist passing close to camera as it
+moves. Midground — Man@Video 1 on the jungle path, the bioluminescent fungi
+lining both sides. Background — towering fungal columns receding into blue-black
+fog, distant waterfall.
 ```
 
 Layered space rules:
@@ -202,20 +316,67 @@ Layered space rules:
 - Background provides atmosphere and scale, often partially obscured by fog,
   mist, or darkness.
 
-## 7. === TIMING (if applicable) ===
+## 9. Timing (if applicable)
 
 For sequential or progressive VFX, describe when each event triggers and how it
 develops.
 
 ```text
-=== TIMING ===
-0:00 — Environment is fully replaced; man is already on the jungle path.
+Timing:
+0:00 — Environment is fully replaced; Man@Video 1 is already on the jungle path.
 0:02 — Creature emerges from right foliage, initially just glowing eyes.
 0:02.5 — Creature fully visible, begins following at a distance of 2 meters.
 0:04 — Creature ducks back into foliage as the man turns a corner.
 ```
 
-## 8. === AUDIO (diegetic only) ===
+### Timed camera moves synced to dialogue
+
+A crash zoom or smooth push-in landing on a beat is a recurring payoff. Anchor
+it **two ways at once** so it lands even if Seedance's internal timing drifts:
+a semantic cue and a numeric cue.
+
+- **Semantic:** `At the line "<exact words>," the camera <snaps into a hard
+  crash zoom | begins a smooth, steady push-in>…` Requires `SFX and source
+  dialogue only` in the audio section so the talk track survives.
+- **Numeric:** `At about <T> seconds… the camera…` Derive `T` from the source
+  audio — measure the timecode of the spoken line and convert.
+- **Crash zoom** = fast hard punch-in; **smooth push-in** = slow steady glide,
+  no snap. Match the user's word.
+- If a landmark or subject must stay visible **through** the move, say so
+  explicitly — the camera pushes toward the element, keeping the landmark in
+  frame throughout, never cropping it.
+- Leave enough tail after the trigger for the payoff to play (a creature slowly
+  turning to camera needs ~2–3s). If the clip is short, fire the zoom on the
+  first word of the line rather than after it.
+
+### Reveal pull-back (the outward move)
+
+The mirror of the push-in: open tight on the **added** element in isolation —
+a long-telephoto, compressed framing of the creature or effect with the subject
+out of frame — then move outward to land on the real plate.
+
+- **Hard / snap zoom-out** = fast punch outward, abrupt.
+- **Smooth pull-back** = slow steady decompression, no snap.
+
+Anchor the landing the same two ways (semantic + numeric). Critically, demand
+a **100% match of the source composition** at the landing: name the matched
+attributes — same angle, headroom, horizon, lens character — or the model
+lands on a near-miss framing that no longer cuts against the original. After
+the landing, hand off to the preserved take and keep the source's own camera
+motion running.
+
+### Preserving lip-sync to a known line
+
+When the payoff is the subject's mouth matching a specific line, quote it
+**verbatim** and anchor it twice: once inside the change or action
+("…lips matching the source exactly, saying clearly: '<line>'…") and once in
+the audio section. Require `SFX and source dialogue only` so the talk track
+survives, and add "lips matching the source exactly" to the `Locks:` section.
+Then check the line against the surviving dialogue window (see **Duration
+discipline**) — a line that runs ~6s cannot sit in a 5s tail. If it doesn't fit,
+resolve the runtime before delivering; do not ship a prompt that cannot lip-sync.
+
+## 10. Audio (diegetic only)
 
 Seedance 2.0 generates native audio with video. In VFX, **only diegetic sound**
 — sound that physically exists in the new world — should be requested. Do not
@@ -223,10 +384,10 @@ request non-diegetic music or narration unless the source clip already contains
 it and must be preserved.
 
 ```text
-=== AUDIO (diegetic only) ===
-Jungle ambience: distant waterfall, dripping moisture, insect chirps, soft
-undergrowth crunching under the man's boots. The creature emits a faint
-chittering sound when it emerges. Wet footsteps preserved from source.
+Audio: Jungle ambience — distant waterfall, dripping moisture, insect chirps,
+soft undergrowth crunching under Man@Video 1's boots. The creature emits a
+faint chittering sound when it emerges. Wet footsteps preserved from source.
+SFX and source dialogue only.
 ```
 
 Diegetic audio rules:
@@ -236,18 +397,21 @@ Diegetic audio rules:
 - Do not request background music, score, or voiceover unless it is part of the
   source footage and must be locked.
 
-## 9. === GUARDS ===
+## 11. Quality and constraints
 
-Safety and quality constraints. Always include face protection when a human face
-is in the source clip.
+Close with image quality, style, and negative constraints. This section
+tightens the generation boundaries and holds the guards — NON-IP, face
+protection, no-warp, camera-motion lock.
 
 ```text
-=== GUARDS ===
-NON-IP: No recognizable real persons, no copyrighted characters, no brand logos.
-Face protection: the man's face must remain real human skin with visible pores,
-stubble texture, and natural catchlights in the eyes. Never waxy, smoothed,
-blurred, or warped. The jaw and lip sync must match the source frame-for-frame.
-No morphing artifacts at the boundary between the man and the new environment.
+Quality and constraints:
+Quality: photoreal, 4K, cinematic texture, natural colors, soft lighting.
+Constraints: NON-IP — no recognizable real persons, no copyrighted characters,
+no brand logos. Face protection — Man@Video 1's face must remain real human skin
+with visible pores, stubble texture, and natural catchlights in the eyes. Never
+waxy, smoothed, blurred, or warped. The jaw and lip sync must match the source
+frame-for-frame. No morphing artifacts at the boundary between the man and the
+new environment.
 ```
 
 Face protection is the most important guard for footage involving people:
@@ -281,43 +445,42 @@ The change happens at `0:00` and is global. The subject's identity,
 performance, and camera motion are fully locked.
 
 ```text
-@source: A woman in a red coat stands on a train platform, static camera, she
-looks left then right, 5 seconds.
+Asset preparation:
+@Video 1: source clip — a woman in a red coat stands on a train platform, static camera, she looks left then right, 5 seconds.
 
-=== LOCKS ===
-Lock the woman's face, red coat, hair, and body exactly.
-Lock her head-turn timing and the static camera framing.
+Subject definitions:
+Define the woman with the red coat and shoulder-length dark hair in @Video 1 as Woman
 
-=== CHANGE ===
-At 0:00, replace the train platform with an abandoned subway station flooded
-with knee-deep water. The woman stands on a raised section of platform above
-the water line.
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify the train platform to an abandoned subway station flooded with knee-deep water at 0:00. Woman@Video 1 stands on a raised section of platform above the water line. Unmentioned parts stay unchanged.
 
-=== NEW WORLD ===
-An abandoned subway station, tiled walls cracked and covered in moss, water
-reflecting dim emergency lighting, old turnstiles half-submerged in the
+Locks: Woman@Video 1's face, red coat, hair, and body locked exactly. Head-turn
+timing and the static camera framing locked frame-for-frame.
+
+New world: An abandoned subway station, tiled walls cracked and covered in moss,
+water reflecting dim emergency lighting, old turnstiles half-submerged in the
 foreground, a collapsed ceiling letting in a shaft of pale daylight from above.
 
-=== LIGHTING (embedded) ===
-A single emergency light on the far wall casts a flickering amber glow across
-the water surface. The daylight shaft from the collapsed ceiling provides a
-cool white key light on the woman from above-left. The water reflects and
+Lighting: A single emergency light on the far wall casts a flickering amber glow
+across the water surface. The daylight shaft from the collapsed ceiling provides
+a cool white key light on Woman@Video 1 from above-left. The water reflects and
 scatters the amber light across the lower walls.
 
-=== SPACE (layered) ===
-Foreground: submerged turnstile, rippling water surface close to camera.
-Midground: the woman on the raised platform, the tiled wall behind her.
-Background: dark tunnel mouth receding into black, faint amber reflection on
+Space: Foreground — submerged turnstile, rippling water surface close to camera.
+Midground — Woman@Video 1 on the raised platform, the tiled wall behind her.
+Background — dark tunnel mouth receding into black, faint amber reflection on
 the water fading to darkness.
 
-=== AUDIO (diegetic only) ===
-Water dripping echoing in the large space, a low electrical hum from the
-emergency light, distant rumble from somewhere deep in the tunnel. The woman's
-breath and the faint rustle of her coat preserved from source.
+Audio: Water dripping echoing in the large space, a low electrical hum from the
+emergency light, distant rumble from somewhere deep in the tunnel. Woman@Video 1's
+breath and the faint rustle of her coat preserved from source. SFX and source
+dialogue only.
 
-=== GUARDS ===
-NON-IP: No recognizable real persons, no copyrighted characters.
-Face protection: real human skin with pores and catchlights, never waxy or
+Quality and constraints:
+Quality: photoreal, 4K, cinematic texture, natural colors.
+Constraints: NON-IP — no recognizable real persons, no copyrighted characters.
+Face protection — real human skin with pores and catchlights, never waxy or
 warped. Lip and jaw sync must match source frame-for-frame.
 ```
 
@@ -330,51 +493,52 @@ Use sequential staging: introduce the element at a specific timestamp, let it
 develop, and resolve it before the end of the clip.
 
 ```text
-@source: A man sits at a wooden desk writing in a notebook, static medium shot,
-warm lamp light, 5 seconds.
+Asset preparation:
+@Video 1: source clip — a man sits at a wooden desk writing in a notebook, static medium shot, warm lamp light, 5 seconds.
 
-=== LOCKS ===
-Lock the man's face, hands, desk, notebook, pen, and the lamp light.
-Lock the static camera framing and the man's writing motion.
+Subject definitions:
+Define the man with short hair and a grey sweater in @Video 1 as Man
 
-=== CHANGE ===
-At 0:01, small glowing runes begin appearing on the notebook page under the
-man's pen as he writes. The runes spread gradually across the page. The man
-does not notice them. The desk and room do not change.
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1. At 0:01, add small glowing runes that begin appearing on the notebook page under Man@Video 1's pen as he writes. The runes spread gradually across the page. The man does not notice them. The desk and room do not change.
 
-=== NEW WORLD ===
-The runes are golden, luminous, floating slightly above the paper surface. They
-are angular geometric symbols that glow with a warm inner light and cast tiny
-shadows on the page. As more appear, they form connected lines like a circuit
-pattern. The ink from the pen transitions seamlessly into the glowing runes.
+Locks: Man@Video 1's face, hands, desk, notebook, pen, and the lamp light
+locked exactly. Static camera framing and the man's writing motion locked
+frame-for-frame.
 
-=== LIGHTING (embedded) ===
-The runes emit a warm golden glow that intensifies as more appear, casting a
-soft upward light on the man's hand and the underside of his jaw. The existing
-lamp light is preserved. The rune light creates a faint moving reflection on
-the pen's metal surface.
+New world: The runes are golden, luminous, floating slightly above the paper
+surface. They are angular geometric symbols that glow with a warm inner light
+and cast tiny shadows on the page. As more appear, they form connected lines
+like a circuit pattern. The ink from the pen transitions seamlessly into the
+glowing runes.
 
-=== SPACE (layered) ===
-Foreground: the man's writing hand, the pen, the glowing runes on the page.
-Midground: the desk surface, the lamp base.
-Background: the man's torso and face, the room behind him (unchanged, soft focus).
+Lighting: The runes emit a warm golden glow that intensifies as more appear,
+casting a soft upward light on Man@Video 1's hand and the underside of his jaw.
+The existing lamp light is preserved. The rune light creates a faint moving
+reflection on the pen's metal surface.
 
-=== TIMING ===
+Space: Foreground — Man@Video 1's writing hand, the pen, the glowing runes on
+the page. Midground — the desk surface, the lamp base. Background — Man@Video 1's
+torso and face, the room behind him (unchanged, soft focus).
+
+Timing:
 0:00 — No runes, normal writing.
 0:01 — First rune appears under the pen tip, faint.
 0:02 — Runes begin spreading, glow intensifies, connecting lines form.
 0:04 — The page is half-covered in a connected rune circuit, glow is steady.
-0:05 — The man lifts his pen; the runes remain glowing on the page.
+0:05 — Man@Video 1 lifts his pen; the runes remain glowing on the page.
 
-=== AUDIO (diegetic only) ===
-Pen scratching on paper preserved from source. A faint crystalline hum
+Audio: Pen scratching on paper preserved from source. A faint crystalline hum
 emanates from the runes, growing slightly louder as they spread. The hum is
-subtle, almost subliminal.
+subtle, almost subliminal. SFX only.
 
-=== GUARDS ===
-NON-IP: No recognizable real persons, no copyrighted symbols or languages.
-Face protection: real human skin with pores and catchlights, never waxy or
-warped. The man's hand and finger joints must remain anatomically correct.
+Quality and constraints:
+Quality: photoreal, 4K, cinematic texture, warm tones.
+Constraints: NON-IP — no recognizable real persons, no copyrighted symbols or
+languages. Face protection — real human skin with pores and catchlights, never
+waxy or warped. Man@Video 1's hand and finger joints must remain anatomically
+correct.
 ```
 
 ### Level 3 — Handheld Cinematic Showcase
@@ -388,61 +552,59 @@ new world. The handheld bob, sway, and forward movement must be preserved so
 the new environment feels like it was genuinely filmed with the same camera.
 
 ```text
-@source: Handheld camera follows a man walking through a parking garage,
-vertical bob and lateral sway, camera roughly 2 meters behind, fluorescent
-lights overhead, 5 seconds.
+Asset preparation:
+@Video 1: source clip — handheld camera follows a man walking through a parking garage, vertical bob and lateral sway, camera roughly 2 meters behind, fluorescent lights overhead, 5 seconds.
 
-=== LOCKS ===
-Lock the man's face, body, clothing, gait, and arm swing exactly.
-Lock the camera's handheld motion: the vertical bob frequency, the lateral
-sway, the forward tracking speed, the lens, and the framing distance — all
+Subject definitions:
+Define the man with dark hair and a dark jacket in @Video 1 as Man
+
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify the parking garage to a vast cathedral-like alien cavern at 0:00. Man@Video 1 walks the same path at the same pace; only the environment changes. Unmentioned parts stay unchanged.
+
+Locks: Man@Video 1's face, body, clothing, gait, and arm swing locked exactly.
+Camera handheld motion — the vertical bob frequency, the lateral sway, the
+forward tracking speed, the lens, and the framing distance — all locked
 frame-for-frame.
 
-=== CHANGE ===
-At 0:00, replace the parking garage with a vast cathedral-like alien cavern.
-The man walks the same path at the same pace; only the environment changes.
+New world: A vast cathedral-like cavern with walls of dark crystalline stone,
+towering bioluminescent mineral veins running in branching patterns up the walls
+like circulatory systems, a floor of smooth dark stone with shallow reflective
+water covering it ankle-deep. The ceiling is lost in darkness far above.
+Enormous crystal formations jut from the walls at angles, some glowing, some
+dark. The space feels ancient, vast, and alive.
 
-=== NEW WORLD ===
-A vast cathedral-like cavern with walls of dark crystalline stone, towering
-bioluminescent mineral veins running in branching patterns up the walls like
-circulatory systems, a floor of smooth dark stone with shallow reflective water
-covering it ankle-deep. The ceiling is lost in darkness far above. Enormous
-crystal formations jut from the walls at angles, some glowing, some dark.
-The space feels ancient, vast, and alive.
+Lighting: The bioluminescent mineral veins pulse with a slow deep-blue glow,
+casting moving light patterns across the water and Man@Video 1's back. Patches
+of warmer amber-glowing crystals near the floor provide underlighting. The
+shallow water reflects and scatters all light sources, creating a continuously
+shifting play of blue and amber reflections. No flat fill — all light comes
+from specific geological features in the walls and floor.
 
-=== LIGHTING (embedded) ===
-The bioluminescent mineral veins pulse with a slow deep-blue glow, casting
-moving light patterns across the water and the man's back. Patches of warmer
-amber-glowing crystals near the floor provide underlighting. The shallow water
-reflects and scatters all light sources, creating a continuously shifting
-play of blue and amber reflections. No flat fill — all light comes from
-specific geological features in the walls and floor.
+Space: Foreground — shallow water splashing under Man@Video 1's steps, low
+crystal formations passing close to camera as it tracks forward, mist at ankle
+height. Midground — Man@Video 1 walking, the reflective water surface, the
+immediate wall formations with glowing veins. Background — towering crystal
+columns receding into blue-black darkness, the cavern ceiling lost above, faint
+distant glows deep in the space suggesting scale.
 
-=== SPACE (layered) ===
-Foreground: shallow water splashing under the man's steps, low crystal
-formations passing close to camera as it tracks forward, mist at ankle height.
-Midground: the man walking, the reflective water surface, the immediate wall
-formations with glowing veins.
-Background: towering crystal columns receding into blue-black darkness, the
-cavern ceiling lost above, faint distant glows deep in the space suggesting
-scale.
-
-=== TIMING ===
+Timing:
 0:00–5:00 — Continuous walk, environment fully present throughout. The
 bioluminescent veins pulse on roughly a 4-second cycle, brightening and dimming
 organically. No sudden changes; the effect is ambient and continuous.
 
-=== AUDIO (diegetic only) ===
-Footsteps splashing through shallow water, echoing heavily in the vast cavern
-space. A deep resonant hum from the mineral veins, almost subsonic, pulsing
-in sync with the blue glow. Distant dripping water echoing from far above.
+Audio: Footsteps splashing through shallow water, echoing heavily in the vast
+cavern space. A deep resonant hum from the mineral veins, almost subsonic,
+pulsing in sync with the blue glow. Distant dripping water echoing from far
+above. SFX only.
 
-=== GUARDS ===
-NON-IP: No recognizable real persons, no copyrighted characters or designs.
-Face protection: real human skin with pores and catchlights, never waxy or
-warped. No morphing artifacts at the boundary between the man and the new
-environment. The camera motion must not drift — the bob and sway must match
-the source exactly.
+Quality and constraints:
+Quality: photoreal, 4K, cinematic texture, natural colors.
+Constraints: NON-IP — no recognizable real persons, no copyrighted characters or
+designs. Face protection — real human skin with pores and catchlights, never
+waxy or warped. No morphing artifacts at the boundary between Man@Video 1 and
+the new environment. The camera motion must not drift — the bob and sway must
+match the source exactly.
 ```
 
 ## 4K resolution: why and when
@@ -457,28 +619,100 @@ the source exactly.
 **Default to 4K for any VFX shot involving faces or fine detail.** Only drop to
 1080p for pure landscape or environment-only shots where no human face appears.
 
+## Photoreal creature / element integration
+
+When a creature or hard-surface element is added and must read as real:
+
+- Demand wildlife-documentary or practical realism explicitly: "fully
+  photoreal, real fur with depth and individual strands (or true-scale detail /
+  brushed metal), true anatomy, **never CG, plastic, or cartoonish**."
+- Tie it into the plate: same sun direction and color temperature as the
+  subject, real soft-edged contact shadow on what it touches, same hazy
+  atmosphere and depth as the far background.
+- **Scale must be explicit** for giant creatures, or the model renders them
+  life-size. Say "enormous, its massive body dwarfing the structure, clearly
+  colossal relative to the mast."
+- If it still reads as CG after a take, the reliable fix is a **second input**
+  — a reference photo of the real animal or material — declared as a
+  texture-only `@Image N` reference in `Asset preparation:`:
+
+  ```text
+  Asset preparation:
+  @Video 1: source clip — [subject, action, camera]. Preserve identity,
+  performance, framing, camera exactly; [what to change].
+  @Image 1: texture reference — reference photo of a real <animal>. Appearance
+  and fur/skin texture reference only; ignore the photo's background and lighting,
+  do not use it for the environment.
+  ```
+
+  Then rewrite the prompt to point the creature at the `@Image 1` reference.
+- **Behavior must match the species:** a sloth shifts slow heavy weight; a chimp
+  is alert and twitchy; a snake's coils tighten and a forked tongue tastes the
+  air (and snakes don't blink — use an unblinking stare, not a blink, for a
+  reptile payoff).
+- The subject usually stays **oblivious / unfazed**, mid-delivery — that
+  contrast is the joke. State it.
+- When a long hold lands on a static creature, add small **"living"
+  micro-movements** (a slow blink, jaw shift, steady breath) so it doesn't
+  look frozen.
+
+## Duration discipline
+
+Default to the source clip's exact runtime. When the user changes the runtime,
+**recompute** any numeric zoom timing and tell them the new mark. When a long
+hold lands on a static creature, add small "living" micro-movements (a slow
+blink, jaw shift, steady breath) so it doesn't look frozen.
+
+### Prepended-intro budget: intro + remaining = total
+
+When you prepend a beat (a reveal, a telephoto hold, an establishing creature
+shot) to footage you must preserve, the preserved take does not get longer — it
+gets *pushed back*. State the arithmetic every time and flag what falls off:
+
+`total runtime − intro length = surviving window for the source performance`
+
+If the source take is longer than that surviving window, some of it cannot
+play. Say so explicitly and offer the three resolutions, in order of fidelity:
+
+1. **Extend the total** so the full source fits (intro + full source). Highest
+   fidelity, longest clip.
+2. **Start the source earlier** — sacrifice the clip's own quiet lead-in so the
+   dialogue still lands in the window. Keeps total fixed, keeps the words,
+   loses pre-roll.
+3. **Accept truncation** — the first N seconds of the source won't appear. Only
+   safe if the dropped head has no dialogue.
+
+Never promise "100% lip-sync" and a prepended intro on a fixed total without
+doing this subtraction first. Recompute and re-flag it on *every* change to
+either number.
+
 ## Integrating with project elements
 
 When a VFX prompt references a reusable element from the project (a character, a
 creature, a prop, a location), use the `@tag` reference convention from the
-workspace's `elements/` directory.
+workspace's `elements/` directory alongside the `@Image N` / `@Video N` index
+convention.
 
 ```text
-@source: A woman walks through a park, static medium shot, 5 seconds.
+Asset preparation:
+@Video 1: source clip — a woman walks through a park, static medium shot, 5 seconds.
+@Image 1: location sheet — @neon-alley reference.
+@Image 2: prop sheet — @red-motorcycle reference.
 
-=== LOCKS ===
-Lock the woman's face, body, clothing, and walking cadence exactly.
-Lock the static camera framing.
+Subject definitions:
+Define the woman with the ponytail and green jacket in @Video 1 as Woman
 
-=== CHANGE ===
-At 0:00, replace the park with the @neon-alley location. The @red-motorcycle
-prop should be parked to the left of frame.
+Prompt:
+Task type: Video Editing
+Strictly edit @Video 1, and modify the park to the @neon-alley location from @Image 1 at 0:00. The @red-motorcycle prop from @Image 2 should be parked to the left of frame. Unmentioned parts stay unchanged.
 
-=== NEW WORLD ===
-@neon-alley as defined in the project location sheet: a narrow neon-lit alley
-behind a 24-hour noodle bar, wet asphalt reflecting pink and blue signs,
-steam from a noodle cart. @red-motorcycle parked to the left, its red
-fuel tank catching the neon reflections.
+Locks: Woman@Video 1's face, body, clothing, and walking cadence locked exactly.
+Static camera framing locked frame-for-frame.
+
+New world: @neon-alley as defined in @Image 1: a narrow neon-lit alley behind a
+24-hour noodle bar, wet asphalt reflecting pink and blue signs, steam from a
+noodle cart. @red-motorcycle from @Image 2 parked to the left, its red fuel tank
+catching the neon reflections.
 ```
 
 The `@tag` convention (e.g. `@neon-alley`, `@red-motorcycle`, `@gloria`)
@@ -502,27 +736,73 @@ flowchart LR
     V2 -->|last frame| F2[First frame for shot 3]
 ```
 
-In the prompt for chained shots, the `@source:` header should describe both the
-source video and the inherited first frame:
+In the prompt for chained shots, the `@Video 1` description should note the
+inherited first frame:
 
 ```text
-@source: Continuation shot. First frame inherited from the last frame of the
-prior shot (woman standing in @neon-alley). She turns and walks toward camera,
+Asset preparation:
+@Video 1: continuation shot — first frame inherited from the last frame of the
+prior shot (Woman standing in @neon-alley). She turns and walks toward camera,
 5 seconds.
 ```
+
+## Iteration discipline
+
+The user iterates fast and in small steps: "softer light," "from the right,"
+"bigger snowier mountains," "make the chimp huge," "a beat before the zoom,"
+"keep the original runtime." Change **only the named thing** and keep the rest
+of the prompt stable — re-rolling the whole prompt loses what already worked.
+
+When refining a generated still or frame, edit the chosen result (pass it back
+as the base) and fix only what is off, rather than starting over.
+
+## Voice
+
+Write in a terse, kinetic, physically precise director's voice within each
+heading section. Name exact materials, behaviors, scale, lenses, angles, and
+moves. Avoid generic adjectives — no "beautiful," "stunning," "amazing,"
+"cinematic" — use texture words instead. Don't inflate, don't soften, don't
+explain what things "represent."
 
 ## VFX prompt checklist
 
 Before finalizing any VFX prompt, verify:
 
-- [ ] **`@source:` lock-header is first** — describes the source clip only
-- [ ] **`=== LOCKS ===`** — identity, performance, and camera motion are locked
-- [ ] **`=== CHANGE ===`** — the change is named with a timestamp
-- [ ] **`=== NEW WORLD ===`** — the replacement/added element is fully described
-- [ ] **`=== LIGHTING (embedded) ===`** — light sources are physical, not pasted
-- [ ] **`=== SPACE (layered) ===`** — foreground, midground, background depth
-- [ ] **`=== TIMING ===`** — sequential changes have timestamps (if applicable)
-- [ ] **`=== AUDIO (diegetic only) ===`** — every sound has a physical source
-- [ ] **`=== GUARDS ===`** — NON-IP and face protection are included
+- [ ] **`Asset preparation:` is first** — `@Video 1` is the source clip, with
+      subject, action, camera motion, and duration in the role description
+- [ ] **Source inspected** — duration, fps, aspect probed; `@Video 1` role built
+      from footage, not from a one-line summary
+- [ ] **`Subject definitions:`** — subjects defined with `Define ... in @Video 1
+      as <Label>`, 2-3 static features each
+- [ ] **`Prompt: Task type: Video Editing`** — `Strictly edit @Video 1` declared
+- [ ] **`Locks:`** — identity, performance, and camera motion are locked, using
+      `<Label>@Video 1` binding
+- [ ] **Change named with timestamp** — `At 0:NN` for localized changes
+- [ ] **`New world:`** — the replacement/added element is fully described
+- [ ] **`Lighting:`** — light sources are physical, not pasted
+- [ ] **Lighting fork decided** — preserve-subject vs relight-all chosen
+      explicitly
+- [ ] **Integration recipe applied** — light direction, environmental bounce,
+      optics/atmosphere, edges/grounding (if subject composited into new world)
+- [ ] **`Space:`** — foreground, midground, background depth
+- [ ] **`Timing:`** — sequential changes have timestamps (if applicable)
+- [ ] **Timed moves dual-anchored** — semantic + numeric cues (if camera move
+      synced to dialogue)
+- [ ] **Lip-sync window checked** — quoted line fits the surviving dialogue
+      window (if lip-sync is the payoff)
+- [ ] **`Audio:`** — every sound has a physical source; `SFX [and source
+      dialogue] only` declared
+- [ ] **`Quality and constraints:`** — NON-IP, face protection, 4K, and other
+      guards included
 - [ ] **4K resolution** — if faces or fine detail are present
-- [ ] **`@tag` references** — project elements are referenced by tag, not re-described
+- [ ] **`@tag` references** — project elements referenced by tag and bound to
+      `@Image N`, not re-described
+- [ ] **Creature realism demanded** — wildlife-doc realism, species behavior,
+      scale explicit (if creature added)
+- [ ] **Texture `@Image N` reference** — second input added if CG still reads
+      fake (if creature added)
+- [ ] **Living micro-movements** — added for static creature holds
+- [ ] **Prepended-intro budget computed** — `total − intro = surviving window`
+      (if intro prepended)
+- [ ] **Iteration discipline** — only the named change applied, rest of prompt
+      stable (if iterating)
