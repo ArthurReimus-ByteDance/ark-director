@@ -64,6 +64,20 @@
         "The output sets video handoff eligibility to false because the jar is unapproved.",
         "The output does not invoke or claim video generation."
       ]
+    },
+    {
+      "id": 6,
+      "prompt": "Create the storyboard for my 30-second ube halaya commercial. I only want one panel for the scene, but give me three visual options to choose from before we use it for Seedance.",
+      "expected_output": "A one-panel storyboard centered on one hero beat, with three alternatives of the same p010 panel and a selection gate before video handoff.",
+      "files": [],
+      "expectations": [
+        "The output creates exactly one narrative panel identified as p010.",
+        "The output identifies the scene's strongest representative hero beat.",
+        "The output presents v01, v02, and v03 as alternatives of p010 rather than separate story beats.",
+        "The three variants materially change composition or emphasis while preserving the same subjects, decisive moment, and continuity contract.",
+        "The output records omitted action or transitions as motion notes instead of adding panels.",
+        "The output recommends I2V or R2V and keeps video handoff ineligible until one variant is explicitly selected and approved."
+      ]
     }
   ]
 }

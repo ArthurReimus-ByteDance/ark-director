@@ -1,6 +1,6 @@
 ---
 name: seedream-storyboard
-description: Create, revise, and optionally generate production-ready cinematic storyboard plans, panels, prompts, continuity records, and review packages with BytePlus Seedream. Use whenever the user asks for storyboards, shot boards, continuity boards, storyboard frames, visual sequences, previsualization, scene panels, or multi-shot image planning for film, advertising, animation, games, or AI video—even when they casually ask for “keyframes” but the scene contains multiple visual beats.
+description: Create, revise, and optionally generate production-ready cinematic storyboards—from one hero panel with alternatives to a multi-panel continuity sequence—with BytePlus Seedream. Use whenever the user asks for storyboards, shot boards, continuity boards, storyboard frames, visual sequences, previsualization, scene panels, or image planning for film, advertising, animation, games, or AI video.
 compatibility: Actual image creation requires callable BytePlus Seedream image-generation tools. Without them, produce complete copy-paste prompts, generation parameters, filenames, and manifests.
 ---
 
@@ -38,7 +38,10 @@ storyboard and visual-anchor review.
 
 - Optimize for instant story clarity before polish.
 - Describe one frozen, decisive moment per panel.
-- Add a panel when visual information or state materially changes.
+- Honor an explicit panel budget. When the user requests one panel, select the
+  strongest representative moment instead of silently expanding the board.
+- Without an explicit panel budget, add a panel when visual information or
+  state materially changes.
 - Keep recurring identities, locations, props, and style in an explicit canon.
 - Treat screen direction and location geography as sequence-level constraints.
 - Use coherent natural language, not comma-heavy keyword piles.
@@ -101,6 +104,8 @@ Extract or infer:
 - visual style, palette, lighting rules, and realism level;
 - forbidden content or transformations;
 - target runtime only when it affects the edit;
+- panel budget, including whether the user wants one hero panel or sequence
+  coverage;
 - whether the user wants prompts only or actual image generation.
 
 Ask only when a missing answer would materially change identity, format, cost,
@@ -124,13 +129,17 @@ Create a beat table before writing image prompts.
 | Geography | Location, travel axis, entrances, exits |
 | Sound/dialogue cue | Only when it changes timing or interpretation |
 
-Do not convert a long action sentence directly into one panel. Split actions
-such as “enters, notices the threat, drops the vial, and attacks” into decisive
-states.
+For a sequence board, do not convert a long action sentence directly into one
+panel. Split actions such as “enters, notices the threat, drops the vial, and
+attacks” into decisive states. For a requested one-panel board, still identify
+all beats, then choose the single decisive moment that best communicates the
+scene's subject, conflict or product, environment, and intended emotion.
 
 ### 4. Decide panel density
 
-Panel count follows information and state changes, not duration alone.
+When the user specifies a panel count, treat it as a creative constraint.
+Otherwise, panel count follows information and state changes, not duration
+alone.
 
 Add a panel for:
 
@@ -146,6 +155,14 @@ For a camera move, use start and end panels when framing or revealed information
 changes. For complex action, use anticipation, contact/change, and
 consequence/reaction when each state matters. Add no mandatory second-by-second
 timestamps; estimate duration only for timing or animatic-ready requests.
+
+For a one-panel board:
+
+- select one hero beat and one frozen composition;
+- favor the image that best sells the scene's central story, emotion, or product;
+- record important omitted transitions as motion notes rather than extra panels;
+- recommend I2V or R2V for video handoff; request a second approved panel only
+  if exact start-and-end locking through FLF2V becomes necessary.
 
 ### 5. Preflight every reference
 
@@ -232,6 +249,9 @@ Use this table:
 Use panel numbers in increments of 10 so panels can be inserted without
 renumbering.
 
+For a one-panel board, create only `p010`. Generate alternatives as variants of
+`p010`; do not mislabel three alternatives as three narrative panels.
+
 ### 8. Write the exact prompt for each panel
 
 Use only the sections that add value. Keep the submitted prompt within the live
@@ -298,9 +318,10 @@ geometry and altar position from @Image 2. Use @Image 4 only for blocking and
 camera composition; remove all sketch lines and labels.
 ```
 
-### 9. Write a cohesive sequence prompt when using multi-image output
+### 9. Write a cohesive sequence prompt for a multi-panel board
 
-Use sequence-capable models only.
+Use this section only when the board contains multiple narrative panels and the
+selected model supports sequential output.
 
 ```text
 Task:
@@ -350,9 +371,15 @@ For actual image creation:
 - use `prompt_optimization: standard` for final candidates and `fast` only when
   latency matters more than fidelity.
 
-Generate three variants by default for storyboard keyframes and high-risk
-panels. For ordinary continuity panels, first generate one low-cost draft
-sequence; add alternatives only where composition or continuity is unresolved.
+For a one-panel board, generate three alternatives of that same panel by
+default: `p010 v01`, `p010 v02`, and `p010 v03`. They share the same decisive
+moment and continuity contract but explore useful composition, lens, staging,
+or lighting differences. They are candidates, not a narrative sequence.
+
+For a multi-panel board, generate three variants by default for keyframes and
+high-risk panels. For ordinary continuity panels, first generate one low-cost
+draft sequence; add alternatives only where composition or continuity is
+unresolved.
 
 If the user explicitly says they are working in Lumina, return clean
 copy-pasteable prompts and parameters only. Do not call generation tools or
@@ -412,9 +439,12 @@ verifying that all recorded source-asset variants and hashes still match. A
 changed character, location, or prop returns the dependent panel to `review`;
 do not silently carry a stale panel into motion generation.
 
-### 12. Review as a sequence
+### 12. Review the board
 
-Evaluate individual panels and the ordered contact sheet.
+Evaluate every individual panel. For multi-panel boards, also evaluate the
+ordered contact sheet. For a one-panel board, compare its three variants side
+by side; a comparison sheet is a review artifact, not another storyboard panel
+and not the canonical video input.
 
 | Dimension | Review question |
 |---|---|
@@ -483,11 +513,13 @@ anchor only after it passes review.
 
 ## Default response structure
 
-For a plan or prompt package, return sections for assumptions and locks,
-reference inventory, beat and panel plan, spatial and continuity contract,
-generation setup, exact panel prompts, review checklist, and open decisions.
-When images were actually generated, add generated variants, technical record,
-and selection needed.
+For a one-panel request, return a compact hero-beat decision, one `p010` panel
+plan, reference inventory, exact prompt, three variant records, video-handoff
+recommendation, review checklist, and selection needed. For a multi-panel plan
+or prompt package, return assumptions and locks, reference inventory, beat and
+panel plan, spatial and continuity contract, generation setup, exact panel
+prompts, review checklist, and open decisions. When images were actually
+generated, add generated variants and the technical record.
 
 Do not claim that a storyboard, asset, or variant exists unless it was actually
 generated and saved.
