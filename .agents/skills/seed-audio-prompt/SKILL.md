@@ -84,7 +84,7 @@ When the user wants dialogue, music, SFX, and ambience together, compose the pro
 5. **Control the mix narratively.** Say when music ducks beneath speech, an effect dominates the foreground, ambience remains distant, or silence replaces the score.
 6. **Specify the ending.** Describe what fades, sustains, stops abruptly, or carries into silence.
 
-Use event-relative cues such as "as she opens the door," "under his line," and "after the impact" by default. Add exact second-level timestamps only when the user explicitly requests them.
+Use event-relative cues such as "as she opens the door," "under his line," and "after the impact" to tie sounds to actions. Second-level timestamps in `[start_time:end_time]` notation are also available by default to control per-line timing — use them when precise placement matters and omit them when event-relative cues suffice.
 
 ### Scene transitions and dynamic arcs
 
@@ -243,9 +243,9 @@ For TA2A, make the reference plan unambiguous:
 3. State the purpose of each reference, such as a character's voice timbre or emotional performance.
 4. Map each character to the matching ordered speaker tag, `<<TGT_SPK1>>` through `<<TGT_SPK3>>`, and never change that mapping within the prompt.
 
-**Timestamp control** (only when the user explicitly asks for second-level timing; T2A and TA2A prompting-guide convention, not defined in the public API reference):
+**Timestamp control** (T2A and TA2A prompting-guide convention, not defined in the public API reference):
 
-Do not add per-line timestamps by default. If the user explicitly requests second-level timing, use the `[start_time:end_time]` bracket notation immediately before the dialogue:
+Use the `[start_time:end_time]` bracket notation immediately before the dialogue to control per-line timing. Timestamps are available by default — use them when precise placement matters, and omit them when event-relative cues or natural ordering suffice:
 
 ```
 Ryan (young adult male, warm voice) calls out anxiously: "[5.5s:8.0s] Maya! Wait—you're really leaving tonight?"
@@ -373,9 +373,7 @@ Ending
 [A sword slides into its sheath; loose chains settle against stone. A solitary clarinet enters over the wind and slowly fades into silence.]
 ```
 
-## Full example: T2A — User-requested timestamp control
-
-Use this format only when the user explicitly asks for second-level timing.
+## Full example: T2A — Timestamp control
 
 ```text
 Scene and atmosphere
@@ -393,7 +391,7 @@ Maya (young adult female, soft voice) answers softly, forcing herself to stay co
 - **Video dubbing**: Generate character voices from text descriptions or reference audio. Human voice + SFX + background music in a single pass.
 - **Gaming**: Generate character voices and environmental sound effects for immersive player experiences.
 - **Podcast and radio drama**: Multi-character dialogue with full sound design from a single prompt.
-- **Language learning content**: Generate audio in multiple languages, with per-sentence timestamp guidance when the user explicitly requests second-level timing.
+- **Language learning content**: Generate audio in multiple languages, with per-sentence timestamp guidance for precise timing control.
 
 ## What makes Seed Audio 1.0 different from normal TTS
 
@@ -404,7 +402,7 @@ Maya (young adult female, soft voice) answers softly, forcing herself to stay co
 | Text Prompt to Audio (T2A) — describe voice, atmosphere, BGM, SFX in free text | ✅ | ❌ |
 | Text Prompt + Audio to Audio (TA2A) — reference audio + text prompt for voice/emotion reference | ✅ | ❌ |
 | Multimodal soundscape (dialogue + music + SFX + ambience in one pass) | ✅ | ❌ |
-| Optional prompting-guide time control per sentence | ✅ | ❌ |
+| Prompting-guide time control per sentence (`[start_time:end_time]`) | ✅ | ❌ |
 | Multilingual generation | ✅ | Varies |
 
 ## Quick reference card

@@ -333,9 +333,10 @@ rejection.
   carries into silence.
 - **Keep the prompt under 3,000 characters.** Be concise — omit unused
   sections and trim redundant stage directions.
-- **Use event-relative cues** by default: "as she opens the door," "under his
-  line," "after the impact." Only use second-level timestamps when the user
-  explicitly requests them.
+- **Use event-relative cues** to tie sounds to actions: "as she opens the door,"
+  "under his line," "after the impact." Second-level `[start_time:end_time]`
+  timestamps are also available by default — use them when precise placement
+  matters and omit them when event-relative cues suffice.
 - **Describe voices through devices or spaces** when relevant: "telephone
   compression," "public-address echo," "whispered proximity."
 
@@ -353,9 +354,10 @@ rejection.
   chaining via TA2A.
 - **Don't use `<<TGT_SPKN>>` tags in T2A mode.** Those are only for TA2A
   (reference-audio) mode.
-- **Don't add per-line timestamps unless the user explicitly asks.** The
-  `[start_time:end_time]` notation is a prompting-guide convention, not an
-  API field, and should only be used on request.
+- **Don't use `[start_time:end_time]` timestamps on every single line.** The
+  notation is a prompting-guide convention, not an API field. Use it when
+  precise timing placement matters; omit it when event-relative cues or
+  natural ordering suffice.
 - **Don't add `Max duration: 120 seconds` to the prompt.** Duration is a
   request parameter, not prompt content.
 
