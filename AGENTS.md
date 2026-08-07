@@ -410,6 +410,18 @@ it does not replace the asset-side snapshot.
 
 When a project contains multiple discrete sub-projects (a film series, a multi-ad campaign), each sub-project gets a **fully parallel, segregated** structure under `sub-projects/<sub-project-id>/` — its own `elements/`, `scenes/`, `assets/`, and `renders/`. Assets are **not** shared between sub-projects by duplication; anything reused across sub-projects (a recurring character, brand elements) is promoted up to the **parent project's** `elements/` and referenced from there. This keeps sub-projects independent and archivable while avoiding duplicated character sheets.
 
+## Workspace-level directories
+
+In addition to the `projects/` tree, the workspace root has three top-level directories for documentation and planning artifacts:
+
+| Directory | Purpose | Naming convention |
+|---|---|---|
+| `docs/` | Project-level and cross-project documentation — architecture guides, model references, workflow docs, how-tos, and any written reference that isn't a plan or spec | `kebab-case.md`; prefix with topic area when useful (e.g. `modelark-mcp-guide.md`, `seedance-25-reference.md`) |
+| `plans/` | Implementation plans — concrete, actionable plans for features, projects, or pipelines. Plans should contain actual implementation details (code structures, API signatures, data models, file organization), not just task steps | `PLAN_<NAME>.md` (uppercase) or `<project>-<feature>-plan.md` (kebab-case) |
+| `specs/` | Specifications — proposed or potential features, formats, and contracts that may or may not be implemented yet. Specs are exploratory and aspirational; they describe what something *could* be before it becomes a plan | `SPEC_<NAME>.md` (uppercase) or `<project>-<feature>-spec.md` (kebab-case) |
+
+**Lifecycle:** An idea typically flows `specs/ → plans/ → implementation`. A spec matures into a plan when the user approves the direction; a plan is consumed during implementation and may be archived or deleted after the work ships.
+
 ## Conventions
 
 ### Secrets
