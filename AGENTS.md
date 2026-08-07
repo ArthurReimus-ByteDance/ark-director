@@ -109,6 +109,7 @@ The core separation: **`elements/` holds reusable assets** (referenced across sc
 projects/
   <project-name>/                     # kebab-case, e.g. midnight-run
     project.md                        # brief, cast, locations, model & credit defaults, status
+    docs/                             # project-specific documentation (limitations, visual packages)
     elements/                         # reusable Elements (authored once, referenced by many scenes)
       characters/
         <character-id>/               # e.g. gloria   (folder = element id)
@@ -142,20 +143,24 @@ projects/
       video/
         shots/<scene>/<shot>/        # e.g. shots/scene-01/s01_sh010/
           s01_sh010_t01_v01.mp4
+          prompt_s01_sh010_t01_v01.md  # immutable prompt snapshot (prefix: prompt_<asset>.md)
         renders/                      # assembled scene/film renders
           s01_render_v01.mp4
       image/
         storyboard/<scene>/          # Seedream keyframes (visual anchors)
           s01_kf01_v01.png
+          prompt_s01_kf01_v01.md      # prompt snapshot beside each asset
         concept/                       # concept art, mood boards
         shots/<scene>/<shot>/
       audio/
         dialogue/<scene>/<shot>/
           dlg_s01_sh010_gloria_t01_v01.wav
+          prompt_dlg_s01_sh010_gloria_t01_v01.md
         music/                         # reusable music beds
         sfx/                           # reusable sound effects
         ambience/<scene>/
         mix/<scene>/                  # full scene mixes
+      task_ids.json                   # project-level task registry (provider task IDs)
     sub-projects/                     # ONLY when the project splits into sub-projects (segregated)
       <sub-project-id>/               # e.g. episode-01  (full parallel structure, own assets/)
         project.md
@@ -167,12 +172,14 @@ projects/
           audio/
         renders/
     renders/                          # final assembled deliverables (final cuts, exports, masters)
+    scripts/                          # helper scripts, generation utilities
     trash/                            # rejected / superseded assets (gitignored, periodic cleanup)
 ```
 
 - Small projects can omit `sub-projects/` entirely; a single-project film just uses `scenes/` + `assets/` directly.
 - The `assets/` tree is the single home for generated outputs. Dialogue is shot-specific (`audio/dialogue/<scene>/<shot>/`); music/SFX are reusable library assets (`audio/music/`, `audio/sfx/`).
 - Elements (characters, locations, props) and their sheets live under `elements/`, never under `assets/`, because they are reusable references, not scene outputs.
+- **Prompt snapshots live beside the media asset they produced, nowhere else.** Do not duplicate prompts in shot folders, scene folders, or any other location. The `shot.md` manifest references the asset-level prompt via `prompt_file` in frontmatter. See [Prompt files](#prompt-files).
 
 ### Production flow
 
@@ -233,6 +240,9 @@ Before video submission:
   Element paths/hashes, and approval status in `shot.md`;
 - respect the live reference-count and face-input restrictions.
 
+For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
+`seedance-prompt-20` (2.0, for 4K/1080p output or Fast/Mini variants).
+
 ### Audio-video alignment (dialogue scenes)
 
 When a scene has spoken dialogue, **generate the Seed Audio dialogue track
@@ -274,7 +284,9 @@ flowchart TD
    inspect it (or transcribe it with `speech_to_text`) and adjust the shot
    timestamps before submitting the Seedance task.
 4. **Audio as `reference_audio`.** Pass the generated `.wav` file as a
-   `reference_audio` input to `seedance_create_task`. Label it `@Audio N` in
+   `reference_audio` input to the Seedance task tool —
+   `seedance_2_5_create_task` for 2.5 (up to 10 audio refs, 30s) or
+   `seedance_create_task` for 2.0 (up to 3 audio refs, 15s). Label it `@Audio N` in
    the Seedance prompt and bind it in every shot that contains dialogue or
    music from that audio.
 5. **Single source of truth.** The `scene.md` file records the audio asset
@@ -286,7 +298,7 @@ flowchart TD
 **Before video submission (dialogue scenes):**
 
 - verify the audio file exists locally and its SHA-256 matches the manifest;
-- verify `audio_duration ≤ video_duration` (e.g., 28.88s ≤ 30s);
+- verify `audio_duration ≤ video_duration` (e.g., 28.88s ≤ 30s for 2.5; ≤ 15s for 2.0);
 - confirm every `{dialogue line}` in the Seedance prompt matches the Seed
   Audio prompt verbatim;
 - adjust shot timestamps in the Seedance prompt to match the actual audio
@@ -347,6 +359,19 @@ Individual generated files use **structured token prefixes** (underscore-separat
 | Ambience | `amb_<scene>_<descriptor>_v<NN>.wav` | `amb_s01_rain_v01.wav` |
 | Scene mix | `mix_<scene>_v<NN>.wav` | `mix_s01_v01.wav` |
 
+**Prompt snapshots** (all modalities)
+| Asset | Pattern | Example |
+|---|---|---|
+| Video prompt | `prompt_<scene>_sh<NNN>_t<NN>_v<NN>.md` | `prompt_s01_sh010_t01_v01.md` |
+| Image prompt | `prompt_<scene>_kf<NN>_v<NN>.md` | `prompt_s01_kf01_v01.md` |
+| Character sheet prompt | `prompt_char_<character-id>_<sheet-type>_v<NN>.md` | `prompt_char_gloria_turnaround_v01.md` |
+| Location sheet prompt | `prompt_loc_<location-id>_<view>_v<NN>.md` | `prompt_loc_neon-alley_wide_v01.md` |
+| Prop sheet prompt | `prompt_prop_<prop-id>_<view>_v<NN>.md` | `prompt_prop_red-motorcycle_side_v01.md` |
+| Audio dialogue prompt | `prompt_dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.md` | `prompt_dlg_s01_sh010_gloria_t01_v01.md` |
+| Music prompt | `prompt_mus_<descriptor>_v<NN>.md` | `prompt_mus_tension-build_v01.md` |
+| Ambience prompt | `prompt_amb_<scene>_<descriptor>_v<NN>.md` | `prompt_amb_s01_rain_v01.md` |
+| Scene mix prompt | `prompt_mix_<scene>_v<NN>.md` | `prompt_mix_s01_v01.md` |
+
 ### Metadata & manifests
 
 Every project, element, scene, and shot carries a Markdown file (`project.md`, `character.md`, `scene.md`, `shot.md`) with YAML frontmatter so generations are **reproducible** — model, prompt, references, seed, params, cost, and status are recorded alongside the asset. Reproducibility is a first-class requirement: a later agent must be able to re-create any asset from its manifest alone.
@@ -372,12 +397,14 @@ scene: s01
 shot: s01_sh010
 model: seedance-2-5
 prompt: "A cinematic action scene of @gloria riding @red-motorcycle at speed down @neon-alley"
+prompt_file: assets/video/shots/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md
+prompt_sha256: "a1b2c3d4..."
 references:
   - elements/characters/gloria/references/ref_01_front.png
   - elements/props/red-motorcycle/references/ref_01_side.png
 seed: 8842
 params:
-  resolution: "2K"
+  resolution: "720p"
   duration: 5
   audio: true
 take: t01
@@ -399,12 +426,30 @@ For generated video and audio, also record when available:
 
 ### Prompt files
 
-In addition to the prompt referenced by the shot manifest, save an immutable
-snapshot of the exact submitted prompt beside every generated asset. Name it to
-mirror the media file, for example
-`s01_sh010_t01_v01_prompt.md` beside `s01_sh010_t01_v01.mp4`. Store its hash in
-the manifest. The editable working prompt may also remain beside `shot.md`, but
-it does not replace the asset-side snapshot.
+Save an immutable snapshot of the exact submitted prompt **beside the media
+asset it produced, nowhere else.** The prompt file is the single source of
+truth for what was submitted to the model. Do not duplicate prompts in shot
+folders, scene folders, or any other location.
+
+**Naming:** Use the `prompt_` prefix followed by the media asset name (without
+extension), e.g. `prompt_s01_sh010_t01_v01.md` beside `s01_sh010_t01_v01.mp4`.
+This groups all prompts together when sorted and makes them immediately
+identifiable.
+
+**Manifest linkage:** The `shot.md` frontmatter references the prompt file via
+`prompt_file` (relative path from project root) and `prompt_sha256`. An agent
+or tool can locate the prompt for any shot by reading these two fields — no
+guessing, no searching.
+
+**Element sheets:** Prompt snapshots for character/location/prop sheets live
+beside the sheet image under `elements/<type>/<id>/sheets/`, using the same
+`prompt_` prefix convention (e.g. `prompt_char_gloria_turnaround_v01.md`
+beside `char_gloria_turnaround_v01.png`).
+
+**Working prompts vs. snapshots:** The editable working prompt may be developed
+inline in `shot.md` or `scene.md` during the drafting phase. Once a generation
+is submitted, the exact submitted text is frozen as the asset-side snapshot and
+the working copy is superseded — the snapshot is canonical from that point on.
 
 ### Sub-projects
 
@@ -421,6 +466,60 @@ In addition to the `projects/` tree, the workspace root has three top-level dire
 | `specs/` | Specifications — proposed or potential features, formats, and contracts that may or may not be implemented yet. Specs are exploratory and aspirational; they describe what something *could* be before it becomes a plan | `SPEC_<NAME>.md` (uppercase) or `<project>-<feature>-spec.md` (kebab-case) |
 
 **Lifecycle:** An idea typically flows `specs/ → plans/ → implementation`. A spec matures into a plan when the user approves the direction; a plan is consumed during implementation and may be archived or deleted after the work ships.
+
+**No loose files at workspace root.** All documentation, research, and reference files must live in `docs/`, `plans/`, or `specs/` — never loose at the workspace root. If a file doesn't fit one of those three purposes, it belongs inside a `projects/<project>/` subdirectory.
+
+### Project-level documentation
+
+Project-specific documentation (model limitations, visual packages, research notes for a single project) lives inside the project under `docs/`:
+
+```
+projects/
+  <project-name>/
+    docs/                       # project-specific documentation
+      seedance-25-limitations.md
+      visual-package.md
+      style-guide.md
+    project.md
+    elements/
+    scenes/
+    assets/
+```
+
+Do not scatter project-level docs at the project root alongside `project.md`. Only `project.md` and the standard subdirectories (`elements/`, `scenes/`, `assets/`, `docs/`, `renders/`, `trash/`) belong at the project root.
+
+### Task ID tracking
+
+Keep a single project-level task registry at `projects/<project>/assets/task_ids.json`. This file maps provider task IDs to shot/asset metadata and is the canonical place to resume polling after a timeout or restart. Do not scatter per-scene `task_ids.json` files or freeform submission JSONs across scene/shot folders.
+
+```json
+{
+  "tasks": [
+    {
+      "task_id": "cv3-abc123",
+      "shot": "s01_sh010",
+      "take": "t01",
+      "version": "v01",
+      "model": "dreamina-seedance-2-5-260628",
+      "status": "succeeded",
+      "asset_path": "assets/video/shots/scene-01/s01_sh010/s01_sh010_t01_v01.mp4",
+      "submitted_at": "2026-08-07T10:30:00Z"
+    }
+  ]
+}
+```
+
+### Helper scripts
+
+Ad-hoc generation scripts, utilities, and one-off tools do not belong inside shot folders. Place them in a project-level `scripts/` directory:
+
+```
+projects/
+  <project-name>/
+    scripts/                   # helper scripts, generation utilities
+      generate_dialogue.py
+      batch_submit.py
+```
 
 ## Conventions
 
@@ -457,6 +556,7 @@ In addition to the `projects/` tree, the workspace root has three top-level dire
 
 ## Costs & guardrails
 - These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
+- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — 30s single-pass, 30/10/10 refs, structured editing, native extension. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 1080p/4K output (2.5 caps at 720p), Fast/Mini speed variants, or lower cost per generation.
 - Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
 - Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
 - For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.
@@ -479,6 +579,7 @@ In addition to the `projects/` tree, the workspace root has three top-level dire
 - Seedance video generation API — https://docs.byteplus.com/en/docs/ModelArk/1520757
 - Dreamina Seedance 2.0 prompt guide — https://docs.byteplus.com/en/docs/ModelArk/2222480
 - Seedance 2.5 announcement — https://seed.bytedance.com/en/blog/one-take-creation-flexible-referencing-introducing-seedance-2-5
+- Seedance 2.5 prompt guide (Lark) — https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh
 - Seed Audio 1.0 API reference — https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01
 - ModelArk model list — https://docs.byteplus.com/en/docs/ModelArk/1330310
 - Region availability — https://docs.byteplus.com/en/docs/ModelArk/2191806
