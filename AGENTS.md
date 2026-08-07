@@ -26,7 +26,7 @@ the canonical names.
 
 | Family | Model(s) | Modality | Key capabilities | Ark API surface |
 |---|---|---|---|---|
-| Seedance | Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`); configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
+| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — 30s single-pass, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback; configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
 | Seedream | Seedream 5.0 Pro (`dola-seedream-5-0-pro-260628`); configured Lite/4.x bindings | Image | Text-to-image, reference-based generation/editing, multi-reference fusion, sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
 | Seed Audio | Seed Audio 1.0 (`seed-audio-1.0`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, voice references, cross-lingual generation, up to ~2 min/clip | BytePlus Seed Speech audio generation API |
 | Seed / Doubao | `seed-2-0-lite-260228` and siblings | Text | Prompt expansion, scene scripting, structured output for pipelines | `POST /responses` (OpenAI-compatible) |
@@ -50,6 +50,7 @@ flowchart LR
   C --> D[Seedance - video]
   C --> E[Seedream - image]
   C --> F[Seed Audio - audio]
+  F -->|reference_audio input| D
   B -->|submit task_id| C
   B -->|poll task_id| C
   C -->|asset URL| B
@@ -74,16 +75,21 @@ Treat expensive media generation as a gated production workflow:
    travel axis, subject order, boundary behavior, end state, and forbidden
    transitions. Resolve contradictions between the brief, references, and
    prompt before generation.
-4. **Low-cost prototype** — validate motion, geography, anatomy, camera,
+4. **Audio-first generation (dialogue scenes)** — when a scene has spoken
+   dialogue, generate the Seed Audio dialogue track before submitting the
+   Seedance video task. Verify the audio duration fits within the planned
+   video duration, then use the audio as a `reference_audio` input to
+   Seedance. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes).
+5. **Low-cost prototype** — validate motion, geography, anatomy, camera,
    boundary behavior, and audio at the lowest suitable resolution and variant.
-5. **Creative review** — preserve user-approved decisions and write the single
+6. **Creative review** — preserve user-approved decisions and write the single
    requested delta plus observable acceptance criteria for the next take.
-6. **Final candidate** — increase resolution only after the important creative
+7. **Final candidate** — increase resolution only after the important creative
    behavior is approved.
-7. **Technical and semantic QA** — inspect actual streams, decode integrity,
+8. **Technical and semantic QA** — inspect actual streams, decode integrity,
    contact sheets, key story transitions, and audio before requesting approval.
 
-For tightly controlled 15-second scenes, do not overload one generation with
+For tightly controlled 30-second scenes, do not overload one generation with
 too many cuts, action beats, close encounters, and location changes. Split the
 scene into separate shots and chain approved frames when continuity risk is
 higher than the benefit of a single generation.
@@ -177,8 +183,9 @@ flowchart TD
   E -->|identity, geometry, prop references| IMG1[assets/image/storyboard]
   SH -->|panel plan| IMG1
   IMG1 -->|review and explicit approval| KF[approved video keyframe]
+  SH -->|generate audio first| AUD[assets/audio/dialogue]
+  AUD -->|reference_audio + shot timestamps| VID
   SH -->|generate video| VID[assets/video/shots]
-  SH -->|generate audio| AUD[assets/audio/dialogue]
   KF -->|I2V, FLF2V, or R2V composition anchor| VID
   VID -->|assemble| R[renders/ - final deliverable]
   AUD -->|mix| R
@@ -225,6 +232,68 @@ Before video submission:
 - record the chosen mode, ordered image roles, panel path/hash, canonical
   Element paths/hashes, and approval status in `shot.md`;
 - respect the live reference-count and face-input restrictions.
+
+### Audio-video alignment (dialogue scenes)
+
+When a scene has spoken dialogue, **generate the Seed Audio dialogue track
+first** and use it as a `reference_audio` input to Seedance. The audio drives
+the video — not the other way around. This prevents lip-sync drift, ensures
+the video duration fits the audio, and keeps dialogue timing verifiable.
+
+**Audio-first pipeline:**
+
+```mermaid
+flowchart TD
+  SCENE[scene.md — script, dialogue, shot timings] --> AUDIO[Seed Audio T2A/TA2A generation]
+  AUDIO -->|verify duration ≤ video duration| AOK{duration OK?}
+  AOK -->|no| ADJ[adjust prompt — trim ambience, music tails, pauses]
+  ADJ --> AUDIO
+  AOK -->|yes| ASAVE[save to assets/audio/dialogue/]
+  ASAVE -->|reference_audio input| SEED[Seedance video generation]
+  SCENE -->|shot timestamps align to audio| SEED
+  SEED -->|verify lip-sync, dialogue placement, timing| QA{QA pass?}
+  QA -->|no — timing drift| ADJ2[adjust shot timestamps in prompt, regenerate video]
+  ADJ2 --> SEED
+  QA -->|yes| DONE[approved take]
+```
+
+**Alignment contract:**
+
+1. **Same dialogue text in both prompts.** The exact lines written in the
+   Seed Audio `text_prompt` must appear in the Seedance prompt inside
+   `{curly braces}` for lip-sync. No paraphrasing, no reordering, no omitted
+   lines. If one changes, both change.
+2. **Audio duration ≤ video duration.** Seed Audio output must fit within the
+   planned Seedance `duration` parameter. If the audio exceeds the video
+   duration, trim the audio prompt (shorter ambience tails, fewer pauses,
+   tighter scene descriptions) and regenerate before submitting the video
+   task. Never pad the video to fit an over-long audio.
+3. **Shot timestamps align to audio.** The `Shot N (start–ends)` time ranges
+   in the Seedance prompt must place each dialogue line at the second it
+   actually occurs in the generated audio. After generating the audio,
+   inspect it (or transcribe it with `speech_to_text`) and adjust the shot
+   timestamps before submitting the Seedance task.
+4. **Audio as `reference_audio`.** Pass the generated `.wav` file as a
+   `reference_audio` input to `seedance_create_task`. Label it `@Audio N` in
+   the Seedance prompt and bind it in every shot that contains dialogue or
+   music from that audio.
+5. **Single source of truth.** The `scene.md` file records the audio asset
+   path, SHA-256, verified duration, and the dialogue-to-shot timestamp
+   mapping. The `shot.md` manifest records the same audio asset as a
+   reference input. If the audio is regenerated, both files are updated and
+   any video that used the old audio is invalidated.
+
+**Before video submission (dialogue scenes):**
+
+- verify the audio file exists locally and its SHA-256 matches the manifest;
+- verify `audio_duration ≤ video_duration` (e.g., 28.88s ≤ 30s);
+- confirm every `{dialogue line}` in the Seedance prompt matches the Seed
+  Audio prompt verbatim;
+- adjust shot timestamps in the Seedance prompt to match the actual audio
+  timing;
+- pass the audio file as `reference_audio` in the Seedance task request;
+- record the audio asset path, hash, duration, and the dialogue-to-shot
+  timestamp mapping in `shot.md`.
 
 ### Folder & project naming
 
@@ -301,7 +370,7 @@ Minimal `shot.md` frontmatter:
 project: midnight-run
 scene: s01
 shot: s01_sh010
-model: seedance-2-0
+model: seedance-2-5
 prompt: "A cinematic action scene of @gloria riding @red-motorcycle at speed down @neon-alley"
 references:
   - elements/characters/gloria/references/ref_01_front.png
@@ -397,6 +466,8 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 - BytePlus ModelArk quick start — https://docs.byteplus.com/en/docs/ModelArk/1399008
 - Seedance video generation API — https://docs.byteplus.com/en/docs/ModelArk/1520757
 - Dreamina Seedance 2.0 prompt guide — https://docs.byteplus.com/en/docs/ModelArk/2222480
+- Seedance 2.5 announcement — https://seed.bytedance.com/en/blog/one-take-creation-flexible-referencing-introducing-seedance-2-5
+- Seed Audio 1.0 API reference — https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01
 - ModelArk model list — https://docs.byteplus.com/en/docs/ModelArk/1330310
 - Region availability — https://docs.byteplus.com/en/docs/ModelArk/2191806
 - ByteDance Seed (Seed Audio 1.0) — https://seed.bytedance.com
