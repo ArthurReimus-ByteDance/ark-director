@@ -96,6 +96,15 @@ higher than the benefit of a single generation.
 
 ## Project & asset directory structure
 
+The entire `projects/` tree is **local-only working state — never commit it to
+git.** Project files (manifests, prompts, references, generated assets, scripts)
+are large, frequently changing, and not meant to live in version control. They
+are the workspace's durable local source of truth, not the remote's. Do not
+`git add` anything under `projects/`. This rule is enforced by convention, not
+by `.gitignore` — the directory is intentionally left un-ignored so that
+individual tracked files (e.g. a project template or doc) *could* be added
+explicitly if ever needed, but the default is: hands off.
+
 This workspace hosts many projects (films, ad campaigns, series, etc.). Each project lives under `projects/<project-name>/` and follows the same internal layout. The structure adapts two proven patterns to a local filesystem:
 
 - **Higgsfield-style "Elements"** — reusable characters, locations, and props are authored once under `elements/` and referenced by many scenes (mirroring Higgsfield Cinema Studio's Elements + SOUL ID character-consistency model).
