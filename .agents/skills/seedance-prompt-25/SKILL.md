@@ -250,6 +250,26 @@ Keep <character identity, number of characters, clothing, prop ownership, spatia
 and audio relationships> consistent.
 ```
 
+### Long-form via native extension
+
+A single generation caps at **30s**, but Seedance 2.5 supports **multi-round
+extension up to 180s (beta)** from a 30s base. For a longer piece (e.g. a
+2-minute video), generate a 30s base take and extend it forward/backward in
+rounds — **do not force scene changes at every 30s mark**; scene changes happen
+naturally where the story needs them.
+
+- **Audio with extension.** Align a single Seed Audio master to the full timeline
+  (up to ~2 min) and pass it as `reference_audio` so dialogue and sound stay
+  continuous across the extension.
+- **Validate seams.** Extension boundaries are not pixel-identical; inspect the
+  boundary image, motion trend, and audio continuity on both sides of each seam.
+  Multi-round extension is beta — validate each seam before committing.
+- **Aspect ratio** is locked to the input video's ratio for extended segments.
+- For multi-location / multi-edit work, generate separate 30s scenes instead,
+  chain them via `return_last_frame` / `first_frame` + a shared reference bundle,
+  and assemble in post. Only then slice the Seed Audio master per scene (each
+  ≤ 30s) at natural boundaries.
+
 ### Timestamps and pacing
 
 Use stages by default. Use one-second precision **only** for critical handoffs,

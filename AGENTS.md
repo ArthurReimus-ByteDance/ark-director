@@ -316,6 +316,30 @@ flowchart TD
 - record the audio asset path, hash, duration, and the dialogue-to-shot
   timestamp mapping in `shot.md`.
 
+### Long-form video (2.5) via native extension
+
+Seedance 2.5 generates **up to 30s per single pass**, but supports **multi-round
+video extension up to 180s (beta)** from a 30s base — so a longer piece (e.g. a
+2-minute video) is built by **extending a 30s base forward/backward**, not by
+forcing cuts at every 30s mark.
+
+- Generate a 30s base take, then extend it forward (and/or backward) in rounds to
+  reach the target runtime. Scene changes happen naturally wherever the story
+  needs them; you do **not** have to align to 30s boundaries.
+- **Audio with extension.** Generate a Seed Audio master aligned to the **full**
+  timeline (up to ~2 min per call) and pass it as `reference_audio`, so dialogue
+  and sound arc stay continuous across the extension. The audio-first alignment
+  contract above applies to the whole timeline.
+- Caveats: extension boundaries are **not pixel-identical** — inspect both sides
+  of each seam (boundary image, motion trend, audio continuity). Multi-round
+  extension is **beta**; validate each seam before committing. Extension locks the
+  input video's aspect ratio.
+- For multi-location / multi-edit pieces where per-scene control matters more
+  than a single seamless pass, generate separate 30s scenes chained via
+  `return_last_frame` / `first_frame` + a shared reference bundle, then assemble
+  in post (`renders/`). Only in that path slice the Seed Audio master into
+  per-scene wavs (each ≤ 30s) at natural boundaries.
+
 ### Folder & project naming
 
 All folders and project/scene/element names are **lowercase kebab-case**, no spaces, no capitals.
