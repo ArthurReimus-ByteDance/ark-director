@@ -1,9 +1,9 @@
 {
-  "skill_name": "seedance-prompt",
+  "skill_name": "seedance-prompt-20",
   "evals": [
     {
       "id": 1,
-      "prompt": "Write a 15-second Seedance 2.0 prompt where a rider on a giant eagle is already fleeing through a forest. A wyvern must suddenly emerge from behind, remain behind during the chase, stop at the inland tree line, and never appear on the beach. I also have a route-map image that is only a path guide and must not appear in the video.",
+      "prompt": "Write a 15-second Seedance 2.0 prompt where a rider on a giant eagle is already fleeing through a forest. A wyvern must suddenly emerge from behind, remain behind during the chase, stop at the inland tree line, and never appear on the beach. I also have a route map image that is only a path guide and must not appear in the video.",
       "expected_output": "A structured multimodal prompt with an explicit spatial continuity contract, repeated lead-pursuer order, a forest-boundary stop, and safe handling of the control-only map.",
       "files": [],
       "expectations": [

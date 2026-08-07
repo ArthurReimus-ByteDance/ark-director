@@ -1,0 +1,96 @@
+{
+  "skill_name": "seedance-prompt-25",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a 30-second Seedance 2.5 prompt for a flower shop order-packing process. Two characters — a Florist and a Store Assistant — arrange, wrap, and hand off a bouquet across three stages. I have reference images for both characters and the shop interior.",
+      "expected_output": "A stage-based 30-second prompt with a Generation Goal, three stages each having one primary event and a clear end state, and a Maintain Consistency block, plus reference role definitions for the characters and scene.",
+      "files": [],
+      "expectations": [
+        "The output uses the [Generation Goal] header with a story summary.",
+        "The output divides the 30 seconds into at least 3 consecutive stages.",
+        "Each stage has an initial state or continuation note, one primary event, and a clear end state.",
+        "The output includes a [Maintain Consistency] block listing identity, clothing, prop ownership, and spatial direction.",
+        "The output defines reference roles using @Image N defines syntax with exclusions."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have 8 reference images for a museum conservation video: 4 characters (Conservator, Registrar, Exhibition Installer, Guide), 2 props (Sample Case, Record Board), and 2 scenes (Conservation Lab, Gallery). Plus a motion reference video and an audio reference. Write a Seedance 2.5 prompt that organizes all these references correctly.",
+      "expected_output": "A multi-reference prompt that follows the 5-step workflow: define roles, map subjects individually, group by type, build subject profiles, and select references by scene.",
+      "files": [],
+      "expectations": [
+        "The output maps each subject to its reference individually using 'corresponds to @Image N' syntax.",
+        "The output groups references by type: [Characters], [Props], [Scenes], [Motion and Audio].",
+        "The output includes a 'Do not interchange' clause for character appearances.",
+        "The output builds at least one subject profile for a recurring character.",
+        "The output selects references scene by scene, naming only the assets each scene uses.",
+        "Each scene includes a Use line, an Event line, and an End state line."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a video of a desk with a yellow folding desk lamp. I want to replace only the lamp with a white one from a reference image. The lamp's arm rotations, hand occlusions, and exit timing must be preserved. Write a Seedance 2.5 editing prompt.",
+      "expected_output": "A structured editing prompt using the subject replacement pattern with Timeline Inheritance.",
+      "files": [],
+      "expectations": [
+        "The output defines @Video 1 as the sole editing master.",
+        "The output uses [Target Reference Role] to define the white lamp from @Image 1 with exclusions.",
+        "The output includes a [Timeline Inheritance] section stating the target inherits every appearance, motion, occlusion, and exit of the original.",
+        "The output specifies edit scope as replacing only the yellow lamp and preserving all other content.",
+        "The output notes that aspect ratio and duration are auto-locked to the input video."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I have a 10-second video of a gardener in a greenhouse. I need to extend it backward — show the empty greenhouse with morning mist drifting before the gardener arrives. The last frame of the extension must connect to the first frame of the source video. Write a Seedance 2.5 backward extension prompt.",
+      "expected_output": "A backward extension prompt that describes the preceding action first, then defines the source video's first frame as the explicit end state.",
+      "files": [],
+      "expectations": [
+        "The output declares @Video 1 as the source video to extend backward.",
+        "The output describes the preceding action before the source video begins.",
+        "The output defines the last frame of the extension as connecting to the first frame of @Video 1 with specific pose, prop, and background matching.",
+        "The output includes a continuity maintenance clause for identity, clothing, key props, and axis of action.",
+        "The output includes the 'keep each subject as the same continuous instance' clause."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a Seedance 2.5 prompt for a scene where a barista greets a customer in Japanese, a bell rings in the distance, soft piano music plays, and a subtitle appears saying 'Chapter One: Departure'. The dialogue must be in natural conversational Japanese.",
+      "expected_output": "A prompt that correctly uses all four audio/text bracket syntaxes and the dialogue language reinforcement formula.",
+      "files": [],
+      "expectations": [
+        "The output uses () for music: (Soft, rhythmic piano music plays in the background).",
+        "The output uses <> for sound effects: <A bell rings in the distance>.",
+        "The output uses {} for dialogue with Japanese text inside.",
+        "The output uses 【】 for the subtitle: 【Chapter One: Departure】.",
+        "The output specifies the dialogue language as Japanese before the dialogue line."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "I have a coarse 3D blockout video showing a character walking path, cart direction, camera movements, and two cuts. I want to use it as a motion reference and define the real characters, props, and scenes with separate images. Write a Seedance 2.5 prompt using the blockout.",
+      "expected_output": "A coarse blockout prompt that maps each blockout subject to its real counterpart and states which temporal/spatial info to inherit.",
+      "files": [],
+      "expectations": [
+        "The output declares @Video 1 as a coarse blockout reference.",
+        "The output maps blockout geometric subjects to real subjects (e.g., 'The tall cylinder in @Video 1 corresponds to <Guide>').",
+        "The output states 'Do not use its blockout appearance, materials, or scene'.",
+        "The output defines character/prop/scene appearances with separate @Image references.",
+        "The output specifies which temporal info to keep from the blockout (motion path, blocking, camera, cuts)."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Write a Seedance 2.5 prompt where a chef tastes an overcooked dish and shifts from confidence to quiet disappointment. The emotion must be shown through observable physical cues, not abstract words.",
+      "expected_output": "An emotional direction prompt using the single emotional transition template with 2-4 observable physical cues.",
+      "files": [],
+      "expectations": [
+        "The output uses the single emotional transition structure: overall shift, triggering event, immediate reaction, gradual change, final expression.",
+        "The output pairs the emotion word 'disappointment' with observable cues like chewing slowing, eyebrows drawing in, shoulders dropping.",
+        "The output does not use bare abstract emotion words without physical cues.",
+        "The output describes the final expression through restrained or explicit outward behavior."
+      ]
+    }
+  ]
+}
