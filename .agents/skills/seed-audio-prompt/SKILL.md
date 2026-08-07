@@ -109,6 +109,11 @@ safe-location soundscape unless the story requires lingering threat.
 For native video audio, keep this arc inside the Seedance prompt so sound and
 picture share the same trigger. Use standalone Seed Audio when producing or
 replacing a separate soundtrack, dialogue stem, ambience bed, or mix element.
+When the audio is destined for a Seedance video, route the prompt to
+`seedance-prompt-25` (2.5, up to 10 audio refs, 30s) or `seedance-prompt-20`
+(2.0, up to 3 audio refs, 15s), and follow the audio-first pipeline in
+`AGENTS.md` (audio duration ≤ video duration, same dialogue text in both
+prompts, pass as `reference_audio`).
 
 ### Scene and atmosphere
 

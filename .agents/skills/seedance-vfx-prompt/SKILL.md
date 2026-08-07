@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-prompt
-description: Write structured Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar, the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers, timed camera moves synced to dialogue (crash zoom, smooth push-in, reveal pull-back, lip-sync), diegetic audio, 4K face protection, photoreal creature integration with species behavior and texture-reference fallback, prepended-intro duration budgeting, source-clip inspection, and iteration discipline. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements or creatures, rebuild environments on moving camera, sync camera moves to spoken lines, or apply any footage-driven visual effect with Seedance.
+description: Write structured Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar, the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers, timed camera moves synced to dialogue (crash zoom, smooth push-in, reveal pull-back, lip-sync), diegetic audio, 4K face protection, photoreal creature integration with species behavior and texture-reference fallback, prepended-intro duration budgeting, source-clip inspection, and iteration discipline. For Seedance 2.5 structured editing (subject replacement, background replacement, audio editing) or native extension, use seedance-prompt-25 instead. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements or creatures, rebuild environments on moving camera, sync camera moves to spoken lines, or apply any footage-driven visual effect with Seedance.
 ---
 
 # Seedance VFX Prompt
@@ -17,13 +17,25 @@ Use this skill when the user wants to:
 - chain VFX shots where the last frame of one becomes the first frame of the next
 
 Do **not** use this skill for:
-- text-to-video generation from a blank prompt (use `seedance-prompt`)
-- image-to-video from a still frame (use `seedance-prompt`)
+- text-to-video generation from a blank prompt (use `seedance-prompt-25` for 2.5, `seedance-prompt-20` for 2.0)
+- image-to-video from a still frame (use `seedance-prompt-25` for 2.5, `seedance-prompt-20` for 2.0)
 - character sheet or location still generation (use Seedream skills)
+
+> **Version note**: This skill targets Seedance 2.0 video-to-video VFX. For
+> Seedance 2.5's structured editing capabilities (subject replacement with
+> Timeline Inheritance, background replacement, audio editing), use the
+> `seedance-prompt-25` skill which covers 2.5's enhanced editing templates.
+> For 2.0 T2V/R2V prompts, use `seedance-prompt-20`.
+
+> **2.5 resolution guard**: Seedance 2.5 supports only 480p/720p output. The
+> 4K face-protection methodology below is 2.0-only. For face-critical structured
+> edits on 2.5, weigh 720p fidelity against 2.0's 4K path. For 1080p/4K output,
+> stay on 2.0.
 
 This skill is designed to partner with:
 - `seedance-vfx-shot` for the end-to-end submission, poll, and save pipeline
-- `seedance-prompt` for text-to-video and image-to-video generation
+- `seedance-prompt-20` for Seedance 2.0 text-to-video and image-to-video generation
+- `seedance-prompt-25` for Seedance 2.5 text-to-video, R2V, and structured editing
 - `seedream-*` skills for generating reference images used in VFX prompts
 
 ## Source authority
@@ -47,7 +59,7 @@ source footage.
 
 The `@Video N` source-clip binding plus the `Locks:` heading enforce this
 discipline. VFX prompts use the same natural-language heading style as the
-general `seedance-prompt` skill — short descriptive words followed by a colon,
+general `seedance-prompt-25` skill — short descriptive words followed by a colon,
 never decorative delimiters.
 
 A VFX prompt is only as good as the source footage. **Shoot each clip already
@@ -59,7 +71,7 @@ hold.
 ## Recommended prompt structure — VFX Edit
 
 Every Seedance VFX prompt follows the same heading convention as the general
-`seedance-prompt` skill: short natural-language headings with a colon, no
+`seedance-prompt-25` skill: short natural-language headings with a colon, no
 decorative delimiters. Assemble in this order. Omit a heading only when it does
 not apply to the task.
 
@@ -94,7 +106,7 @@ Constraints: [NON-IP, face protection, no-warp, camera-motion lock, etc.]
 ## 1. Asset preparation (always first)
 
 List every reference asset the user provides, using the same `@Video N`,
-`@Image N`, `@Audio N` index convention as the general `seedance-prompt` skill.
+`@Image N`, `@Audio N` index convention as the general `seedance-prompt-25` skill.
 For VFX, the source clip being edited is always `@Video 1`.
 
 ```text
@@ -130,7 +142,7 @@ they're starting from before writing.
 ## 2. Subject definitions
 
 Define every distinct subject that appears in the references using the `Define`
-keyword, exactly as the general `seedance-prompt` skill requires. Use 2-3 clear,
+keyword, exactly as the general `seedance-prompt-25` skill requires. Use 2-3 clear,
 stable static features (clothing, hairstyle, appearance, category) to uniquely
 identify each subject.
 
@@ -745,6 +757,11 @@ Asset preparation:
 prior shot (Woman standing in @neon-alley). She turns and walks toward camera,
 5 seconds.
 ```
+
+> **Seedance 2.5 alternative**: For pure extension tasks (no VFX change, just
+> extending a clip), Seedance 2.5's native forward/backward extension can replace
+> the manual `return_last_frame` chaining above. Use `seedance-prompt-25` with
+> the 2.5 model (`dreamina-seedance-2-5-260628`) and `seedance_2_5_create_task`.
 
 ## Iteration discipline
 

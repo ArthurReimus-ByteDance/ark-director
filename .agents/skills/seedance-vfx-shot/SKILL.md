@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-shot
-description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt.
+description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. For Seedance 2.5 structured editing or extension, use seedance-prompt-25 instead.
 ---
 
 # Seedance VFX Shot Pipeline
@@ -10,6 +10,13 @@ This skill composes the `seedance-vfx-prompt` skill (prompt writing) with the
 `modelark-mcp` tools (task submission, polling, download) to produce a saved,
 manifested asset following the workspace's `projects/<project>/` directory
 conventions.
+
+> **Version note**: This pipeline targets Seedance 2.0 video-to-video VFX with
+> 4K face protection. For Seedance 2.5's structured editing (subject replacement,
+> background replacement, audio editing) and native forward/backward extension,
+> use the `seedance-prompt-25` skill. Note that 2.5 supports only 480p/720p
+> output — the 4K face-protection path below is 2.0-only. For 2.0 T2V/R2V
+> prompts, use `seedance-prompt-20`.
 
 Use this skill when the user wants to:
 - **run a complete VFX shot** from source clip to saved output
@@ -110,9 +117,15 @@ Before submitting, verify:
 4. **4K check** — if the source clip contains a human face, `resolution` must
    be `4k`. Only allow `1080p` for pure landscape/environment shots with no
    human faces.
+
+> **2.5 guard**: Seedance 2.5 supports only 480p/720p. If using the 2.5 model (`dreamina-seedance-2-5-260628`), set `resolution` to `"720p"` — `"4k"` and `"1080p"` are invalid and will be rejected.
+
 5. **Duration** — 1 to 15 seconds. The API also accepts `-1` (auto/match-source),
    but for VFX prefer an explicit duration matching the source clip. If the
    source clip is longer than 15s, split it into multiple chained shots.
+
+For Seedance 2.5, single-pass duration extends to 30s, and native forward/backward extension can replace the manual `return_last_frame` chaining workflow.
+
 6. **Project/scene/shot directories exist** — create them if missing:
    - `projects/<project>/scenes/<scene>/shots/<shot>/`
    - `projects/<project>/assets/video/shots/<scene>/<shot>/`
@@ -145,7 +158,7 @@ Call `seedance_create_task` on the `mcp_modelark-seed` MCP server.
           "role": "reference_image"
         }
       ],
-      "model": "dreamina-seedance-2-0-260128",
+      "model": "{{model_id}}",  # default: dreamina-seedance-2-0-260128 (2.0); use dreamina-seedance-2-5-260628 for 2.5 (note: 2.5 supports only 480p/720p)
       "resolution": "4k",
       "ratio": "16:9",
       "duration": 5,
@@ -246,7 +259,7 @@ projects/<project>/scenes/<scene>/shots/<shot>/shot.md
 project: <project>
 scene: <scene>
 shot: <shot>
-model: dreamina-seedance-2-0-260128
+model: dreamina-seedance-2-0-260128  # 2.0 default; use dreamina-seedance-2-5-260628 for 2.5 (720p max)
 mode: V2V
 vfx_level: <1 | 2 | 3>
 references:
@@ -303,7 +316,7 @@ safety_identifier: <project>-<scene>-<shot>
 
 ## Generation parameters
 
-- **Model**: `dreamina-seedance-2-0-260128` (Seedance 2.0 Standard)
+- **Model**: `dreamina-seedance-2-0-260128` (Seedance 2.0 Standard; for 2.5 use `dreamina-seedance-2-5-260628` — note 2.5 caps at 720p)
 - **Resolution**: 4K (3840×2160)
 - **Ratio**: 16:9
 - **Duration**: <N>s
@@ -329,7 +342,7 @@ To re-create this take from this manifest alone:
 
 1. Encode the source video and element reference images.
 2. Call `seedance_create_task` on `mcp_modelark-seed` with the prompt from
-   `<shot>_prompt.md`, `model=dreamina-seedance-2-0-260128`,
+   `<shot>_prompt.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (720p max)`,
    `resolution=4k`, `ratio=16:9`, `duration=<N>`, `generate_audio=true`,
    `return_last_frame=true`.
 3. Poll with `seedance_get_task` until `status=succeeded`.
@@ -384,7 +397,7 @@ If the task failed, report:
 |---|---|---|
 | Content safety rejection | Source clip or prompt flagged by moderation | Review source clip content; simplify the `New world:` description; remove any borderline language |
 | Invalid reference format | Video URL unreachable, image not valid PNG/JPEG | Verify file paths; re-encode images as PNG; use `kind: "base64"` for local files |
-| Prompt too long | Exceeds 4000 character limit | Condense `New world:` and `Lighting:` sections; remove redundant detail |
+| Prompt too long | Exceeds 32,000 character limit (the MCP `seedance_create_task` video-generation tool accepts up to 32,000 characters) | Condense `New world:` and `Lighting:` sections; remove redundant detail |
 | Task timeout / expired | `execution_expires_after` too short | Resubmit with `execution_expires_after: 7200` (2 hours) |
 | Face warp in output | Resolution too low or face protection not in constraints | Ensure `resolution: "4k"` and face protection guard is present; resubmit |
 | Camera motion drift | Camera lock too vague in `Locks:` | Specify exact motion type (handheld bob, lateral sway, tracking speed) and add "frame-for-frame" lock; resubmit |
@@ -397,6 +410,8 @@ and debugging.
 VFX shots using Seedance 2.0 at 4K with audio are the **most expensive**
 generation mode in the workspace. Each 4K VFX take costs significantly more than
 a 1080p text-to-video take.
+
+Seedance 2.5 at 720p is cheaper per generation but cannot produce 4K output — use 2.5 for structured editing and extension, 2.0 for 4K face protection.
 
 Guidelines:
 - **Default to a single take** (`t01`) for VFX development. Generate multiple

@@ -43,6 +43,9 @@ storyboard and visual-anchor review.
 - Without an explicit panel budget, add a panel when visual information or
   state materially changes.
 - Keep recurring identities, locations, props, and style in an explicit canon.
+- When matching canonical Element sheets exist, attach the selected character,
+  location, and visible-prop sheets to the live generation request. A text
+  description or an earlier storyboard panel is not a substitute for them.
 - Treat screen direction and location geography as sequence-level constraints.
 - Use coherent natural language, not comma-heavy keyword piles.
 - Bind every reference by role and target with exact `@Image N` tokens.
@@ -86,8 +89,18 @@ Before creating files:
 
 - search for the project, scene, shot, character, location, and prop;
 - reuse approved assets and existing IDs;
+- open every relevant `elements/characters/*/character.md`,
+  `elements/locations/*/location.md`, and `elements/props/*/prop.md`; resolve
+  one selected sheet/reference file per visible Element, its lifecycle state,
+  and SHA-256 before writing prompts;
 - preserve user-written descriptions and lifecycle states;
 - do not create a duplicate project, scene, element, or same-purpose note.
+
+If a project has relevant Element sheets, a generated panel must bind them by
+role in both the submitted request and its metadata. If an Element has no
+selected sheet, use the best available approved reference; otherwise record the
+asset as `unresolved` and keep the output as an unlocked draft, ineligible for
+video handoff. Do not quietly use a storyboard output as the canonical source.
 
 If the request is not tied to a local project, keep the output in chat unless
 the user asks for files.
@@ -101,6 +114,7 @@ Extract or infer:
   keyframe planning;
 - target medium and aspect ratio;
 - cast, locations, props, wardrobe, and visible state;
+- the selected character, location, and prop sheet for every visible Element;
 - visual style, palette, lighting rules, and realism level;
 - forbidden content or transformations;
 - target runtime only when it affects the edit;
@@ -162,7 +176,8 @@ For a one-panel board:
 - favor the image that best sells the scene's central story, emotion, or product;
 - record important omitted transitions as motion notes rather than extra panels;
 - recommend I2V or R2V for video handoff; request a second approved panel only
-  if exact start-and-end locking through FLF2V becomes necessary.
+  if exact start-and-end locking through FLF2V becomes necessary. R2V bundle
+  sizing is version-dependent: Seedance 2.0 allows ≤9 images; 2.5 allows ≤30.
 
 ### 5. Preflight every reference
 
@@ -185,9 +200,12 @@ Check for:
 - ambiguous images that combine several reference roles;
 - more references than the chosen model supports.
 
-Use the smallest sufficient reference set. If a visible reference conflicts
-with the requested result, clean or replace it instead of relying only on an
-exclusion sentence.
+Use the smallest sufficient reference set, but include one selected source for
+each visible character, the active location, and each story-critical prop. If
+that exceeds the live model limit, split the panel/task or resolve the asset
+set; do not silently drop an Element. If a visible reference conflicts with the
+requested result, clean or replace it instead of relying only on an exclusion
+sentence.
 
 Control-only floor plans and sketches may guide structure, but state that their
 lines, labels, and colors must not appear in the finished panel.
@@ -302,7 +320,10 @@ Exclude: [only material faults; no text overlays, labels, storyboard borders,
 watermarks, unintended subjects, duplicated faces, or control-guide marks]
 ```
 
-For text-to-image, omit `References` and use:
+For text-to-image, omit `References` only when there are no applicable
+canonical Element sheets. When character, location, or prop sheets exist, use
+image-to-image/reference generation and bind them with exact `@Image N` tokens.
+Use:
 
 ```text
 Task:
@@ -334,7 +355,9 @@ design, palette, and rendering style consistent. Each image must depict one
 frozen decisive moment, not a collage or multi-panel grid.
 
 References:
-@Image 1: ...
+@Image 1: character identity — selected character sheet
+@Image 2: location geometry — selected location sheet
+@Image 3: prop identity — selected prop sheet
 
 Global visual canon:
 [Stable identity, location, prop, style, aspect ratio, and lighting rules.]
@@ -370,6 +393,8 @@ For actual image creation:
 - set `watermark: false` unless the user requires a visible watermark;
 - use `prompt_optimization: standard` for final candidates and `fast` only when
   latency matters more than fidelity.
+- Upload and pass the resolved local Element files as ordered reference inputs;
+  keep their `@Image N` indices identical in the prompt, request, and manifest.
 
 For a one-panel board, generate three alternatives of that same panel by
 default: `p010 v01`, `p010 v02`, and `p010 v03`. They share the same decisive
@@ -431,13 +456,28 @@ Record:
 - `source_assets` with each path, role, selected variant, approval state, and
   SHA-256;
 - `video_handoff` with eligibility, promoted keyframe path, recommended image
-  mode, and any invalidation reason.
+  mode, target Seedance version (2.5 or 2.0), reference budget, and any
+  invalidation reason.
 
 Set a newly generated output to `review`, not `approved`.
 Set `video_handoff.eligible: true` only after explicit panel approval and after
 verifying that all recorded source-asset variants and hashes still match. A
 changed character, location, or prop returns the dependent panel to `review`;
 do not silently carry a stale panel into motion generation.
+
+Use this minimum `source_assets` record for every visible canonical Element:
+
+```yaml
+source_assets:
+  - element_id: lola-maria
+    element_type: character
+    role: character_identity
+    path: elements/characters/lola-maria/references/ref_01_front.png
+    selected_variant: ref_01_front.png
+    status: approved
+    sha256: "..."
+    prompt_token: "@Image 1"
+```
 
 ### 12. Review the board
 

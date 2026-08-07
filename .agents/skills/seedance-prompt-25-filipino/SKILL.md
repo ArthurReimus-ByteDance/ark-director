@@ -11,7 +11,9 @@ description: >
   seedance-prompt-25 whenever the scene contains Tagalog, Filipino, or Taglish
   dialogue. Invoke when the user asks for Filipino video prompts, Tagalog
   dialogue in Seedance, Philippine-language content, or pronunciation and
-  intonation guidance for Filipino speech in AI video generation.
+  intonation guidance for Filipino speech in AI video generation. For 4K or
+  1080p output resolution not supported by Seedance 2.5, fall back to the
+  seedance-prompt-20 skill with the 2.0 model.
 ---
 
 # Seedance Prompt 2.5 — Filipino/Tagalog Partner
@@ -564,7 +566,7 @@ flowchart TD
   QA -->|no: mispronounced stress,<br/>wrong intonation, missing glottal stops| ADJ[Revise prompt with<br/>stronger annotation, regenerate]
   ADJ --> SEEDAUDIO
   QA -->|yes| SAVE[Save to<br/>assets/audio/dialogue/]
-  SAVE --> REF[Pass as reference_audio<br/>to Seedance create_task]
+  SAVE --> REF[Pass as reference_audio<br/>to seedance_2_5_create_task]
   SCENE -->|visual prompt +<br/>dialogue text in braces| SEED[Seedance video generation]
   REF --> SEED
   SEED --> VQA{Video QA: lip-sync,<br/>timing, pronunciation match?}
@@ -1017,6 +1019,15 @@ Teacher Mae asks: {Naiintindihan ba ninyo?}
 | First step | Always simplify vocabulary before annotation or generation |
 | Preferred pipeline | Audio-first (Seed Audio → Seedance reference_audio) |
 | Fallback for remaining difficult words | In-prompt phonetic annotation |
+| Seedance 2.5 model ID | `dreamina-seedance-2-5-260628` |
+| MCP tools | `seedance_2_5_create_task`, `seedance_2_5_get_task` |
+
+### Fallback to Seedance 2.0
+
+Seedance 2.5 supports only 480p/720p output resolution. For 1080p or 4K output,
+or for Fast/Mini speed variants, use the `seedance-prompt-20` skill with model
+`dreamina-seedance-2-0-260128`. Note that 2.0 has a 15s max duration (vs 30s on
+2.5) and fewer reference slots (9 imgs / 3 vids / 3 audios vs 30/10/10).
 
 ### Phonetic annotation summary
 
@@ -1059,7 +1070,7 @@ Teacher Mae asks: {Naiintindihan ba ninyo?}
 4. Generate audio
 5. Verify: stress, glottal stops, intonation, duration, Taglish phonology
 6. Save to `assets/audio/dialogue/<scene>/<shot>/`
-7. Pass as `reference_audio` to Seedance (`@Audio N`)
+7. Pass as `reference_audio` to `seedance_2_5_create_task` (`@Audio N`)
 8. Write same dialogue text in `{curly braces}` in Seedance prompt
 9. Align shot timestamps to actual audio timing
 10. Record audio path, hash, duration, timestamp mapping in `shot.md`

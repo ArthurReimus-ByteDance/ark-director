@@ -11,7 +11,7 @@ description: >
   Seedance 2.5 prompts, multi-reference asset orchestration, 30-second
   narrative staging, video editing, extension, and corrections to generated
   motion or continuity. For legacy Seedance 2.0 prompts, use
-  seedance-prompt-20 instead.
+  seedance-prompt-20 instead. For 4K or 1080p output resolution (unsupported by 2.5) or Fast/Mini speed variants, also use `seedance-prompt-20`.
 ---
 
 # Seedance Prompt
@@ -959,15 +959,14 @@ content, camera movements, cuts, and event order from @Video 1 unchanged.
 
 | Variant | Model ID |
 |---|---|
-| Seedance 2.5 | TBD — check the [Model list](https://docs.byteplus.com/en/docs/ModelArk/1330310) when API access launches |
+| Seedance 2.5 | `dreamina-seedance-2-5-260628` |
 | Seedance 2.0 Standard (legacy) | `dreamina-seedance-2-0-260128` |
 | Seedance 2.0 Fast (legacy) | `dreamina-seedance-2-0-fast-260128` |
 | Seedance 2.0 Mini (legacy) | `dreamina-seedance-2-0-mini-260615` |
 
-> Seedance 2.5 API access is "coming soon" on BytePlus ModelArk as of
-> 2026-07-31. It is live on Jimeng AI and Doubao Pro. Always copy the live
-> model ID from the [Model list](https://docs.byteplus.com/en/docs/ModelArk/1330310)
-> before making API calls.
+**MCP tools:** `seedance_2_5_create_task` (submit), `seedance_2_5_get_task` (poll), `seedance_list_tasks` / `seedance_cancel_or_delete_task` (shared with 2.0).
+
+> The model ID `dreamina-seedance-2-5-260628` is live on BytePlus ModelArk. Confirm the current ID on the [Model list](https://docs.byteplus.com/en/docs/ModelArk/1330310) before making API calls.
 
 ### Reference limits
 
@@ -1014,12 +1013,21 @@ content, camera movements, cuts, and event order from @Video 1 unchanged.
 
 ### Output duration
 - 4–30s per generation (up from 4–15s in 2.0).
+- Output resolution: 480p or 720p only. For 1080p or 4K output, fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) via `seedance-prompt-20`.
 - Multi-round extensions up to 180s (beta).
 
 ### Cost ladder
 - Prototype at lower resolution → finalize at target resolution.
 - Video generation is billed per successful task completion.
 - Confirm current billing rules on the [Pricing page](https://docs.byteplus.com/en/docs/ModelArk/1544106).
+
+### When to use Seedance 2.0 instead of 2.5
+
+Fall back to `seedance-prompt-20` and the 2.0 model (`dreamina-seedance-2-0-260128`) when:
+
+- You need **1080p or 4K output resolution** — 2.5 caps at 720p.
+- You need **Fast or Mini speed variants** — 2.5 has no Fast/Mini; 2.0 Fast/Mini are cheaper and faster for prototyping.
+- You need the lowest possible cost per generation for quick iteration.
 
 ### Languages
 - 10+ languages supported natively: Chinese, English, Spanish, Indonesian, Malay, Thai, Arabic, Portuguese, Vietnamese, Japanese, Korean.

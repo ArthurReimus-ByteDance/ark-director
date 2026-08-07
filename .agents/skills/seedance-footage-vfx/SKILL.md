@@ -11,17 +11,24 @@ description: >
   animate from. Also use when they paste such a prompt and ask to change its lighting, timing,
   creature, or runtime. Trigger even if they just say "make a Seedance prompt for this video" with a
   clip attached. This is the video-to-video specialization; for a brand-new scene from image
-  references with no source clip to preserve, the general Seedance prompter applies instead.
+  references with no source clip to preserve, use seedance-prompt-20 (2.0) or
+  seedance-prompt-25 (2.5). For Seedance 2.5's structured editing (subject
+  replacement, background replacement, audio editing), use seedance-prompt-25.
 ---
 
 # Seedance 2.0 — Footage Transformation
+
+> **Version note**: This skill targets Seedance 2.0 video-to-video VFX. For
+> Seedance 2.5's structured editing capabilities (subject replacement, background
+> replacement, audio editing), use the `seedance-prompt-25` skill. For 2.0 T2V/R2V
+> prompts, use `seedance-prompt-20`.
 
 This skill is for **editing a clip the user already has**: keep a real subject and the real camera
 move, change only what they ask for. It is the video-to-video sibling of the general Seedance
 prompter. It reuses the same prompt grammar — a compact specs line, scene action written as a
 single continuous shot (the source is one take), an `SFX` line at the end, and a terse director's
-voice — and adds the transformation layer below. If the `seedance-prompter-v2` skill is also
-available, reuse its grammar and style verbatim; do not contradict it.
+voice — and adds the transformation layer below. If the `seedance-prompt-20`
+skill is also available, reuse its grammar and style verbatim; do not contradict it.
 
 ## The core idea: preserve, then change one thing
 
@@ -285,6 +292,11 @@ emotionally controlled. Don't inflate, don't soften, don't explain what things "
 Images ≤ 9; videos ≤ 3 items, total ≤ 15s; audio ≤ 3 MP3s, total ≤ 15s; total mixed inputs ≤ 12;
 generation duration 4–15s. A source clip plus a texture-reference photo fits easily. If a request
 needs more inputs than allowed, flag it and say what to prioritize.
+
+> **Seedance 2.5 limits**: 2.5 raises these to 30 images / 10 videos / 10 audios
+> and 30s generation duration. If your request exceeds the 2.0 limits above,
+> route to `seedance-prompt-25` and use the 2.5 model
+> (`dreamina-seedance-2-5-260628`) with `seedance_2_5_create_task`.
 
 ## Structure patterns to internalize (style reference only — do not reproduce)
 

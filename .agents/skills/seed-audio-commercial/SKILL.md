@@ -34,7 +34,9 @@ A finished audio commercial asset, saved locally, with:
 
 - **Plain TTS or single-voice narration** — use `seed-audio-prompt` directly
   without the commercial story structure.
-- **Video generation** — use Seedance skills (`seedance-prompt`).
+- **Video generation** — use Seedance skills (`seedance-prompt-25` for 2.5, `seedance-prompt-20` for 2.0).
+  If the dialogue track is for a Seedance video, follow the audio-first pipeline in `AGENTS.md`
+  (generate audio, verify duration ≤ video duration, pass as `reference_audio`).
 - **Image generation** — use Seedream skills (`seedream-prompt`).
 - **Voice cloning for consistent characters across multiple clips** — use
   `seed-audio-prompt` in TA2A mode with reference audio clips.

@@ -540,7 +540,7 @@ Native support for 14 languages: Arabic, Filipino, French, German, Indonesian, J
 Supported in `ap-southeast-1` and `eu-west-1`.
 
 ### Trust ecosystem with Seedance
-- Images from Seedream 5.0 Pro and Lite are trusted inputs across all Seedance models (2.5, 2.0, Fast, Mini).
+- Images from Seedream 5.0 Pro and Lite are trusted inputs across all Seedance models (2.5 `dreamina-seedance-2-5-260628`, 2.0 `dreamina-seedance-2-0-260128`, Fast/Mini via `SEEDANCE_MODEL_BINDINGS`).
 - Text-to-Image outputs are trusted automatically for all customers.
 - Image-to-Image outputs become trusted after the account passes KYC verification.
 - Trust exempts input moderation only, not output moderation.
