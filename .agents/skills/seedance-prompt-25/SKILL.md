@@ -1069,23 +1069,25 @@ Fall back to `seedance-prompt-20` and the 2.0 model (`dreamina-seedance-2-0-2601
 
 ### Consistency rules
 - Lock character sheets, prop sheets, and scene sheets with Seedream before spending video credits.
-- Generate storyboard panels from approved assets when composition must be reviewed before motion.
+- Storyboarding is optional. Generate storyboard panels from approved assets when composition must be reviewed before motion; otherwise generate video directly from canonical Element references (R2V) or text-to-video.
 - Reuse the same reference bundle across every shot in a scene.
 - Preserve a written locked-decisions and requested-delta record for every retry.
 - Change only one of {prompt wording, reference bundle, motion design} per retry when practical.
 
 ### Storyboard-to-video handoff
 
-Treat a storyboard panel as a derivative composition and continuity anchor,
-not as the canonical identity source. Character, location, and prop sheets
-remain the source of truth. Require explicit approval before using a panel as
-a video input.
+Storyboards are optional. Use a storyboard panel as a derivative composition
+and continuity anchor when composition must be reviewed before motion;
+otherwise generate video directly from canonical Element references (R2V)
+or text-to-video. Character, location, and prop sheets remain the source of
+truth. Require explicit approval before using a panel as a video input.
 
 | Need | Mode | Reference rule |
 |---|---|---|
 | Reproduce the exact approved opening frame | First-frame | Submit only the promoted panel |
 | Lock approved start and end states | First + last frame | Submit only the two promoted panels |
 | Preserve explicit references while following storyboard composition | R2V | Submit the approved panel and canonical asset set as separate indexed references |
+| Generate video without a storyboard | R2V or T2V | Submit canonical Element references only (R2V) or text-only prompt (T2V) |
 
 For R2V, index the panel and canonical assets separately:
 

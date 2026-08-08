@@ -416,7 +416,7 @@ Never rely only on a provider URL. Use durable artifact persistence and save the
 actual file under:
 
 ```text
-projects/<project>/assets/image/storyboard/<scene>/
+projects/<project>/scenes/scene-NN/
 ```
 
 Use:

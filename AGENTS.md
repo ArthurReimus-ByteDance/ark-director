@@ -150,7 +150,7 @@ projects/
     scenes/
       scene-01/                       # scene-NN (2-digit, 10-gap)
         scene.md                      # script, cast, location, props, camera, style, status
-        s01_kf01_v01.png              # scene-level storyboard keyframe
+        s01_kf01_v01.png              # scene-level keyframe (from storyboard or direct)
         prompt_s01_kf01_v01.md        # prompt snapshot beside asset
         s01_render_v01.mp4            # scene render / final deliverable
         s01_sh010/                    # shot folder (gaps of 10 so shots can be inserted later)
@@ -183,6 +183,7 @@ flowchart TD
   AUD -->|reference_audio + shot timestamps| VID
   SH -->|generate video at natural duration 4-30s| VID[shot folder - video take]
   KF -->|I2V, FLF2V, or R2V composition anchor| VID
+  SH -->|direct R2V or text-to-video, no storyboard| VID
   VID -->|return_last_frame / first_frame chain| NEXT[approved scene boundary frame]
   NEXT -->|first_frame anchor| VID2[next scene - video take]
   VID -->|assemble| R[scene folder - render]
@@ -195,19 +196,25 @@ flowchart TD
 
 ### Storyboard-to-video handoff
 
-Use the project-local `seedream-storyboard` skill to create or revise
-storyboard panels when a video depends on visualized composition, blocking, or
-continuity. Coordination belongs in this project contract; the storyboard skill
-remains independently usable.
+**Storyboarding is optional.** Use the project-local `seedream-storyboard`
+skill to create or revise storyboard panels when a video depends on visualized
+composition, blocking, or continuity that must be reviewed before spending
+video credits. For simple shots, well-defined Elements, or rapid iteration,
+skip the storyboard and generate video directly from canonical Element
+references (R2V) or text-to-video. Coordination belongs in this project
+contract; the storyboard skill remains independently usable.
 
 Treat references in this order:
 
 1. **Elements are canonical** — approved character, location, and prop assets
    define identity, geometry, materials, and persistent design.
 2. **Storyboard panels are derivative** — they combine canonical Elements with
-   shot composition, staging, lighting, and visible state.
+   shot composition, staging, lighting, and visible state. When used, they
+   serve as composition and continuity anchors, not as identity sources.
 3. **Video keyframes are approved promotions** — only a panel that has passed
-   storyboard and visual-anchor review may become a video input.
+   storyboard and visual-anchor review may become a video input. This
+   constraint applies only when storyboard panels exist; a direct path with no
+   storyboard has no panel to promote.
 
 Choose one Seedance image mode per generation:
 
@@ -216,12 +223,13 @@ Choose one Seedance image mode per generation:
 | Lock the exact opening composition | I2V | One approved keyframe as `first_frame` |
 | Lock exact opening and ending states | FLF2V | Two approved keyframes as `first_frame` and `last_frame` |
 | Keep canonical assets explicit while using storyboard composition | R2V | Approved panel plus the smallest sufficient character, location, and prop set as `reference_image` inputs |
+| Generate video without storyboarding | R2V or T2V | Canonical Elements as `reference_image` inputs (R2V) or text-only prompt (T2V) |
 
 Do not mix I2V/FLF2V frame roles with an R2V reference bundle unless the live
 model and tool explicitly support that combination. In R2V, assign stable
 `@Image N` indices and repeat each applicable binding inside the relevant shot.
 
-Before video submission:
+Before video submission (when storyboard panels are used):
 
 - require explicit approval or `selected_variant` for every storyboard panel
   used as a video input;
@@ -233,6 +241,10 @@ Before video submission:
 - record the chosen mode, ordered image roles, panel path/hash, canonical
   Element paths/hashes, and approval status in `shot.md`;
 - respect the live reference-count and face-input restrictions.
+
+When storyboarding is skipped, still record the chosen mode, ordered Element
+reference roles, paths, hashes, and approval status in `shot.md` before
+submitting the video task.
 
 For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
 `seedance-prompt-20` (2.0, for 4K/1080p output or Fast/Mini variants).

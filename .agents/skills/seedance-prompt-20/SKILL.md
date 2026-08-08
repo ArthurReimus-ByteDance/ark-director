@@ -291,11 +291,13 @@ Constraints: keep Girl @Image 1's face and clothing stable without deformation; 
 
 ### Storyboard-to-video handoff
 
-Treat a storyboard panel as a derivative composition and continuity anchor, not
-as the canonical identity source. Character, location, and prop sheets remain
-the source of truth. Require explicit approval before using a panel as a video
-input, and verify that its recorded source-asset variants and hashes still
-match the current approved assets.
+Storyboards are optional. Use a storyboard panel as a derivative composition
+and continuity anchor when composition must be reviewed before motion;
+otherwise generate video directly from canonical Element references (R2V) or
+text-to-video. Character, location, and prop sheets remain the source of
+truth. Require explicit approval before using a panel as a video input, and
+verify that its recorded source-asset variants and hashes still match the
+current approved assets.
 
 Choose the mode from the production need:
 
@@ -304,6 +306,7 @@ Choose the mode from the production need:
 | Reproduce the exact approved opening frame | I2V | Submit only the promoted panel as `first_frame` |
 | Lock approved start and end states | FLF2V | Submit only the two promoted panels as `first_frame` and `last_frame` |
 | Preserve explicit character, location, and prop references while following storyboard composition | R2V | Submit the approved panel and the smallest sufficient canonical asset set as `reference_image` inputs |
+| Generate video without a storyboard | R2V or T2V | Submit canonical Element references only (R2V) or text-only prompt (T2V) |
 
 These modes are mutually exclusive. Do not combine I2V or FLF2V frame roles
 with an R2V bundle unless the live model and tool explicitly confirm that
@@ -359,8 +362,9 @@ Model IDs are version-dated and change on release. Always copy the live ID from 
 
 ### Consistency rules
 - Lock character sheets, prop sheets, and scene sheets with Seedream before spending video credits.
-- Generate storyboard panels from those approved assets when composition,
-  blocking, or shot-to-shot continuity must be reviewed before motion.
+- Storyboarding is optional. Generate storyboard panels from those approved assets when composition,
+  blocking, or shot-to-shot continuity must be reviewed before motion; otherwise generate video
+  directly from canonical Element references (R2V) or text-to-video.
 - Promote only approved panels to video keyframes; a panel still in `review` is
   not a production video input.
 - Reuse the same reference bundle across every shot in a scene (seed guidance above).
