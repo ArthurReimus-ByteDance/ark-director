@@ -62,7 +62,7 @@ flowchart TD
   H --> P[Prompt composition: T2A full soundscape]
   P --> V[Validate: char count, safety, format]
   V --> S[Generate via seed_audio_generate]
-  S --> D[Download to project assets/]
+  S --> D[Download to shot/scene folder]
   D --> Q[Verify: ffprobe + full decode]
   Q --> M[Save prompt snapshot + manifests]
   M --> R[Present for user review]
@@ -233,8 +233,16 @@ Create or update these project files:
 |---|---|
 | `projects/<project>/project.md` | Brief, cast, locations, model defaults, status |
 | `projects/<project>/scenes/scene-01/scene.md` | Scene definition, story, assets table |
-| `projects/<project>/scenes/scene-01/shots/s01_sh010/shot.md` | Generation details, output, cost, prompt ref, notes |
-| `assets/audio/commercial/<name>_t<NN>_v<NN>_prompt.md` | Immutable prompt snapshot |
+| `projects/<project>/scenes/scene-01/s01_sh010/shot.md` | Generation details, output, cost, prompt ref, notes |
+| `projects/<project>/scenes/scene-01/prompt_mix_s01_v<NN>.md` | Immutable prompt snapshot beside the audio asset |
+
+The prompt snapshot lives **beside the media asset it produced, nowhere
+else.** Use the `prompt_` prefix followed by the audio asset name (without
+extension). For a scene-level commercial mix: `prompt_mix_s01_v01.md` beside
+`mix_s01_v01.mp3`. For shot-level dialogue:
+`prompt_dlg_s01_sh010_<character-id>_t01_v01.md` beside
+`dlg_s01_sh010_<character-id>_t01_v01.mp3`. See AGENTS.md for the full audio
+prompt-snapshot naming table.
 
 ### Step 8 — Present for review
 
@@ -473,22 +481,38 @@ projects/
     scenes/
       scene-01/
         scene.md
-        shots/
-          s01_sh010/
-            shot.md
-    assets/
-      audio/
-        commercial/
-          <project-name>_t<NN>_v<NN>.mp3
-          <project-name>_t<NN>_v<NN>_prompt.md
+        mix_s01_v01.mp3                          # scene-level commercial mix
+        prompt_mix_s01_v01.md                    # prompt snapshot beside asset
+        s01_sh010/
+          shot.md
+          dlg_s01_sh010_<character-id>_t01_v01.mp3  # shot-level dialogue
+          prompt_dlg_s01_sh010_<character-id>_t01_v01.md
+    library/                                     # reusable, non-shot-specific assets
+      mus_<descriptor>_v01.wav
+      prompt_mus_<descriptor>_v01.md
 ```
 
 ### Asset file naming
 
+Follow the AGENTS.md structured-token conventions. Audio assets use these
+prefixes:
+
 | Asset | Pattern | Example |
 |---|---|---|
-| Commercial audio | `<project-name>_t<NN>_v<NN>.mp3` | `jollibee-chickenjoy_t01_v01.mp3` |
-| Prompt snapshot | `<project-name>_t<NN>_v<NN>_prompt.md` | `jollibee-chickenjoy_t01_v01_prompt.md` |
+| Dialogue | `dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.<ext>` | `dlg_s01_sh010_marco_t01_v01.mp3` |
+| Music | `mus_<descriptor>_v<NN>.<ext>` | `mus_tension-build_v01.wav` |
+| Ambience | `amb_<scene>_<descriptor>_v<NN>.<ext>` | `amb_s01_rain_v01.wav` |
+| Scene mix | `mix_<scene>_v<NN>.<ext>` | `mix_s01_v01.mp3` |
+
+Prompt snapshots use the `prompt_` prefix followed by the audio asset name
+(without extension):
+
+| Prompt | Pattern | Example |
+|---|---|---|
+| Dialogue prompt | `prompt_dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.md` | `prompt_dlg_s01_sh010_marco_t01_v01.md` |
+| Music prompt | `prompt_mus_<descriptor>_v<NN>.md` | `prompt_mus_tension-build_v01.md` |
+| Ambience prompt | `prompt_amb_<scene>_<descriptor>_v<NN>.md` | `prompt_amb_s01_rain_v01.md` |
+| Scene mix prompt | `prompt_mix_<scene>_v<NN>.md` | `prompt_mix_s01_v01.md` |
 
 - Takes: 2-digit, `t01`, `t02`, `t03` (one take = one generation attempt).
 - Versions: 2-digit, `v01`, `v02` (revisions of the same take's prompt).
