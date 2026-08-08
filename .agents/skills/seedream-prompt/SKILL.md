@@ -491,6 +491,116 @@ For multi-element composition or fine editing, step-by-step operation improves c
 - UI design requiring pixel-level precision
 - Small text may still be unstable — manual refinement after generation is recommended
 
+## Avoiding the AI look
+
+Seedream images often look AI-generated even when prompted for "realistic" results. The root cause is almost always **insufficient specificity** — the model fills visual gaps with its default plastic-smooth aesthetic. The fixes below apply to both T2I and reference-based generation.
+
+### 1. "Realistic" is not enough — use concrete photorealism signals
+
+The word "realistic" or "photorealistic" alone does little. The model needs **specific** references to real-world imaging pipelines:
+
+- **Film stocks**: Kodak Portra 400, Fujifilm Superia 400, Ilford HP5, CineStill 800T
+- **Lens characteristics**: anamorphic widescreen, 35mm prime, shallow depth of field, natural lens flare, chromatic aberration
+- **Camera bodies**: shot on ARRI Alexa, Sony A7R IV, Hasselblad medium format
+- **Photographic genres**: documentary photography, photojournalism, editorial portrait, street photography
+
+**Bad:** `Style: realistic, high quality`
+
+**Good:** `Style: photorealistic, cinematic, Kodak Portra 400 film stock aesthetic, anamorphic widescreen look, shot on 35mm prime lens`
+
+### 2. Lighting is the #1 AI tell
+
+Flat, even, shadowless lighting is the most common reason an image reads as AI-generated. Real photographs have **directional, imperfect light** with falloff, spill, and environmental contamination.
+
+Always specify:
+- **Direction**: "key light at 45 degrees camera-left"
+- **Quality**: hard, soft, diffused, dappled
+- **Color temperature**: warm 3200K, cool 5600K, golden-hour amber
+- **Falloff / spill**: "light spills onto the background wall," "shadows deepen at the edges"
+- **Environmental contamination**: "window light mixed with neon signage reflection," "dust particles catching the backlight"
+
+**Bad:** `Lighting: well lit, bright`
+
+**Good:** `Lighting: golden hour backlight, warm amber and rose tones, soft rim light on subject's hair, god rays breaking through scattered clouds, gentle fill from ocean reflection`
+
+### 3. Add skin and texture imperfections
+
+AI models default to airbrushed, plastic-smooth skin. Counteract this by explicitly requesting imperfections in the **Subject** section:
+
+- Visible pores, subtle freckles, fine lines
+- Flyaway hair strands, stray eyebrow hairs
+- Slight asymmetry in features or smile
+- Skin texture: dewy, matte, perspiring, wind-chapped
+- Fabric texture: visible weave, wrinkling, stray threads
+
+**Bad:** `Subject: A beautiful woman with perfect skin`
+
+**Good:** `Subject: A woman in her early 30s, visible pores and subtle freckles across the nose, flyaway hair strands catching the light, slight asymmetry in her smile, faint laugh lines`
+
+### 4. Prompt order carries weight
+
+Concepts placed earlier in the prompt carry more weight. If "photorealistic" is buried at the end after Constraints, the model treats it as an afterthought. Put the most important visual directives (style, lighting) high in the order:
+
+**Subject > Setting > Style > Lighting > Composition > Constraints**
+
+### 5. Use negative constraints aggressively
+
+Seedream has no separate `negative_prompt` field — all exclusions go inline in the Constraints section. AI-looking outputs are best prevented by explicitly forbidding the artifacts the model tends to produce:
+
+```
+Constraints:
+Quality: 4K, rich textures, cinematic depth of field
+Negative: no plastic skin, no over-smoothing, no waxy textures, no watermarks, no text overlays, no distorted anatomy, no unnatural symmetry, no CG render look
+```
+
+### 6. Avoid over-description that forces perfection
+
+Long lists of superlatives ("flawless, stunning, breathtaking, perfect, gorgeous") push the model toward an idealized, plastic look. Prefer **observed detail** over **value judgment**:
+
+- "windswept dark hair" not "beautiful stunning gorgeous hair"
+- "weathered hands resting on a wooden railing" not "perfect elegant hands"
+- "slightly rumpled linen shirt" not "beautiful designer outfit"
+
+### 7. Use `prompt_optimization: standard`
+
+The `fast` prompt optimization mode trades quality for latency. For photorealistic final output, always use `standard` (the default). Only use `fast` for quick iterations and concept exploration.
+
+### 8. Before-and-after example
+
+**Prompt that produces AI-looking output:**
+```
+Subject: A beautiful young woman with perfect skin and stunning features, wearing a gorgeous red dress, standing on a cliff.
+
+Setting: A beautiful ocean view at sunset.
+
+Style: Realistic, high quality, 4K.
+
+Lighting: Well lit.
+
+Composition: Wide shot.
+
+Constraints:
+Quality: HD
+Negative: no watermarks
+```
+
+**Prompt that produces photorealistic output:**
+```
+Subject: A young woman in her late 20s, visible pores and subtle freckles, flyaway dark hair strands catching the light, slight asymmetry in her smile, wearing a slightly windswept red linen dress, standing at the edge of a cliff with arms slightly raised, face turned toward the horizon.
+
+Setting: A dramatic coastal cliff at golden hour. Ocean stretches below, waves crashing against rocks. Distant seabirds. A lighthouse on a far promontory.
+
+Style: Photorealistic, cinematic, Kodak Portra 400 film stock aesthetic, anamorphic widescreen look, shot on 35mm prime lens.
+
+Lighting: Golden hour backlight, warm amber and rose tones, soft rim light on subject's hair and dress, god rays breaking through scattered clouds, gentle fill from ocean reflection.
+
+Composition: Wide shot, eye level, rule of thirds — subject on left third line, horizon on lower third, negative space to the right.
+
+Constraints:
+Quality: 4K, rich textures, cinematic depth of field
+Negative: no plastic skin, no over-smoothing, no waxy textures, no watermarks, no text overlays, no distorted anatomy, no unnatural symmetry, no CG render look
+```
+
 ## Quick reference card
 
 ### Model IDs
