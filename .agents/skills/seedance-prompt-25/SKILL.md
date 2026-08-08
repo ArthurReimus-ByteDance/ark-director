@@ -2,26 +2,28 @@
 name: seedance-prompt-25
 description: >
   Write production-grade Seedance 2.5 video prompts with the flexible six-part
-  formula, 50-material multimodal referencing, 30-second stage-based staging,
-  timestamp pacing, structured video editing (subject replacement, background
-  replacement, audio editing), forward and backward video extension, keyframe
-  sequences, storyboard grids, coarse and fine blockout references, one-click
-  video, seamless transitions, audio bracket syntax, dialogue language
-  reinforcement, emotional direction, and camera language. Use this skill for
-  Seedance 2.5 prompts, multi-reference asset orchestration, 30-second
-  narrative staging, video editing, extension, and corrections to generated
-  motion or continuity. For legacy Seedance 2.0 prompts, use
-  seedance-prompt-20 instead. For 4K or 1080p output resolution (unsupported by 2.5) or Fast/Mini speed variants, also use `seedance-prompt-20`.
+  formula, 50-material multimodal referencing, variable-duration scene staging
+  (4-30s), timestamp pacing, structured video editing (subject replacement,
+  background replacement, audio editing), forward and backward video extension,
+  keyframe sequences, storyboard grids, coarse and fine blockout references,
+  one-click video, seamless transitions, audio bracket syntax, dialogue
+  language reinforcement, emotional direction, and camera language. Use this
+  skill for Seedance 2.5 prompts, multi-reference asset orchestration, scene
+  staging, video editing, extension, and corrections to generated motion or
+  continuity. For legacy Seedance 2.0 prompts, use seedance-prompt-20 instead.
+  For 4K or 1080p output resolution (unsupported by 2.5) or Fast/Mini speed
+  variants, also use `seedance-prompt-20`.
 ---
 
 # Seedance Prompt
 
 Write production-grade prompts for the BytePlus Seedance 2.5 video generation
-model. Seedance 2.5 generates up to **30 seconds** of video with native audio in
-a single pass, accepts up to **50 multimodal reference materials**, and supports
-video editing, extension, one-click video, and seamless transitions. The model
-co-generates audio and video in one latent space, so sound direction in the
-prompt shapes the final result.
+model. Seedance 2.5 generates **up to 30 seconds** of video with native audio in
+a single pass (set the actual duration via the `duration` parameter — 30s is
+the ceiling, not the target), accepts up to **50 multimodal reference
+materials**, and supports video editing, extension, one-click video, and
+seamless transitions. The model co-generates audio and video in one latent
+space, so sound direction in the prompt shapes the final result.
 
 ## Source authority
 
@@ -221,11 +223,17 @@ display-case area.
 > The goal is to help the model select the correct materials for the current
 > scene, **not** to make every material appear at the same time.
 
-## 30-second video staging
+## Scene staging
 
 When a video contains several events, divide the story into **consecutive
 stages**. Give each stage only **one primary state change** and a **clear end
 state** — what should be directly visible at the end.
+
+**Generate per scene at its natural duration (4–30s), not per 30-second block.**
+Right-size each scene using the `duration` parameter — 7s for a single beat,
+12s for a short dialogue exchange, 20s for a multi-stage action sequence. Do
+not pad scenes to fill 30s. Chain approved scenes via `return_last_frame` /
+`first_frame` + a shared reference bundle and assemble in post.
 
 ```
 [Generation Goal]
@@ -250,13 +258,22 @@ Keep <character identity, number of characters, clothing, prop ownership, spatia
 and audio relationships> consistent.
 ```
 
-### Long-form via native extension
+### When to use 30s single-pass or native extension (exception)
 
-A single generation caps at **30s**, but Seedance 2.5 supports **multi-round
-extension up to 180s (beta)** from a 30s base. For a longer piece (e.g. a
-2-minute video), generate a 30s base take and extend it forward/backward in
-rounds — **do not force scene changes at every 30s mark**; scene changes happen
-naturally where the story needs them.
+Native extension (up to 180s, beta) and full 30s single-pass are the **exception**,
+not the default. Use them only when you explicitly need continuous, seamless
+motion across what would otherwise be scene boundaries:
+
+- **Single continuous take** — a one-shot with no cuts where seamless motion
+  across 30s+ matters more than per-scene iteration control.
+- **Minimal scene variation** — same location, same characters, gradual change
+  that the model handles well in one pass.
+- **Audio-driven long dialogue** — one long dialogue block where lip-sync must
+  be continuous across scene boundaries; extension keeps it seamless.
+
+If using extension: generate a 30s base take, then extend it forward/backward
+in rounds — **do not force scene changes at every 30s mark**; scene changes
+happen naturally where the story needs them.
 
 - **Audio with extension.** Align a single Seed Audio master to the full timeline
   (up to ~2 min) and pass it as `reference_audio` so dialogue and sound stay
@@ -265,10 +282,6 @@ naturally where the story needs them.
   boundary image, motion trend, and audio continuity on both sides of each seam.
   Multi-round extension is beta — validate each seam before committing.
 - **Aspect ratio** is locked to the input video's ratio for extended segments.
-- For multi-location / multi-edit work, generate separate 30s scenes instead,
-  chain them via `return_last_frame` / `first_frame` + a shared reference bundle,
-  and assemble in post. Only then slice the Seed Audio master per scene (each
-  ≤ 30s) at natural boundaries.
 
 ### Timestamps and pacing
 

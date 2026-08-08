@@ -13,7 +13,7 @@ The primary integration mechanism is **MCP (Model Context Protocol) servers** pl
 
 AI coding agents working here should treat MCP tools as the canonical way to invoke BytePlus models, and skills as the canonical way to package reusable content recipes. Do not call the Ark REST API directly from skills — go through the MCP tools.
 
-**Always save generated files locally.** Every asset produced via MCP (video, image, audio) must be downloaded and saved to the appropriate path under `projects/<project>/assets/` inside this workspace — never rely solely on a remote URL or ephemeral link. Remote URLs expire; the local `assets/` tree is the durable source of truth for generated content.
+**Always save generated files locally.** Every asset produced via MCP (video, image, audio) must be downloaded and saved to the appropriate path under `projects/<project>/scenes/` (or `library/` for reusable assets) inside this workspace — never rely solely on a remote URL or ephemeral link. Remote URLs expire; the local project tree is the durable source of truth for generated content.
 
 ## Model catalog
 
@@ -26,7 +26,7 @@ the canonical names.
 
 | Family | Model(s) | Modality | Key capabilities | Ark API surface |
 |---|---|---|---|---|
-| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — 30s single-pass, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback; configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
+| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — up to 30s per pass, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback; configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
 | Seedream | Seedream 5.0 Pro (`dola-seedream-5-0-pro-260628`); configured Lite/4.x bindings | Image | Text-to-image, reference-based generation/editing, multi-reference fusion, sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
 | Seed Audio | Seed Audio 1.0 (`seed-audio-1.0`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, voice references, cross-lingual generation, up to ~2 min/clip | BytePlus Seed Speech audio generation API |
 | Seed / Doubao | `seed-2-0-lite-260228` and siblings | Text | Prompt expansion, scene scripting, structured output for pipelines | `POST /responses` (OpenAI-compatible) |
@@ -54,12 +54,12 @@ flowchart LR
   B -->|submit task_id| C
   B -->|poll task_id| C
   C -->|asset URL| B
-  B -->|download| G[(projects/<project>/assets/ - gitignored)]
+  B -->|download| G[(projects/<project>/scenes/ - gitignored)]
   A -->|expand prompt / script| H[Seed LLM]
 ```
 
-- MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/assets/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local `assets/` tree is the durable source of truth.
-- Generated assets are written to a **gitignored** project-scoped `assets/` directory (see [Project & asset directory structure](#project--asset-directory-structure)); never commit binary outputs.
+- MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/scenes/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local project tree is the durable source of truth.
+- Generated assets are written to a **gitignored** project-scoped `scenes/` directory (see [Project & asset directory structure](#project--asset-directory-structure)); never commit binary outputs.
 - The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
 
 ## Production gates
@@ -89,10 +89,14 @@ Treat expensive media generation as a gated production workflow:
 8. **Technical and semantic QA** — inspect actual streams, decode integrity,
    contact sheets, key story transitions, and audio before requesting approval.
 
-For tightly controlled 30-second scenes, do not overload one generation with
-too many cuts, action beats, close encounters, and location changes. Split the
-scene into separate shots and chain approved frames when continuity risk is
-higher than the benefit of a single generation.
+**Generate per scene at its natural duration (4–30s), not per 30-second block.**
+Do not overload one generation with too many cuts, action beats, close
+encounters, and location changes. Right-size each scene to the duration it
+actually needs using the `duration` parameter (1–30s for 2.5, ≤15s for 2.0),
+then chain approved scenes via `return_last_frame` / `first_frame` + a shared
+reference bundle and assemble in post. Reserve 30s single-pass or native
+extension for when you explicitly need continuous, seamless motion across scene
+boundaries.
 
 ## Project & asset directory structure
 
@@ -105,12 +109,13 @@ by `.gitignore` — the directory is intentionally left un-ignored so that
 individual tracked files (e.g. a project template or doc) *could* be added
 explicitly if ever needed, but the default is: hands off.
 
-This workspace hosts many projects (films, ad campaigns, series, etc.). Each project lives under `projects/<project-name>/` and follows the same internal layout. The structure adapts two proven patterns to a local filesystem:
+This workspace hosts many projects (films, ad campaigns, series, etc.). Each project lives under `projects/<project-name>/` and follows the same internal layout. The structure leans on **structured file naming** (token prefixes like `s01_sh010_t01_v01.mp4`, `char_gloria_turnaround_v01.png`) to self-describe assets, minimizing folder nesting:
 
 - **Higgsfield-style "Elements"** — reusable characters, locations, and props are authored once under `elements/` and referenced by many scenes (mirroring Higgsfield Cinema Studio's Elements + SOUL ID character-consistency model).
 - **VFX pipeline shot/versioning** — scenes break into numbered shots with gaps for insertions, and every generated file carries structured, padded, versioned tokens.
+- **Naming over nesting** — file prefixes (`char_`, `loc_`, `prop_`, `ref_`, `dlg_`, `mus_`, `sfx_`, `amb_`, `mix_`, `prompt_`) already encode type, scene, shot, take, and version. Folders don't need to repeat that information.
 
-The core separation: **`elements/` holds reusable assets** (referenced across scenes), **`scenes/` holds scene/shot definitions**, and **`assets/` holds generated outputs** split by modality. Storyboards and concept art are scene/production outputs; character/location/prop sheets are Element outputs.
+The core separation: **`elements/` holds reusable assets** (referenced across scenes), **`scenes/` holds scene/shot definitions and all generated outputs** co-located with their shot, and **`library/` holds reusable non-shot-specific assets** (music, SFX, ambience).
 
 ### Directory tree
 
@@ -118,76 +123,51 @@ The core separation: **`elements/` holds reusable assets** (referenced across sc
 projects/
   <project-name>/                     # kebab-case, e.g. midnight-run
     project.md                        # brief, cast, locations, model & credit defaults, status
-    docs/                             # project-specific documentation (limitations, visual packages)
-    elements/                         # reusable Elements (authored once, referenced by many scenes)
-      characters/
-        <character-id>/               # e.g. gloria   (folder = element id)
-          character.md                # sheet: role, traits, voice, consistency model & notes
-          references/                 # SOUL-ID style seed set (multi-angle, incl. full-body)
-            ref_01_front.png
-            ref_02_side.png
-            ref_03_fullbody.png
-          sheets/                     # generated character sheets
-            char_gloria_turnaround_v01.png
-            char_gloria_expression_happy_v01.png
-      locations/
-        <location-id>/                # e.g. neon-alley
-          location.md
-          references/
-          sheets/
-            loc_neon-alley_wide_v01.png
-      props/
-        <prop-id>/                    # e.g. red-motorcycle
-          prop.md
-          references/
-          sheets/
-            prop_red-motorcycle_side_v01.png
+    task_ids.json                     # project-level task registry (provider task IDs)
+    library/                          # reusable, non-shot-specific assets
+      mus_tension-build_v01.wav       # music beds
+      sfx_door-slam_v01.wav           # sound effects
+      amb_s01_rain_v01.wav            # ambience
+      prompt_mus_tension-build_v01.md # prompt snapshots beside library assets
+    elements/                         # reusable Elements (flat, no type subfolders)
+      gloria/                         # folder = element id; type is in manifest + file prefix
+        character.md                  # role, traits, voice, consistency model & notes
+        ref_01_front.png              # ref_ prefix = reference seed image
+        ref_02_side.png
+        ref_03_fullbody.png
+        char_gloria_turnaround_v01.png      # char_ prefix = character sheet
+        prompt_char_gloria_turnaround_v01.md # prompt snapshot beside the sheet
+      neon-alley/
+        location.md
+        ref_01_wide.png
+        loc_neon-alley_wide_v01.png
+        prompt_loc_neon-alley_wide_v01.md
+      red-motorcycle/
+        prop.md
+        ref_01_side.png
+        prop_red-motorcycle_side_v01.png
+        prompt_prop_red-motorcycle_side_v01.md
     scenes/
-      <scene-id>/                     # e.g. scene-01
-        scene.md                      # script, prompt, cast, location, props, camera, style, status
-        shots/
-          s01_sh010/                  # shot folder (gaps of 10 so shots can be inserted later)
-            shot.md                   # shot prompt, camera move, refs, model, params, seed, cost
-    assets/                           # generated asset library — split by modality, then scene/shot
-      video/
-        shots/<scene>/<shot>/        # e.g. shots/scene-01/s01_sh010/
-          s01_sh010_t01_v01.mp4
-          prompt_s01_sh010_t01_v01.md  # immutable prompt snapshot (prefix: prompt_<asset>.md)
-        renders/                      # assembled scene/film renders
-          s01_render_v01.mp4
-      image/
-        storyboard/<scene>/          # Seedream keyframes (visual anchors)
-          s01_kf01_v01.png
-          prompt_s01_kf01_v01.md      # prompt snapshot beside each asset
-        concept/                       # concept art, mood boards
-        shots/<scene>/<shot>/
-      audio/
-        dialogue/<scene>/<shot>/
-          dlg_s01_sh010_gloria_t01_v01.wav
+      scene-01/                       # scene-NN (2-digit, 10-gap)
+        scene.md                      # script, cast, location, props, camera, style, status
+        s01_kf01_v01.png              # scene-level storyboard keyframe
+        prompt_s01_kf01_v01.md        # prompt snapshot beside asset
+        s01_render_v01.mp4            # scene render / final deliverable
+        s01_sh010/                    # shot folder (gaps of 10 so shots can be inserted later)
+          shot.md                     # shot prompt, camera move, refs, model, params, seed, cost
+          s01_sh010_t01_v01.mp4       # video take
+          prompt_s01_sh010_t01_v01.md # immutable prompt snapshot
+          dlg_s01_sh010_gloria_t01_v01.wav  # dialogue audio
           prompt_dlg_s01_sh010_gloria_t01_v01.md
-        music/                         # reusable music beds
-        sfx/                           # reusable sound effects
-        ambience/<scene>/
-        mix/<scene>/                  # full scene mixes
-      task_ids.json                   # project-level task registry (provider task IDs)
-    sub-projects/                     # ONLY when the project splits into sub-projects (segregated)
-      <sub-project-id>/               # e.g. episode-01  (full parallel structure, own assets/)
-        project.md
-        elements/
-        scenes/
-        assets/
-          video/
-          image/
-          audio/
-        renders/
-    renders/                          # final assembled deliverables (final cuts, exports, masters)
-    scripts/                          # helper scripts, generation utilities
-    trash/                            # rejected / superseded assets (gitignored, periodic cleanup)
+        s01_sh020/
+          shot.md
+          s01_sh020_t01_v01.mp4
+          prompt_s01_sh020_t01_v01.md
 ```
 
-- Small projects can omit `sub-projects/` entirely; a single-project film just uses `scenes/` + `assets/` directly.
-- The `assets/` tree is the single home for generated outputs. Dialogue is shot-specific (`audio/dialogue/<scene>/<shot>/`); music/SFX are reusable library assets (`audio/music/`, `audio/sfx/`).
-- Elements (characters, locations, props) and their sheets live under `elements/`, never under `assets/`, because they are reusable references, not scene outputs.
+- The `assets/` tree is eliminated. Generated outputs live **co-located with their shot** in `scenes/scene-NN/sNN_shNNN/`. Scene-level outputs (storyboard keyframes, renders) live directly in the scene folder.
+- **`library/`** holds reusable, non-shot-specific assets (music, SFX, ambience). Shot-specific dialogue audio stays in the shot folder.
+- Elements (characters, locations, props) and their sheets live under `elements/`, never under `scenes/` or `library/`, because they are reusable references, not scene outputs.
 - **Prompt snapshots live beside the media asset they produced, nowhere else.** Do not duplicate prompts in shot folders, scene folders, or any other location. The `shot.md` manifest references the asset-level prompt via `prompt_file` in frontmatter. See [Prompt files](#prompt-files).
 
 ### Production flow
@@ -195,17 +175,22 @@ projects/
 ```mermaid
 flowchart TD
   E[elements/ - canonical characters, locations, props] -->|reference| S
-  S[scenes/scene-N - scene definition] -->|break into| SH[shots/sNN_shNNN - shot definition]
-  E -->|identity, geometry, prop references| IMG1[assets/image/storyboard]
+  S[scenes/scene-N - scene definition] -->|break into| SH[scenes/scene-N/sNN_shNNN - shot definition]
+  E -->|identity, geometry, prop references| IMG1[scene folder - storyboard keyframe]
   SH -->|panel plan| IMG1
   IMG1 -->|review and explicit approval| KF[approved video keyframe]
-  SH -->|generate audio first| AUD[assets/audio/dialogue]
+  SH -->|generate audio first| AUD[shot folder - dialogue audio]
   AUD -->|reference_audio + shot timestamps| VID
-  SH -->|generate video| VID[assets/video/shots]
+  SH -->|generate video at natural duration 4-30s| VID[shot folder - video take]
   KF -->|I2V, FLF2V, or R2V composition anchor| VID
-  VID -->|assemble| R[renders/ - final deliverable]
+  VID -->|return_last_frame / first_frame chain| NEXT[approved scene boundary frame]
+  NEXT -->|first_frame anchor| VID2[next scene - video take]
+  VID -->|assemble| R[scene folder - render]
+  VID2 -->|assemble| R
   AUD -->|mix| R
   E -->|R2V canonical references| VID
+  E -->|R2V canonical references| VID2
+  LIB[library/ - reusable music, SFX, ambience] -->|mix| R
 ```
 
 ### Storyboard-to-video handoff
@@ -267,7 +252,7 @@ flowchart TD
   AUDIO -->|verify duration ≤ video duration| AOK{duration OK?}
   AOK -->|no| ADJ[adjust prompt — trim ambience, music tails, pauses]
   ADJ --> AUDIO
-  AOK -->|yes| ASAVE[save to assets/audio/dialogue/]
+  AOK -->|yes| ASAVE[save to shot folder]
   ASAVE -->|reference_audio input| SEED[Seedance video generation]
   SCENE -->|shot timestamps align to audio| SEED
   SEED -->|verify lip-sync, dialogue placement, timing| QA{QA pass?}
@@ -316,29 +301,55 @@ flowchart TD
 - record the audio asset path, hash, duration, and the dialogue-to-shot
   timestamp mapping in `shot.md`.
 
-### Long-form video (2.5) via native extension
+### Scene generation strategy
 
-Seedance 2.5 generates **up to 30s per single pass**, but supports **multi-round
-video extension up to 180s (beta)** from a 30s base — so a longer piece (e.g. a
-2-minute video) is built by **extending a 30s base forward/backward**, not by
-forcing cuts at every 30s mark.
+**Default: generate per scene at its natural duration (4–30s), then chain and
+assemble.** Each scene gets the model's full attention on one moment, iteration
+is cheaper (regenerate one scene, not a whole 30s block), and audio alignment is
+self-contained per scene. Use the `duration` parameter to right-size each scene
+— 30s is the ceiling, not the target.
 
-- Generate a 30s base take, then extend it forward (and/or backward) in rounds to
-  reach the target runtime. Scene changes happen naturally wherever the story
-  needs them; you do **not** have to align to 30s boundaries.
-- **Audio with extension.** Generate a Seed Audio master aligned to the **full**
-  timeline (up to ~2 min per call) and pass it as `reference_audio`, so dialogue
-  and sound arc stay continuous across the extension. The audio-first alignment
-  contract above applies to the whole timeline.
-- Caveats: extension boundaries are **not pixel-identical** — inspect both sides
-  of each seam (boundary image, motion trend, audio continuity). Multi-round
-  extension is **beta**; validate each seam before committing. Extension locks the
-  input video's aspect ratio.
-- For multi-location / multi-edit pieces where per-scene control matters more
-  than a single seamless pass, generate separate 30s scenes chained via
-  `return_last_frame` / `first_frame` + a shared reference bundle, then assemble
-  in post (`renders/`). Only in that path slice the Seed Audio master into
-  per-scene wavs (each ≤ 30s) at natural boundaries.
+- **Right-size each scene.** Set `duration` to the natural length the scene
+  needs (e.g. 7s for a single beat, 12s for a short dialogue exchange, 20s for a
+  multi-stage action sequence). Do not pad scenes to fill 30s.
+- **Chain scenes via keyframes.** Use `return_last_frame: true` on a scene to
+  capture its final frame, then pass that frame as `first_frame` on the next
+  scene. This preserves visual continuity across scene boundaries without
+  forcing everything into one generation.
+- **Shared reference bundle.** Pass the same canonical Elements (characters,
+  locations, props) as `reference_image` inputs to every scene so identity stays
+  consistent across the chain.
+- **Per-scene audio.** Generate Seed Audio for each scene's dialogue at the
+  scene's own duration. Verify `audio_duration ≤ video_duration` per scene, then
+  pass the audio as `reference_audio` to that scene's Seedance task. No need to
+  slice a master audio file.
+- **Assemble in post.** Concatenate approved scene takes into the final render
+  in the scene folder. Mix per-scene dialogue with library music, SFX, and
+  ambience at the project level.
+
+### When to use 30s single-pass or native extension (exception)
+
+Native extension (up to 180s, beta) and full 30s single-pass are the **exception**,
+not the default. Use them only when you explicitly need continuous, seamless
+motion across what would otherwise be scene boundaries:
+
+- **Single continuous take** — a one-shot with no cuts where seamless motion
+  across 30s+ matters more than per-scene iteration control.
+- **Minimal scene variation** — same location, same characters, gradual change
+  that the model handles well in one pass.
+- **Audio-driven long dialogue** — one long dialogue block where lip-sync must
+  be continuous across scene boundaries; extension keeps it seamless.
+
+If using extension: generate a 30s base take, then extend forward (and/or
+backward) in rounds to reach the target runtime. Scene changes happen naturally
+wherever the story needs them; you do **not** have to align to 30s boundaries.
+Generate a Seed Audio master aligned to the **full** timeline (up to ~2 min per
+call) and pass it as `reference_audio`, so dialogue and sound arc stay continuous
+across the extension. The audio-first alignment contract above applies to the
+whole timeline. Caveats: extension boundaries are **not pixel-identical** —
+inspect both sides of each seam (boundary image, motion trend, audio
+continuity). Multi-round extension is **beta**; validate each seam before
+committing. Extension locks the input video's aspect ratio.
 
 ### Folder & project naming
 
@@ -347,7 +358,6 @@ All folders and project/scene/element names are **lowercase kebab-case**, no spa
 | Entity | Rule | Example |
 |---|---|---|
 | Project | kebab-case, descriptive slug | `midnight-run`, `spring-campaign-2026` |
-| Sub-project | kebab-case | `episode-01`, `ad-variant-a` |
 | Scene | `scene-NN` (2-digit, 10-gap) | `scene-01`, `scene-02` |
 | Character id | kebab-case, short, human | `gloria`, `villain-marcus` |
 | Location id | kebab-case | `neon-alley`, `rooftop-night` |
@@ -430,11 +440,11 @@ scene: s01
 shot: s01_sh010
 model: seedance-2-5
 prompt: "A cinematic action scene of @gloria riding @red-motorcycle at speed down @neon-alley"
-prompt_file: assets/video/shots/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md
+prompt_file: scenes/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md
 prompt_sha256: "a1b2c3d4..."
 references:
-  - elements/characters/gloria/references/ref_01_front.png
-  - elements/props/red-motorcycle/references/ref_01_side.png
+  - elements/gloria/ref_01_front.png
+  - elements/red-motorcycle/ref_01_side.png
 seed: 8842
 params:
   resolution: "720p"
@@ -475,7 +485,7 @@ or tool can locate the prompt for any shot by reading these two fields — no
 guessing, no searching.
 
 **Element sheets:** Prompt snapshots for character/location/prop sheets live
-beside the sheet image under `elements/<type>/<id>/sheets/`, using the same
+beside the sheet image under `elements/<id>/`, using the same
 `prompt_` prefix convention (e.g. `prompt_char_gloria_turnaround_v01.md`
 beside `char_gloria_turnaround_v01.png`).
 
@@ -486,7 +496,7 @@ the working copy is superseded — the snapshot is canonical from that point on.
 
 ### Sub-projects
 
-When a project contains multiple discrete sub-projects (a film series, a multi-ad campaign), each sub-project gets a **fully parallel, segregated** structure under `sub-projects/<sub-project-id>/` — its own `elements/`, `scenes/`, `assets/`, and `renders/`. Assets are **not** shared between sub-projects by duplication; anything reused across sub-projects (a recurring character, brand elements) is promoted up to the **parent project's** `elements/` and referenced from there. This keeps sub-projects independent and archivable while avoiding duplicated character sheets.
+When a project contains multiple discrete sub-projects (a film series, a multi-ad campaign), each sub-project gets a **fully parallel, segregated** structure under `sub-projects/<sub-project-id>/` — its own `elements/`, `scenes/`, `library/`, and `task_ids.json`. Assets are **not** shared between sub-projects by duplication; anything reused across sub-projects (a recurring character, brand elements) is promoted up to the **parent project's** `elements/` and referenced from there. This keeps sub-projects independent and archivable while avoiding duplicated character sheets.
 
 ## Workspace-level directories
 
@@ -502,28 +512,9 @@ In addition to the `projects/` tree, the workspace root has three top-level dire
 
 **No loose files at workspace root.** All documentation, research, and reference files must live in `docs/`, `plans/`, or `specs/` — never loose at the workspace root. If a file doesn't fit one of those three purposes, it belongs inside a `projects/<project>/` subdirectory.
 
-### Project-level documentation
-
-Project-specific documentation (model limitations, visual packages, research notes for a single project) lives inside the project under `docs/`:
-
-```
-projects/
-  <project-name>/
-    docs/                       # project-specific documentation
-      seedance-25-limitations.md
-      visual-package.md
-      style-guide.md
-    project.md
-    elements/
-    scenes/
-    assets/
-```
-
-Do not scatter project-level docs at the project root alongside `project.md`. Only `project.md` and the standard subdirectories (`elements/`, `scenes/`, `assets/`, `docs/`, `renders/`, `trash/`) belong at the project root.
-
 ### Task ID tracking
 
-Keep a single project-level task registry at `projects/<project>/assets/task_ids.json`. This file maps provider task IDs to shot/asset metadata and is the canonical place to resume polling after a timeout or restart. Do not scatter per-scene `task_ids.json` files or freeform submission JSONs across scene/shot folders.
+Keep a single project-level task registry at `projects/<project>/task_ids.json`. This file maps provider task IDs to shot/asset metadata and is the canonical place to resume polling after a timeout or restart. Do not scatter per-scene `task_ids.json` files or freeform submission JSONs across scene/shot folders.
 
 ```json
 {
@@ -535,23 +526,11 @@ Keep a single project-level task registry at `projects/<project>/assets/task_ids
       "version": "v01",
       "model": "dreamina-seedance-2-5-260628",
       "status": "succeeded",
-      "asset_path": "assets/video/shots/scene-01/s01_sh010/s01_sh010_t01_v01.mp4",
+      "asset_path": "scenes/scene-01/s01_sh010/s01_sh010_t01_v01.mp4",
       "submitted_at": "2026-08-07T10:30:00Z"
     }
   ]
 }
-```
-
-### Helper scripts
-
-Ad-hoc generation scripts, utilities, and one-off tools do not belong inside shot folders. Place them in a project-level `scripts/` directory:
-
-```
-projects/
-  <project-name>/
-    scripts/                   # helper scripts, generation utilities
-      generate_dialogue.py
-      batch_submit.py
 ```
 
 ## Conventions
@@ -563,7 +542,7 @@ projects/
 ### Adding a new model tool (MCP)
 1. Define the tool with a clear, verb-noun name (e.g. `seedance.text_to_video`), a JSON Schema for inputs, and a single responsibility.
 2. Resolve key/region/base URL from env at runtime.
-3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct `assets/` path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
+3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct project path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
 4. Validate all prompt/reference inputs before calling the API.
 5. Normalize Ark error responses into actionable messages; surface `task_id` and retry guidance on failure.
 6. Persist the task ID before polling and support resuming the same task after a timeout or restart.
@@ -575,9 +554,9 @@ projects/
 - Document inputs, outputs, expected cost, latency, and failure modes.
 
 ### Lumina (web workspace) workflow
-- **Default workflow is local, not Lumina.** Unless the user explicitly says they are working in Lumina, assume the normal MCP-driven, local-`assets/` workflow. Lumina mode is opt-in only.
+- **Default workflow is local, not Lumina.** Unless the user explicitly says they are working in Lumina, assume the normal MCP-driven, local workflow. Lumina mode is opt-in only.
 - Lumina is BytePlus's all-in-one AI creative workspace at `https://ai.byteplus.com/lumina` (image page: `https://ai.byteplus.com/lumina/en/model/image?mode=image`), where a human drives Seedream/Seedance generation directly in the browser rather than via the API/MCP.
-- When the user indicates they are working in Lumina (e.g. "I'm in Lumina", "use Lumina", "paste this into Lumina", or they share a `ai.byteplus.com/lumina/...` URL), do NOT call MCP/Ark generation tools or write local `assets/`. Instead, write the ready-to-use prompt(s) directly in chat so the user can copy-paste them into Lumina's prompt box.
+- When the user indicates they are working in Lumina (e.g. "I'm in Lumina", "use Lumina", "paste this into Lumina", or they share a `ai.byteplus.com/lumina/...` URL), do NOT call MCP/Ark generation tools or write local project files. Instead, write the ready-to-use prompt(s) directly in chat so the user can copy-paste them into Lumina's prompt box.
 - Deliver clean, final, copy-pasteable prompts as plain text or fenced code blocks. Offer multiple variants (e.g. v01/v02/v03) as separate blocks when useful.
 - This is an explicit exception to the "MCP is canonical" rule: in Lumina mode the human runs the model; the assistant only authors prompts.
 - If the user later asks to programmatically generate or download assets, resume the normal MCP-driven workflow.
@@ -589,11 +568,12 @@ projects/
 
 ## Costs & guardrails
 - These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
-- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — 30s single-pass, 30/10/10 refs, structured editing, native extension. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 1080p/4K output (2.5 caps at 720p), Fast/Mini speed variants, or lower cost per generation.
+- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — up to 30s per pass, 30/10/10 refs, structured editing, native extension. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 1080p/4K output (2.5 caps at 720p), Fast/Mini speed variants, or lower cost per generation.
 - Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
 - Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
 - For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.
 - Treat preflight cost figures as estimates. Keep estimated cost, confirmed billing, and provider usage separate.
+- **Watermark:** Always set `watermark: false` by default for all image, video, and audio generation. Enable the AIGC watermark only when the user explicitly requests it.
 - **Default variant count:** When generating character sheets, location sheets, prop sheets, concept art, or storyboard keyframes, generate **at least 3 distinct variants (v01, v02, v03)** by default so the user has options to choose from. This applies to Seedream image generations in the Elements pipeline and concept/storyboard pipelines. Increase or decrease only when the user explicitly requests it.
 - **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.

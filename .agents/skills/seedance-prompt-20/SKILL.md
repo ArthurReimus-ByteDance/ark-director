@@ -7,8 +7,8 @@ description: Write and revise production-grade Seedance 2.0 video prompts with r
 
 > **For Seedance 2.5 prompts, use the `seedance-prompt-25` skill instead.** This skill
 > is for the legacy Seedance 2.0 model. The 2.5 model has a different prompt anatomy
-> (flexible formula, 50 references, 30-second staging, structured editing templates)
-> that is not covered here.
+> (flexible formula, 50 references, variable-duration scene staging, structured editing
+> templates) that is not covered here.
 
 Write production-grade prompts for the BytePlus Seedance 2.0 series video generation model. Every prompt follows a strict engineering structure: reference inventory, subject definitions, shot-by-shot timeline, and constraints. The model is a multimodal AI director that reads text, images, video, and audio simultaneously and decomposes them into a spatial layer (what is in the frame) and a temporal layer (how things change over time).
 

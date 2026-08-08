@@ -1,6 +1,6 @@
 ---
 name: modelark-mcp
-description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5 with 30-second generation and 50 multimodal references), understand images and videos through Seed 2.1 (OCR, scene analysis, multimodal reasoning), transcribe speech to text, poll and manage Seedance tasks, upload reference media to object storage (TOS or S3), and fetch persisted artifacts.
+description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5 with up to 30-second generation per pass and 50 multimodal references), understand images and videos through Seed 2.1 (OCR, scene analysis, multimodal reasoning), transcribe speech to text, poll and manage Seedance tasks, upload reference media to object storage (TOS or S3), and fetch persisted artifacts.
 ---
 
 # ModelArk Seed Multimodal MCP Server
