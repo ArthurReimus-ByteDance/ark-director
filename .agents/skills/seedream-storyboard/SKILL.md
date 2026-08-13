@@ -1,7 +1,6 @@
 ---
 name: seedream-storyboard
 description: Create, revise, and optionally generate production-ready cinematic storyboards—from one hero panel with alternatives to a multi-panel continuity sequence—with BytePlus Seedream. Use whenever the user asks for storyboards, shot boards, continuity boards, storyboard frames, visual sequences, previsualization, scene panels, or image planning for film, advertising, animation, games, or AI video.
-compatibility: Actual image creation requires callable BytePlus Seedream image-generation tools. Without them, produce complete copy-paste prompts, generation parameters, filenames, and manifests.
 ---
 
 # Seedream Storyboard
@@ -89,8 +88,8 @@ Before creating files:
 
 - search for the project, scene, shot, character, location, and prop;
 - reuse approved assets and existing IDs;
-- open every relevant `elements/characters/*/character.md`,
-  `elements/locations/*/location.md`, and `elements/props/*/prop.md`; resolve
+- open every relevant `elements/*/character.md`, `elements/*/location.md`, and
+  `elements/*/prop.md`; resolve
   one selected sheet/reference file per visible Element, its lifecycle state,
   and SHA-256 before writing prompts;
 - preserve user-written descriptions and lifecycle states;
@@ -429,7 +428,7 @@ Example:
 
 ```text
 s01_sh010_p020_t01_v01.png
-s01_sh010_p020_t01_v01_prompt.md
+prompt_s01_sh010_p020_t01_v01.md
 ```
 
 The prompt snapshot must contain the exact submitted prompt and parameters, with
@@ -472,7 +471,7 @@ source_assets:
   - element_id: lola-maria
     element_type: character
     role: character_identity
-    path: elements/characters/lola-maria/references/ref_01_front.png
+    path: elements/lola-maria/ref_01_front.png
     selected_variant: ref_01_front.png
     status: approved
     sha256: "..."

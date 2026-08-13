@@ -9,7 +9,7 @@ Write production-grade prompts for BytePlus Seedream location and environment
 asset generation. This skill is for **places**, not characters: interiors,
 exteriors, establishing shots, reusable location sheets, set references, and
 worldbuilding environment stills intended for downstream Seedance, storyboards,
-or project `elements/locations/` assets.
+or project `elements/<location-id>/` assets.
 
 Use this skill when the user wants:
 - a reusable **location asset** for a project
@@ -32,7 +32,7 @@ location/environment generation.
 - [Seedream 5.0 Pro official blog](https://seed.bytedance.com/en/blog/beyond-generation-it-understands-design-introducing-seedream-5-0-pro)
 - [Seedream 4.0-5.0 API Tutorial](https://docs.byteplus.com/en/docs/ModelArk/1824121)
 - [Seedream 4.0-4.5 Prompt Guide](https://docs.byteplus.com/en/docs/ModelArk/1829186)
-- Project conventions in `AGENTS.md` for `elements/locations/` and location sheets
+- Project conventions in `AGENTS.md` for flat `elements/<element-id>/` folders and location sheets
 
 When official documentation changes, prefer the live docs over this skill where
 they conflict.
@@ -235,7 +235,7 @@ Common location negatives:
 
 ### A. Reusable location asset
 
-Use when the goal is a project location sheet for `elements/locations/`.
+Use when the goal is a project location sheet for `elements/<location-id>/`.
 
 Focus on:
 - stable architecture
@@ -351,7 +351,7 @@ sample prompt when future agents update or reuse this skill.
 
 When a generated location asset is approved, save it under:
 
-- `projects/<project>/elements/locations/<location-id>/sheets/`
+- `projects/<project>/elements/<location-id>/`
 
 Recommended names:
 

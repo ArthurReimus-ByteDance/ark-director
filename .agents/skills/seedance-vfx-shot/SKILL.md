@@ -46,7 +46,7 @@ flowchart TD
     POLL[4. Poll via seedance_get_task until terminal] --> CHECK
     CHECK{status?} -->|succeeded| SAVE
     CHECK -->|failed/cancelled/expired| ERROR[Report error + retry guidance]
-    SAVE[5. Download asset to assets/video/shots/] --> MANIFEST
+    SAVE[5. Download asset to scene shot directory] --> MANIFEST
     MANIFEST[6. Write shot.md manifest] --> PROMPTFILE
     PROMPTFILE[7. Write standalone prompt .md] --> REPORT
     REPORT[8. Report cost, latency, paths, last-frame]
@@ -126,9 +126,8 @@ Before submitting, verify:
 
 For Seedance 2.5, single-pass duration extends to 30s, and native forward/backward extension can replace the manual `return_last_frame` chaining workflow.
 
-6. **Project/scene/shot directories exist** — create them if missing:
-   - `projects/<project>/scenes/<scene>/shots/<shot>/`
-   - `projects/<project>/assets/video/shots/<scene>/<shot>/`
+6. **Project/scene/shot directory exists** — create it if missing:
+   - `projects/<project>/scenes/scene-NN/sNN_shNNN/`
 
 ## Step 3 — Submit via MCP
 
@@ -187,7 +186,10 @@ Key parameters for VFX:
 - **`safety_identifier`** — set to `<project>-<scene>-<shot>` for
   traceability.
 
-The tool returns a `task_id` and `polling_interval`. Store both.
+The tool returns a `task_id` and `polling_interval`. Immediately store the task,
+shot, take, version, model, status, intended asset path, and submission time in
+`projects/<project>/task_ids.json` before polling. A local timeout never
+authorizes a duplicate submission; resume the recorded task until terminal.
 
 ## Step 4 — Poll for completion
 
@@ -226,10 +228,10 @@ On `succeeded`, the MCP response includes `artifacts` with the generated video
 (and optionally the last frame image). The MCP server's artifact store
 (`persist_output: true`) has already persisted the asset.
 
-Save the video to the project's asset directory:
+Save the video in its shot directory:
 
 ```
-projects/<project>/assets/video/shots/<scene>/<shot>/<shot>_t01_v01.mp4
+projects/<project>/scenes/scene-NN/sNN_shNNN/sNN_shNNN_t01_v01.mp4
 ```
 
 File naming follows the workspace convention:
@@ -240,7 +242,7 @@ If `return_last_frame=true`, save the last frame image alongside the video for
 chaining:
 
 ```
-projects/<project>/assets/video/shots/<scene>/<shot>/<shot>_t01_v01_lastframe.png
+projects/<project>/scenes/scene-NN/sNN_shNNN/sNN_shNNN_t01_v01_lastframe.png
 ```
 
 ## Step 6 — Write the shot.md manifest
@@ -249,7 +251,7 @@ Write the `shot.md` file in the shot directory with full YAML frontmatter for
 reproducibility:
 
 ```
-projects/<project>/scenes/<scene>/shots/<shot>/shot.md
+projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md
 ```
 
 **Manifest template:**
@@ -264,8 +266,10 @@ mode: V2V
 vfx_level: <1 | 2 | 3>
 references:
   - <source video path or URL>
-  - elements/characters/<id>/sheets/<sheet>.png
-  - elements/locations/<id>/sheets/<sheet>.png
+  - elements/<character-id>/<character-sheet>.png
+  - elements/<location-id>/<location-sheet>.png
+prompt_file: scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md
+prompt_sha256: <sha256 of exact submitted prompt>
 seed: null
 params:
   resolution: 4k
@@ -333,8 +337,7 @@ safety_identifier: <project>-<scene>-<shot>
 ## Prompt
 
 Full prompt text saved at:
-- `scenes/<scene>/shots/<shot>/<shot>_prompt.md` (shot-level)
-- `assets/video/shots/<scene>/<shot>/<shot>_prompt.md` (asset-level copy)
+- `scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md`
 
 ## Reproduction
 
@@ -342,7 +345,7 @@ To re-create this take from this manifest alone:
 
 1. Encode the source video and element reference images.
 2. Call `seedance_create_task` on `mcp_modelark-seed` with the prompt from
-   `<shot>_prompt.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (720p max)`,
+   `prompt_sNN_shNNN_t01_v01.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (720p max)`,
    `resolution=4k`, `ratio=16:9`, `duration=<N>`, `generate_audio=true`,
    `return_last_frame=true`.
 3. Poll with `seedance_get_task` until `status=succeeded`.
@@ -352,16 +355,10 @@ To re-create this take from this manifest alone:
 
 ## Step 7 — Write the standalone prompt file
 
-Save the full prompt text as a standalone Markdown file alongside the asset:
+Save the exact submitted prompt once, alongside the asset:
 
 ```
-projects/<project>/assets/video/shots/<scene>/<shot>/<shot>_prompt.md
-```
-
-Also write a copy at the shot level:
-
-```
-projects/<project>/scenes/<scene>/shots/<shot>/<shot>_prompt.md
+projects/<project>/scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md
 ```
 
 The file is plain Markdown containing the full VFX prompt text (from
@@ -375,7 +372,7 @@ After completion, report to the user:
 | Field | Source |
 |---|---|
 | **Status** | `succeeded` / `failed` |
-| **Local file path** | `projects/<project>/assets/video/shots/<scene>/<shot>/<file>.mp4` |
+| **Local file path** | `projects/<project>/scenes/scene-NN/sNN_shNNN/<file>.mp4` |
 | **Artifact URI** | `seed-media://artifacts/<id>` (MCP artifact store) |
 | **Task ID** | From MCP response |
 | **Cost** | `cost_usd` from MCP response |
@@ -384,7 +381,7 @@ After completion, report to the user:
 | **Duration** | Actual output duration |
 | **Last frame** | Path to saved last-frame PNG (if `return_last_frame=true`) |
 | **Latency** | Wall-clock time from submit to succeeded |
-| **Manifest** | `projects/<project>/scenes/<scene>/shots/<shot>/shot.md` |
+| **Manifest** | `projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md` |
 
 If the task failed, report:
 - The `error` field from the MCP response
@@ -442,7 +439,7 @@ flowchart LR
 
 Chaining procedure:
 1. Submit Shot 1 with `return_last_frame: true`.
-2. On success, save the last-frame PNG to the shot's asset directory.
+2. On success, save the last-frame PNG to the shot directory.
 3. For Shot 2, submit the source clip as `reference_video` AND the last-frame
    PNG as an image with `role: "first_frame"`.
 4. In Shot 2's prompt `Asset preparation:` section, note that the first frame
@@ -463,12 +460,12 @@ Before declaring a VFX shot complete, verify:
 - [ ] **`generate_audio: true`** — native diegetic audio enabled
 - [ ] **Task submitted** — `seedance_create_task` returned a `task_id`
 - [ ] **Task polled** — `seedance_get_task` returned `status: succeeded`
-- [ ] **Video saved locally** — asset in `assets/video/shots/<scene>/<shot>/`
+- [ ] **Video saved locally** — asset in `scenes/scene-NN/sNN_shNNN/`
 - [ ] **Last frame saved** — PNG alongside the video (if chaining)
 - [ ] **`shot.md` manifest written** — full YAML frontmatter with model, prompt
       references, seed, params, cost, status, artifacts
-- [ ] **Prompt file written** — standalone `.md` at both shot-level and
-      asset-level paths
+- [ ] **Prompt file written** — one immutable `prompt_...md` snapshot beside
+      the generated asset, linked by path and SHA-256 from `shot.md`
 - [ ] **Cost recorded** — `cost_usd` and `billing_tokens_total` in manifest
 - [ ] **Status set** — `review` (default), `approved`, or `rejected`
 - [ ] **No secrets in manifest** — API keys, tokens, credentials never in

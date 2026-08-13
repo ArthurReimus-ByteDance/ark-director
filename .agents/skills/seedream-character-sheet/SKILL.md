@@ -14,7 +14,7 @@ Use this skill when the user wants:
 - a model sheet
 - a turnaround-style identity sheet
 - a Seedance-facing identity anchor
-- a reusable `elements/characters/<id>/sheets/` asset
+- a reusable `elements/<character-id>/char_<character-id>_<sheet-type>_v<NN>.png` asset
 
 This skill is designed to partner with:
 - `seedream-prompt` for general Seedream image prompting
@@ -269,8 +269,8 @@ Recommended sequence:
 2. Generate the sheet with Seedream.
 3. Inspect the body panels for extra readable faces.
 4. If needed, invoke `seedream-character-sheet-cleanup`.
-5. Save the approved result under `elements/characters/<character-id>/sheets/`.
-6. Promote the approved version to `references/` for downstream use.
+5. Save each generated result under `elements/<character-id>/` beside `character.md`.
+6. Record the approved filename as `selected_variant` in `character.md`; keep reference images in the same element folder using the `ref_<NN>_...` convention.
 
 ## Example asset
 
