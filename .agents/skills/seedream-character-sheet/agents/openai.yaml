@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Character Sheet"
+  short_description: "Help with Seedream Character Sheet tasks"
+  default_prompt: "Use $seedream-character-sheet to handle this seedream character sheet task."

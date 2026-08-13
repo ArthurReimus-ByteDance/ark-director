@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Vfx Prompt"
+  short_description: "Help with Seedance Vfx Prompt tasks"
+  default_prompt: "Use $seedance-vfx-prompt to handle this seedance vfx prompt task."

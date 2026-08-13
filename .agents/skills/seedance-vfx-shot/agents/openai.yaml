@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Vfx Shot"
+  short_description: "Help with Seedance Vfx Shot tasks"
+  default_prompt: "Use $seedance-vfx-shot to handle this seedance vfx shot task."

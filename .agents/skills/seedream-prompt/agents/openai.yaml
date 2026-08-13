@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Prompt"
+  short_description: "Help with Seedream Prompt tasks"
+  default_prompt: "Use $seedream-prompt to handle this seedream prompt task."

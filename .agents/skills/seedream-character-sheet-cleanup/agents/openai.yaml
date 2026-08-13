@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Character Sheet Cleanup"
+  short_description: "Help with Seedream Character Sheet Cleanup tasks"
+  default_prompt: "Use $seedream-character-sheet-cleanup to handle this seedream character sheet cleanup task."

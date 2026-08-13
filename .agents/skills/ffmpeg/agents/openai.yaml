@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ffmpeg"
+  short_description: "Help with Ffmpeg tasks and workflows"
+  default_prompt: "Use $ffmpeg to handle this ffmpeg task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seed Audio Prompt"
+  short_description: "Help with Seed Audio Prompt tasks"
+  default_prompt: "Use $seed-audio-prompt to handle this seed audio prompt task."

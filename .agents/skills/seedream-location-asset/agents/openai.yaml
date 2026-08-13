@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Location Asset"
+  short_description: "Help with Seedream Location Asset tasks"
+  default_prompt: "Use $seedream-location-asset to handle this seedream location asset task."

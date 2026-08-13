@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Edit"
+  short_description: "Help with Seedream Edit tasks"
+  default_prompt: "Use $seedream-edit to handle this seedream edit task."

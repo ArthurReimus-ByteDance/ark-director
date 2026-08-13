@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remotion Markup"
+  short_description: "Help with Remotion Markup tasks"
+  default_prompt: "Use $remotion-markup to handle this remotion markup task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedream Storyboard"
+  short_description: "Help with Seedream Storyboard tasks"
+  default_prompt: "Use $seedream-storyboard to handle this seedream storyboard task."

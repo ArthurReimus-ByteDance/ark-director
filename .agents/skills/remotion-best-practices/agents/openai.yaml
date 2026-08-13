@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remotion Best Practices"
+  short_description: "Help with Remotion Best Practices tasks"
+  default_prompt: "Use $remotion-best-practices to handle this remotion best practices task."

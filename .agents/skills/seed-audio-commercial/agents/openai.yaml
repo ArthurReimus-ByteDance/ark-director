@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seed Audio Commercial"
+  short_description: "Help with Seed Audio Commercial tasks"
+  default_prompt: "Use $seed-audio-commercial to handle this seed audio commercial task."
