@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lark Showcase Aigc"
+  short_description: "Help with Lark Showcase Aigc tasks"
+  default_prompt: "Use $lark-showcase-aigc to handle this lark showcase aigc task."

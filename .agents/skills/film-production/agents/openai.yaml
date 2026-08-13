@@ -1,0 +1,4 @@
+interface:
+  display_name: "Film Production"
+  short_description: "Orchestrate agentic film production workflows"
+  default_prompt: "Use $film-production to take this film project through the next safe production stage."
