@@ -271,6 +271,7 @@ Audio); they are prompt-composition only and never call the API themselves.
 | Color grading | `color-grade-palettes` | Named palettes + film looks in the Visual Style slot; keep one project-wide palette; optional FFmpeg match graphs in the mix step |
 | Acting / emotion | `seedance-acting-console` | 6 emotions × 3 intensities via observable cues; reinforces performance through the audio-first Seed Audio `reference_audio` pipeline |
 | Pacing / rhythm | `seedance-pacing-presets` | Speed ramps + montage pacing as timestamped blocks; timestamps are a time budget, not frame-accurate |
+| Animation medium & handcrafted style | `seedance-animation-styles` | Material-first recipes for clay, felt, wood puppets, toys, vintage cel, painterly 2D, crafted 3D, silicone, crayon, and custom media; emits an optional Seedream style anchor plus a duration-aware Seedance treatment |
 
 Use a preset skill only when the user asks for a concrete axis ("dolly in on
 her face", "teal and orange grade", "Rage at medium intensity", "bullet-time
@@ -279,7 +280,10 @@ alone is sufficient. Do not let two skills fight: exactly one grade, one
 dominant lighting direction, and 1–2 camera moves per clip. Record the chosen
 axis choices and their canonical phrases in `shot.md` alongside the prompt
 snapshot. Load `seedance-lighting-presets` / `color-grade-palettes` alongside
-`seedream-prompt` when generating matching element sheets.
+`seedream-prompt` when generating matching element sheets. Load
+`seedance-animation-styles` for a stylized animation medium, especially when
+construction, surface behavior, motion cadence, and handmade imperfections must
+stay coherent from the still anchor through the video.
 
 ### Audio-video alignment (dialogue scenes)
 
