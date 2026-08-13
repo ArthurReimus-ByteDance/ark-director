@@ -54,13 +54,22 @@ flowchart LR
   B -->|submit task_id| C
   B -->|poll task_id| C
   C -->|asset URL| B
-  B -->|download| G[(projects/<project>/scenes/ - gitignored)]
+  B -->|download| G[(projects/<project>/scenes/ - local production state)]
   A -->|expand prompt / script| H[Seed LLM]
 ```
 
 - MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/scenes/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local project tree is the durable source of truth.
-- Generated assets are written to a **gitignored** project-scoped `scenes/` directory (see [Project & asset directory structure](#project--asset-directory-structure)); never commit binary outputs.
+- Generated assets are written to project-scoped `scenes/` directories (see
+  [Project & asset directory structure](#project--asset-directory-structure)).
+  The `projects/` tree is intentionally not gitignored; treat it as local
+  production state and do not stage it unless the user explicitly requests a
+  specific project artifact.
 - The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
+
+For end-to-end film work, use the project-local `film-production` skill as the
+manager. It advances one production stage at a time, delegates modality-specific
+work to the existing specialist skills, and preserves explicit human approval at
+creative locks and generation handoffs.
 
 ## Production gates
 
@@ -248,6 +257,29 @@ submitting the video task.
 
 For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
 `seedance-prompt-20` (2.0, for 4K/1080p output or Fast/Mini variants).
+
+**Compose directorial axes from the preset skills when the user names them.**
+Each preset skill resolves one axis into canonical prompt phrasing that drops
+into the six-part formula (Subject + Action + Scene + Visual Style + Camera +
+Audio); they are prompt-composition only and never call the API themselves.
+
+| Axis | Skill | Notes |
+|---|---|---|
+| Camera movement & MoveSet styles | `seedance-camera-presets` | Moves, techniques (dolly zoom, FPV, bullet-time orbit, one-take), and 10 MoveSet styles; keep ≤2 moves per clip |
+| Lens / focal length / aperture / sensor | `seedance-lens-presets` | Always pairs numeric optics with the visible result; 4K/1080p routes to `seedance-prompt-20` |
+| Lighting | `seedance-lighting-presets` | Causal lighting presets; emit both the Seedream `Lighting:` recipe (elements) and the Seedance visual-style phrase so image + video share one lighting intent |
+| Color grading | `color-grade-palettes` | Named palettes + film looks in the Visual Style slot; keep one project-wide palette; optional FFmpeg match graphs in the mix step |
+| Acting / emotion | `seedance-acting-console` | 6 emotions × 3 intensities via observable cues; reinforces performance through the audio-first Seed Audio `reference_audio` pipeline |
+| Pacing / rhythm | `seedance-pacing-presets` | Speed ramps + montage pacing as timestamped blocks; timestamps are a time budget, not frame-accurate |
+
+Use a preset skill only when the user asks for a concrete axis ("dolly in on
+her face", "teal and orange grade", "Rage at medium intensity", "bullet-time
+slow-mo"). For ordinary shots without such direction, `seedance-prompt-25`
+alone is sufficient. Do not let two skills fight: exactly one grade, one
+dominant lighting direction, and 1–2 camera moves per clip. Record the chosen
+axis choices and their canonical phrases in `shot.md` alongside the prompt
+snapshot. Load `seedance-lighting-presets` / `color-grade-palettes` alongside
+`seedream-prompt` when generating matching element sheets.
 
 ### Audio-video alignment (dialogue scenes)
 
@@ -586,7 +618,22 @@ Keep a single project-level task registry at `projects/<project>/task_ids.json`.
 - For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.
 - Treat preflight cost figures as estimates. Keep estimated cost, confirmed billing, and provider usage separate.
 - **Watermark:** Always set `watermark: false` by default for all image, video, and audio generation. Enable the AIGC watermark only when the user explicitly requests it.
-- **Default variant count:** When generating character sheets, location sheets, prop sheets, concept art, or storyboard keyframes, generate **at least 3 distinct variants (v01, v02, v03)** by default so the user has options to choose from. This applies to Seedream image generations in the Elements pipeline and concept/storyboard pipelines. Increase or decrease only when the user explicitly requests it.
+- **Sampling variations by default:** When generating multiple variations of an
+  image, audio clip, or video in one request, use the exact same submitted
+  prompt, ordered reference inputs and roles, model, and generation parameters
+  for every variation. Only the stochastic sample may differ: use distinct
+  seeds when the tool exposes seed control; otherwise submit independent tasks
+  with identical inputs. Do not silently introduce per-variation prompts,
+  reference bundles, or parameter changes. Use different prompts or references
+  only when the user explicitly requests creative alternatives or a controlled
+  experiment. In that case, identify the changed variable and persist each
+  variation's exact prompt, references, parameters, and provenance separately.
+- **Default variant count:** When generating character sheets, location sheets,
+  prop sheets, concept art, or storyboard keyframes, generate **at least 3
+  distinct sampling variants (v01, v02, v03)** by default so the user has
+  options to choose from. This applies to Seedream image generations in the
+  Elements pipeline and concept/storyboard pipelines. Increase or decrease only
+  when the user explicitly requests it.
 - **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
 
