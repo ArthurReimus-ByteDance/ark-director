@@ -1,0 +1,95 @@
+{
+  "skill_name": "seedance-camera-presets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Seedance 2.5 prompt for @gloria walking through the neon alley at night. I want the camera to slowly dolly in toward her face and end on a static close-up as she stops and turns toward the camera.",
+      "expected_output": "A prompt whose Camera block uses a slow dolly-in toward the named subject, with a shot size and angle, ending on a static lock.",
+      "files": [],
+      "expectations": [
+        "The output uses 'dolly in' or 'push in' wording toward the named subject.",
+        "The output names which subject the camera follows (Gloria or @gloria).",
+        "The output gives a shot size for the move (e.g. close-up or medium close-up).",
+        "The output states where the move ends (e.g. a static lock) and does not add a second movement."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Seedance 2.5 prompt for a dolly zoom on @marcus standing at the end of a long corridor. Keep his size constant while the background compresses closer behind him. I want a 50mm look with shallow depth of field.",
+      "expected_output": "A prompt whose Camera block names the dolly-zoom technique, preserves the subject's size, states whether the background moves closer or farther, and pairs the numeric lens value with a visible result.",
+      "files": [],
+      "expectations": [
+        "The output names the dolly zoom technique explicitly.",
+        "The output specifies which subject's size must be preserved (Marcus or @marcus).",
+        "The output states whether the background moves closer or farther (compresses).",
+        "The output pairs any numeric lens value (e.g. '50mm') with a visible result such as shallow depth of field or bokeh, never a bare number (per the skill's advisory rule).",
+        "The output keeps simultaneous moves at or below 2."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a Seedance 2.5 prompt for a whip-pan transition at 5 seconds. The camera whips rapidly to the left, cuts when the foreground bookshelf fully covers the frame, then continues moving left at a similar speed in the next scene.",
+      "expected_output": "A prompt whose Camera block is a timestamped whip-pan transition including the trigger time, camera direction, occluding element, and the continuation after the cut.",
+      "files": [],
+      "expectations": [
+        "The output uses 'At 5 seconds' or equivalent one-second timestamp syntax for the whip pan.",
+        "The output states the camera direction (rapidly to the left).",
+        "The output names the foreground occluding element that fills the frame (bookshelf).",
+        "The output specifies the continuation (continue moving left at a similar speed in the next scene).",
+        "The output keeps simultaneous moves at or below 2."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a Seedance 2.5 prompt for an FPV drone shot flying through a ruined city: dive between the towers, bank hard right at the plaza, then climb over the cathedral. Fast speed.",
+      "expected_output": "A prompt whose Camera block uses first-person viewpoint and specifies the flight path through named spaces, the speed, and the turns or direction changes.",
+      "files": [],
+      "expectations": [
+        "The output uses first-person view or FPV wording.",
+        "The output describes the flight path through named spaces (towers, plaza, cathedral).",
+        "The output specifies the speed (fast) of the flight.",
+        "The output specifies turns or direction changes (bank right, climb).",
+        "The output keeps simultaneous moves at or below 2."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a Seedance 2.5 prompt for a single continuous one-take shot: the camera follows a courier into a lobby, past the reception desk, into an elevator, and up to the 12th floor corridor, with no cuts.",
+      "expected_output": "A prompt whose Camera block is a one-take shot listing the subjects, spaces, and events the camera passes through in order.",
+      "files": [],
+      "expectations": [
+        "The output uses one-take or single continuous take wording.",
+        "The output names the subject the camera follows (the courier).",
+        "The output lists the spaces the camera passes through in order (lobby, reception desk, elevator, 12th floor corridor).",
+        "The output orders the events (enters, passes, rides up, arrives) rather than presenting them unordered.",
+        "The output keeps simultaneous moves at or below 2."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Seedance 2.5 prompt for a quiet moment between two old friends in a cafe. Use the Intimate Observer camera style: stay close to the subject, gentle handheld moves, capturing small gestures.",
+      "expected_output": "A prompt that selects exactly one MoveSet style (Intimate Observer) and emits its camera-treatment block, with moves that stay near the subject.",
+      "files": [],
+      "expectations": [
+        "The output selects exactly one MoveSet style from the bank.",
+        "The output uses close-up or near-subject framing from the Intimate Observer block.",
+        "The output keeps the camera near the subject with gentle or handheld movement.",
+        "The output does not combine a second MoveSet style in the same prompt.",
+        "The output keeps simultaneous camera moves at or below 2."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Write a Seedance 2.5 prompt for a locked-off wide shot of a warehouse at dawn. The camera must not move at all; only the forklift moves within the frame.",
+      "expected_output": "A prompt whose Camera block uses static or locked-off wording and notes the camera_fixed generation parameter to keep the frame locked.",
+      "files": [],
+      "expectations": [
+        "The output uses static or locked-off camera wording.",
+        "The output states that only the subject (the forklift) moves within the frame.",
+        "The output mentions setting the generation parameter camera_fixed to true.",
+        "The output does not add any camera movement.",
+        "The output does not put generation parameters inside the prompt text itself."
+      ]
+    }
+  ]
+}

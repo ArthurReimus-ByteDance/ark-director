@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Acting Console"
+  short_description: "Help with Seedance acting, emotion, and performance tasks"
+  default_prompt: "Use $seedance-acting-console to handle this acting, emotion, or performance direction task."

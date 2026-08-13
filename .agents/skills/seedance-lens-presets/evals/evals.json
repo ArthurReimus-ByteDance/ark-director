@@ -1,0 +1,82 @@
+{
+  "skill_name": "seedance-lens-presets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Seedance 2.5 prompt for an 85mm f/1.4 portrait of a violinist on a dim stage, one spotlight from above, the audience seats and stage lights behind her dissolving into bokeh.",
+      "expected_output": "A Seedance prompt that resolves the 85mm f/1.4 request into a Camera line pairing the numeric values with the visible result: shallow depth of field, the subject's face sharp, and the background compressed with creamy bokeh.",
+      "files": [],
+      "expectations": [
+        "The output includes the numeric values '85mm' and 'f/1.4' or 'f/1.4' in the camera line.",
+        "The output pairs the aperture with a visible-result phrase such as 'shallow depth of field'.",
+        "The output names the sharp plane explicitly, e.g. 'face sharp' or 'eyes sharp'.",
+        "The output describes the background as soft, compressed, or creamy bokeh.",
+        "The output places the optics phrase in the camera or visual-style line, not duplicated elsewhere."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Seedance 2.5 prompt for an anamorphic widescreen opening shot of a desert highway at dusk, a lone motorcycle rider entering from the left.",
+      "expected_output": "A Seedance prompt whose camera or visual-style line renders the anamorphic request as visible markers: oval or stretched bokeh and an explicit horizontal anamorphic lens flare.",
+      "files": [],
+      "expectations": [
+        "The output includes 'anamorphic' as the lens intent.",
+        "The output describes oval or stretched bokeh.",
+        "The output includes an explicit 'horizontal lens flare' or 'anamorphic lens flare' cue.",
+        "The output carries a widescreen feel, e.g. 'widescreen' or 'cinematic anamorphic' language.",
+        "The output does not combine the anamorphic intent with a second competing lens character."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a Seedance 2.5 prompt for a 24mm wide establishing shot of a rain-soaked night market, vendors under canvas stalls, neon signs reflecting on wet pavement.",
+      "expected_output": "A Seedance prompt whose camera line resolves the 24mm wide-angle request with the environmental-context visible result: subject kept in frame while the surrounding space and architecture recede.",
+      "files": [],
+      "expectations": [
+        "The output includes the focal value '24mm'.",
+        "The output pairs 24mm with a wide-angle or environmental-context phrase such as 'wide angle' or 'strong environmental context'.",
+        "The output describes the surrounding space stretching or receding away from the camera.",
+        "The output keeps the market, stalls, and neon signage in frame as environmental context.",
+        "The output places the optics phrase in the camera or visual-style line."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a Seedance 2.5 prompt for a f/11 deep focus shot inside a library, bookshelves receding from a reader at a table in the foreground to the far wall in crisp detail.",
+      "expected_output": "A Seedance prompt whose camera or visual-style line resolves the f/11 deep-focus request with the near-to-far sharpness visible result.",
+      "files": [],
+      "expectations": [
+        "The output includes the aperture value 'f/11'.",
+        "The output pairs f/11 with a 'deep focus' or 'near-to-far sharpness' phrase.",
+        "The output states that foreground and background details are both sharp or in focus.",
+        "The output names the depth range, e.g. from the reader in the foreground to the far bookshelf wall.",
+        "The output places the optics phrase in the camera or visual-style line."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a prompt for a 4K anamorphic optics look — full widescreen flare and anamorphic bokeh at 4K resolution.",
+      "expected_output": "A response that resolves the anamorphic optics but routes the 4K resolution request to Seedance 2.0, noting that Seedance 2.5 caps at 720p and pointing to the seedance-prompt-20 skill.",
+      "files": [],
+      "expectations": [
+        "The output notes that Seedance 2.5 outputs 480p or 720p only.",
+        "The output routes 4K or 1080p optics requests to `seedance-prompt-20` and the 2.0 model.",
+        "The output still resolves the anamorphic look into visible markers (horizontal lens flare, oval bokeh).",
+        "The output does not silently write a 4K claim into a Seedance 2.5 prompt."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Seedance 2.5 prompt for a handheld found-footage clip of a diner at night, shot on a VHS sensor — scanlines, color bleed, soft low-fi look.",
+      "expected_output": "A Seedance prompt whose visual-style line renders the VHS sensor character as visible markers: low resolution feel, scanlines, color bleed, soft dated look.",
+      "files": [],
+      "expectations": [
+        "The output names the VHS sensor or tape character in the visual-style line.",
+        "The output includes visible VHS markers such as scanlines, color bleed, or soft blur.",
+        "The output pairs the sensor character with the subject and scene, not isolated as a file-format claim.",
+        "The output does not combine the VHS look with a second competing sensor or lens character.",
+        "The output keeps the optics phrase in the visual-style or camera line."
+      ]
+    }
+  ]
+}

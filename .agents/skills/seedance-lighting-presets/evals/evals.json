@@ -1,0 +1,83 @@
+{
+  "skill_name": "seedance-lighting-presets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Seedance lighting phrase and a full Seedance 2.5 prompt for an interrogation scene. A detective questions a suspect in a windowless room under soft cross lighting that splits the detective's face into a lit half and a shadowed half.",
+      "expected_output": "A Seedance 2.5 prompt whose Visual Style slot carries a soft cross lighting phrase naming direction and quality, with the split face expressed as observable shadow behavior.",
+      "files": [],
+      "expectations": [
+        "The output places the lighting phrase in the Visual Style slot using 'The visuals feature ... lighting'.",
+        "The output names a 90-degree soft cross direction.",
+        "The output names the light quality (soft or diffused).",
+        "The output describes the split face as observable shadow behavior (one half lit, one half in shadow).",
+        "The output names exactly one dominant lighting direction."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Seedream prompt for a character element sheet of a woman at sunset using contre-jour backlight. She should have a warm halo rim and a readable face.",
+      "expected_output": "A Seedream image prompt with the lighting intent expressed in the Lighting: section as a contre-jour backlight recipe.",
+      "files": [],
+      "expectations": [
+        "The output uses the Lighting: section for the lighting direction.",
+        "The output names contre-jour backlight behind the subject.",
+        "The output names a warm color temperature or amber/golden tone.",
+        "The output states the face remains readable despite the backlight.",
+        "The output does not put lighting wording in the Subject or Style sections."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write both a Seedream Lighting: recipe and a Seedance visual-style phrase for a candlelit dinner scene lit only by the candles and lamps visible in frame. No hidden fill light is allowed.",
+      "expected_output": "A practicals-only lighting treatment for both models that restricts light sources to those visible in frame and adds no off-camera fill.",
+      "files": [],
+      "expectations": [
+        "The output restricts the light sources to the practicals visible in frame (candles and lamps).",
+        "The output states no hidden fill or off-camera source is used.",
+        "The Seedream recipe appears under the Lighting: section.",
+        "The Seedance phrase appears in the Visual Style slot.",
+        "The output names a warm color temperature consistent with candlelight."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a Seedream prompt for a studio portrait of an older man with Rembrandt lighting. Include the triangle of light on the shadowed cheek.",
+      "expected_output": "A Seedream portrait prompt whose Lighting: section describes a Rembrandt key with the triangle-of-light cue on the shadowed cheek.",
+      "files": [],
+      "expectations": [
+        "The output uses the Lighting: section for the lighting recipe.",
+        "The output names a 45-degree upper key direction.",
+        "The output includes the triangle of light on the shadowed cheek as an observable cue.",
+        "The output names the light quality (soft).",
+        "The output keeps one dominant lighting direction."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I want a lighting direction and quality for a rooftop scene. It is a night scene with neon signage, but the brief also mentions golden hour. Choose one coherent lighting direction and quality and write the Seedance visual-style phrase.",
+      "expected_output": "A single coherent lighting choice (night neon, not golden hour) with direction, quality, and gel color, expressed as one Seedance visual-style phrase.",
+      "files": [],
+      "expectations": [
+        "The output picks exactly one dominant lighting direction and quality.",
+        "The output does not mix golden hour and night neon in the same phrase.",
+        "The output names a night-neon direction with a neon gel or cool color temperature.",
+        "The output names the light quality (soft or hard).",
+        "The output sits in the Visual Style slot using 'The visuals feature ... lighting'."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Seedream Lighting: recipe for a cyberpunk street portrait. Hard key from the right tinted neon blue (#0099FF), with a bright cool ambient fill.",
+      "expected_output": "A Seedream Lighting: recipe composed from the relight-style direction (hard side key) plus a gel color, using the direction + quality + color_temp_or_gel + ratio template.",
+      "files": [],
+      "expectations": [
+        "The output uses the Lighting: section for the recipe.",
+        "The output names a hard key direction from one side (right).",
+        "The output includes the gel color as neon blue or the hex #0099FF tinting the key.",
+        "The output names the quality (hard).",
+        "The output composes a single coherent recipe with one dominant source."
+      ]
+    }
+  ]
+}

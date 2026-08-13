@@ -1,0 +1,4 @@
+interface:
+  display_name: "Color Grade Palettes"
+  short_description: "Help with Color Grade Palettes tasks"
+  default_prompt: "Use $color-grade-palettes to handle this color grade palette task."

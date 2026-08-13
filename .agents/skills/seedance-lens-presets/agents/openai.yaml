@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Lens Presets"
+  short_description: "Help with Seedance Lens Presets tasks"
+  default_prompt: "Use $seedance-lens-presets to handle this lens preset task."

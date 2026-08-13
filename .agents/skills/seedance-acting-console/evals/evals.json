@@ -1,0 +1,71 @@
+{
+  "skill_name": "seedance-acting-console",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Direct a performance: @maya is delivering a line after winning the race. Emotion: joy, intensity 3 (high). Dialogue: \"I actually did it!\". Write the acting block for the Seedance prompt using observable cues, not abstract emotion words.",
+      "expected_output": "A single emotional transition acting block for Joy at high intensity, with 2-4 directly observable cues and the dialogue in {} with a delivery style.",
+      "files": [],
+      "expectations": [
+        "The output uses the single emotional transition structure: overall shift, triggering event, immediate reaction, gradual change, final expression.",
+        "The output encodes high intensity with graduated observable cues, e.g. laughing, spinning in place, breathless, eyes crinkled.",
+        "The output contains no degree adjectives such as 'very happy' or 'extremely joyful'.",
+        "The output places the exact line 'I actually did it!' inside curly braces: {I actually did it!}.",
+        "The output gives the dialogue a delivery style and a dialogue language when the line is not Chinese."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Direct a multi-stage performance over 12 seconds: @kai starts calm, then a phone call pushes him into rage, and footsteps approaching turn him to fear. Give each beat a trigger and a timestamp, then write the Seedance acting block.",
+      "expected_output": "A multi-stage emotion acting block with three emotion x intensity beats (Calm -> Rage -> Fear), each with a trigger event and a timestamp, using the multi-stage template.",
+      "files": [],
+      "expectations": [
+        "The output defines at least three beats, each with an emotion, an intensity level, a trigger event, and a timestamp.",
+        "The output uses the multi-stage template ('When <character> hears or sees...') rather than the single-transition template.",
+        "Each beat's intensity is encoded through graduated observable cues, not degree adjectives.",
+        "The output keeps the character identity consistent across all three beats.",
+        "The output includes a final expression or manner of speaking that resolves the arc."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write the acting block for Terror at intensity 2 (medium) for @nadia. The door slams behind her. Show the terror through physical cues only. Do not use degree adjectives.",
+      "expected_output": "A Terror medium acting block built from the cue vocabulary (gaze fixed, brows lowered, tense stillness, widened pupils, heaving chest, frozen hands) with no degree adjectives.",
+      "files": [],
+      "expectations": [
+        "The output builds Terror from directly observable cues such as gaze fixed, eyes widening, brows raised and rigid, chest heaving, hands freezing mid-motion.",
+        "The output contains no degree adjectives such as 'very scared' or 'extremely terrified'.",
+        "The output uses a triggering event (the door slamming) to drive the transition.",
+        "The output states a final expression through restrained or explicit outward behavior.",
+        "The output does not rely on the bare word 'terror' without accompanying cues."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Produce the full plan for a dialogue scene: @dario says \"You left me behind.\" with anger. Emotion: rage, intensity 2, reinforce_with_audio: true. Include the Seed Audio voice profile, the duration check, the @Audio 1 binding, and the verbatim dialogue in both prompts.",
+      "expected_output": "An audio-first pipeline plan: Seed Audio prompt with a rage voice profile and the exact line, a duration check (audio_duration <= video_duration), reference_audio passed to Seedance bound as @Audio 1, identical {dialogue} text, aligned shot timestamps, and manifest recording.",
+      "files": [],
+      "expectations": [
+        "The plan includes a Seed Audio voice profile for rage with tone and speed from the bank (e.g. shouted, voice cracking; harsh, escalating).",
+        "The plan states the exact line in the Seed Audio text prompt and the identical line inside {} in the Seedance prompt.",
+        "The plan includes a duration check: audio_duration <= video_duration, trimming the audio prompt if exceeded.",
+        "The plan passes the WAV as reference_audio and binds it as @Audio 1 in the Seedance prompt.",
+        "The plan aligns shot timestamps to the actual audio timing after generation.",
+        "The plan records the audio path, SHA-256, duration, and dialogue-to-shot mapping in shot.md and scene.md."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write two acting blocks for the same emotion to prove the intensity distinction: Fear at intensity 1 and Fear at intensity 3 for the same character and the same dialogue. The two outputs must differ through graduated cues, not through degree adjectives.",
+      "expected_output": "Two Fear acting blocks at intensity 1 vs 3 that differ only through graduated cues: channel count, amplitude, movement degree, and vocal delivery.",
+      "files": [],
+      "expectations": [
+        "The output contains two distinct blocks for the same emotion (Fear) and same character.",
+        "Intensity 1 is encoded with fewer, fainter cues (e.g. eyes darting, fingers tapping) while intensity 3 uses more channels and amplitude (e.g. body pulled back, shoulders hunched, voice cracking).",
+        "Neither block uses degree adjectives such as 'very fearful' or 'extremely scared'.",
+        "The difference between levels is attributed to cue graduation, not to any numeric intensity parameter the model reads.",
+        "The dialogue line is identical in both blocks."
+      ]
+    }
+  ]
+}

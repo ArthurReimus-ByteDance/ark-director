@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Camera Presets"
+  short_description: "Help with Seedance camera presets tasks"
+  default_prompt: "Use $seedance-camera-presets to handle this seedance camera preset task."

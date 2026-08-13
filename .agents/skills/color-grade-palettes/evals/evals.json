@@ -1,0 +1,89 @@
+{
+  "skill_name": "color-grade-palettes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Seedance 2.5 prompt for a night scene: a detective parks beside a rain-soaked city street and walks into a noodle shop. Apply the teal-and-orange grade palette.",
+      "expected_output": "A six-part formula Seedance prompt whose Visual Style slot carries a single teal-and-orange grade sentence with deep teal shadows and rich orange highlights.",
+      "files": [],
+      "expectations": [
+        "The output contains a single teal-and-orange grade sentence (deep teal shadows, rich orange highlights, warm skin glow).",
+        "The grade sentence is placed in the visual style slot, not in the subject or action line.",
+        "The output does not mix a second conflicting palette or conflicting color words such as blue-wash or bleach-bypass language.",
+        "The output keeps subject and action distinct from the grade sentence."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Seedance 2.5 prompt for an action scene: a courier sprints across a rooftop and leaps to a neighboring fire escape. Apply the bleach-bypass grade.",
+      "expected_output": "A Seedance prompt whose visual style slot carries the bleach-bypass sentence with hard contrast, blown highlights, and a desaturated silvery sheen.",
+      "files": [],
+      "expectations": [
+        "The output contains the bleach-bypass grade phrase (hard contrast, blown highlights, desaturated silvery sheen).",
+        "The grade sentence sits in the visual style slot and is not duplicated elsewhere.",
+        "The output does not stack a second grade direction such as warm-golden or teal-and-orange language.",
+        "The action description remains the primary subject of the prompt."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a Seedream prompt for a close-up portrait of a woman laughing at a sidewalk cafe. Use the Kodak Portra 400 film stock look.",
+      "expected_output": "A structured Seedream prompt with the Kodak Portra 400 film-stock grade sentence inside the Style: section.",
+      "files": [],
+      "expectations": [
+        "The output places the Portra 400 film-stock grade in the Style: section, not in the Subject or Setting line.",
+        "The grade phrase includes soft warm skin tones and gentle low contrast.",
+        "The output does not place film-stock words in the subject description.",
+        "The output keeps a single grade direction with no conflicting cold or neon language."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a Seedance 2.5 prompt for a scene of a gardener tending a greenhouse at dusk. I have a style-reference image with a muted palette, soft grain, and diffused highlights — grade the scene off that image.",
+      "expected_output": "A Seedance prompt that binds the style reference with @Image N syntax and borrows the muted grade language from it in the visual style slot.",
+      "files": [],
+      "expectations": [
+        "The output binds the style reference with @Image N defines syntax (e.g. @Image 1 defines the color grade).",
+        "The output translates the reference into prompt language: muted palette, soft grain, diffused highlights.",
+        "The grade language appears in the visual style slot.",
+        "The output contains exactly one grade direction and no conflicting palette words."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I am grading a two-scene project with the cold-steel palette. Write Seedance 2.5 prompts for scene 1 (a lab technician inspecting a sample) and scene 2 (the same technician reviewing a monitor) using the same grade in both.",
+      "expected_output": "Two Seedance prompts that repeat the identical cold-steel grade phrase in the visual style slot of each scene.",
+      "files": [],
+      "expectations": [
+        "The exact same cold-steel grade sentence appears in both scene prompts.",
+        "Each scene places the grade in its visual style slot.",
+        "Neither scene introduces a second or conflicting palette.",
+        "The prompts differ only in subject and action, not in grade language."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Seedance 2.5 prompt for the teal-and-orange grade on a two-take scene, and emit the matching FFmpeg filter graph for cross-shot matching in the mix step.",
+      "expected_output": "A Seedance prompt with the teal-and-orange grade in the visual style slot plus a labeled FFmpeg filter graph for matching only, not a replacement for the prompt grade.",
+      "files": [],
+      "expectations": [
+        "The output includes the teal-and-orange grade sentence in the visual style slot.",
+        "The output emits an ffmpeg -i ... -vf ... command for the teal-and-orange palette.",
+        "The output labels the FFmpeg graph as matching-only in the mix step, not as a re-grade of the prompt.",
+        "The output does not put FFmpeg commands inside the model prompt text."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Write a Seedream prompt for a monochrome portrait of an old fisherman with strong facial lines, using the classic black-and-white palette.",
+      "expected_output": "A Seedream prompt whose Style: section carries the classic B&W grade sentence with explicit tonal-range language (deep blacks, clean whites, silver mid-tones, film grain).",
+      "files": [],
+      "expectations": [
+        "The output places the grade in the Style: section.",
+        "The output uses explicit black-and-white language: deep blacks, bright whites or silver mid-tones, not just 'black and white'.",
+        "The output includes a grain or film-texture cue.",
+        "The output keeps exactly one grade direction with no color words that contradict monochrome."
+      ]
+    }
+  ]
+}

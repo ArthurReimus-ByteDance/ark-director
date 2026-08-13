@@ -1,0 +1,83 @@
+{
+  "skill_name": "seedance-pacing-presets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a Seedance 2.5 pacing block for a 12-second fight scene. A fighter lands a heavy knockout punch at the 4-second mark, then the action drops into slow motion while the opponent falls, and the frame holds before cutting out. Use timestamps.",
+      "expected_output": "A timestamped pacing block that combines an Impact beat at 4 seconds with Slow Motion, each with a subject, a beat that lands, and an end state.",
+      "files": [],
+      "expectations": [
+        "The output uses At <N>s timestamp phrasing for the impact beat.",
+        "The output names the impact beat (the knockout punch) that lands at the timestamp.",
+        "The output drops into slow motion after the impact with a named subject and an end state.",
+        "The output describes the frame holding for half a beat after the hit.",
+        "The output stays within the requested 12-second budget without padding."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Seedance 2.5 pacing block for a bullet-time shot. A cyclist jumps a ramp and freezes mid-air in slow motion while the camera orbits around him, then motion resumes on landing. The clip is 8 seconds.",
+      "expected_output": "A Bullet Time pacing block that freezes the action into slow motion, names the orbit direction, and defines the resume point and end state.",
+      "files": [],
+      "expectations": [
+        "The output uses the Bullet Time preset name or its canonical freeze phrasing.",
+        "The output names the action that freezes (the cyclist mid-air over the ramp).",
+        "The output names the camera orbit direction (clockwise or counterclockwise).",
+        "The output defines when motion resumes and the end state (the landing).",
+        "The output uses At <N>s timestamp phrasing for the freeze point."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a Seedance 2.5 pacing block for a 20-second dynamic training montage. Four shots in order: shadow boxing, heavy bag, speed rope, then a sprint finish. Each shot should cut on the beat and build momentum toward the sprint climax.",
+      "expected_output": "A Dynamic montage pacing block with a 4-item ordered cut list, each item timed, using cut-on-the-beat language and building toward the sprint climax.",
+      "files": [],
+      "expectations": [
+        "The output names the Dynamic pacing preset or its cut-on-the-beat language.",
+        "The output provides an ordered 4-item cut list with consecutive, non-overlapping time ranges.",
+        "Each cut list item names the shot content (shadow boxing, heavy bag, speed rope, sprint).",
+        "The output states the cuts build momentum toward the sprint climax.",
+        "The output keeps the total within the 20-second budget."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a Seedance 2.5 pacing block for a calm 10-second scene of a woman reading by a window at dusk. The scene should be one continuous, unbroken take with no cuts and slow, even pacing.",
+      "expected_output": "A Calm / Single Shot pacing block that explicitly forbids cuts, keeps continuous motion, and uses slow, even pacing.",
+      "files": [],
+      "expectations": [
+        "The output explicitly states no cuts or one continuous unbroken shot.",
+        "The output uses slow, even pacing language (held, unhurried, even pace).",
+        "The output names the subject and the single space the camera stays with.",
+        "The output does not include a cut list or shot timings.",
+        "The output does not add a speed ramp that would break the calm, even rhythm."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a Seedance 2.5 pacing block for a 15-second dialogue scene. Two characters exchange two lines each over a table. The pacing should align to an audio master generated first by Seed Audio, with cuts landing on the dialogue beats.",
+      "expected_output": "A dialogue-scene pacing block that is audio-first: notes the Seed Audio master, aligns cuts to the audio timeline, and keeps the dialogue lines verbatim inside curly braces.",
+      "files": [],
+      "expectations": [
+        "The output notes the audio-first contract: Seed Audio is generated first and used as reference_audio.",
+        "The output aligns the pacing timestamps to the audio master's dialogue beats.",
+        "The output places the exact dialogue lines inside {} curly braces.",
+        "The output uses the same verbatim dialogue text that would appear in the Seed Audio prompt.",
+        "The output keeps the scene within the 15-second duration."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Seedance 2.5 pacing block for a 10-second commercial beat: the product snaps into frame with a flash-in burst at 2 seconds, holds, then the action flashes out as the scene cuts to black at 8 seconds.",
+      "expected_output": "A pacing block that uses the Flash In preset at 2 seconds and Flash Out at 8 seconds, each with a beat, a timestamp, and an end state.",
+      "files": [],
+      "expectations": [
+        "The output uses Flash In phrasing at a timestamp near 2 seconds (e.g. 'At 2 seconds, ... flashes in').",
+        "The output names the beat that snaps into frame (the product).",
+        "The output uses Flash Out phrasing near 8 seconds ending in a cut to black or still.",
+        "The output gives each ramp an end state.",
+        "The output stays within the 10-second budget and does not promise frame-accurate timing."
+      ]
+    }
+  ]
+}
