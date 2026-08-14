@@ -45,7 +45,7 @@ Audited **16 files** (11 skills + AGENTS.md + 4 sub-agent audit groups) for Seed
 
 8. **`AGENTS.md` shot.md sample had invalid resolution** — `resolution: "2K"` with `model: seedance-2-5` when 2.5 only supports 480p/720p. Fixed to `"720p"`.
 
-9. **`seedance-footage-vfx` had dangling reference** — `seedance-prompter-v2` cited as a grammar authority but no such skill exists. Fixed to `seedance-prompt-20`.
+9. **`seedance-footage-vfx` had dangling reference** — `seedance-prompter-v2` cited as a grammar authority but no such skill exists. Fixed to `seedance-prompt-20`. (Skill later merged into `seedance-vfx-prompt` — see audit report.)
 
 ### Medium (P2)
 
@@ -78,9 +78,7 @@ flowchart TD
 
   VFXQ -->|2.0 4K VFX| VFXP[seedance-vfx-prompt<br/>+ seedance-vfx-shot]
   VFXQ -->|2.5 structured editing| SP25
-  VFXQ -->|2.0 footage transform| FFVFX[seedance-footage-vfx]
   VFXP --> MCP20
-  FFVFX --> MCP20
 
   SAP -->|dialogue for video| AGENTS[AGENTS.md<br/>audio-first pipeline]
   AGENTS -->|2.5| MCP25
@@ -106,4 +104,4 @@ flowchart TD
 | MCP variations | `seedance_create_task_variations` | `seedance_2_5_create_task_variations` |
 | Shared tools | `seedance_list_tasks`, `seedance_cancel_or_delete_task` | same |
 | Prompt skill | `seedance-prompt-20` | `seedance-prompt-25` |
-| VFX skills | `seedance-vfx-prompt`, `seedance-footage-vfx`, `seedance-vfx-shot` | Use `seedance-prompt-25` for structured editing |
+| VFX skills | `seedance-vfx-prompt`, `seedance-vfx-shot` | Use `seedance-prompt-25` for structured editing |
