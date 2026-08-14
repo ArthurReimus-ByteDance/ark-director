@@ -107,6 +107,31 @@ reference bundle and assemble in post. Reserve 30s single-pass or native
 extension for when you explicitly need continuous, seamless motion across scene
 boundaries.
 
+## Directing principles
+
+Three rules govern every prompt this workspace writes. They are non-negotiable
+and apply to every modality — Seedream image prompts, Seed Audio prompts, and
+Seedance video prompts.
+
+1. **Assets first.** Not one shot until every character, location, and prop is
+   named, versioned, and locked. Build and approve the canonical Elements under
+   `elements/` before any scene or shot is written, and reference them by their
+   locked `@tag`. **The model has no memory — describe everything, every time.**
+   Descriptors, voice locks, and spatial maps go into every prompt **word for
+   word**: never summarize, shorten, or imply a locked descriptor; copy the
+   exact canonical phrasing into each prompt that touches that element.
+
+2. **Say what you want, not what you avoid.** The words you write are the words
+   you summon — including the ones inside a "no". A prohibition still names and
+   summons the thing it forbids. Instead of listing what to avoid, write the
+   positive, specific instruction that produces the intended result.
+
+3. **Direct, don't describe.** Write the scene event, motive, goal, obstacle,
+   and tactic — not just what things look like. The director's craft is the one
+   part the model can't invent for you yet: action beats, character intent,
+   staging, and blocking are your contribution. If a prompt reads like a static
+   description with no event or intent, it is not yet a shot.
+
 ## Project & asset directory structure
 
 The entire `projects/` tree is **local-only working state — never commit it to
