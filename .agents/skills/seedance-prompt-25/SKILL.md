@@ -66,6 +66,16 @@ surface texture, then cut to a frontal view of the shelf.
 Retain the low hum of the pottery wheel, the friction of clay, and subtle indoor ambience.
 ```
 
+### Stylized animation medium
+
+When the user requests claymation, felt, wood puppets, toy miniatures, vintage
+cel/rubber-hose animation, painterly 2D, handcrafted 3D, silicone creatures,
+wax crayon, or another medium whose material behavior must persist through
+motion, load the partner `seedance-animation-styles` skill. It owns the medium,
+construction, deformation, craft-imperfection, and still-anchor contract; this
+skill remains the authority for the full six-part prompt, reference roles,
+scene staging, timestamps, audio syntax, and generation limitations.
+
 ## Reference materials
 
 ### Limits and recommended ranges
