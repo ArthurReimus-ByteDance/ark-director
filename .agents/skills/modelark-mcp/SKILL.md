@@ -1,6 +1,6 @@
 ---
 name: modelark-mcp
-description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5 and BytePlus VOD AI MediaKit enhancement), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance tasks, upload reference media, and fetch persisted artifacts.
+description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5, BytePlus VOD AI MediaKit enhancement, and video transcoding), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance tasks, upload reference media, and fetch persisted artifacts.
 ---
 
 # ModelArk Seed Multimodal MCP Server
@@ -23,7 +23,9 @@ behind one server:
   sub-agent.
 - **Speech-to-Text** — synchronous audio transcription via Seed Speech ASR.
 - **VOD AI MediaKit** — asynchronous video-enhancement submission using the exact
-  common/professional/4K/high/24-fps profile.
+  common/professional/4K/high/24-fps profile, and asynchronous video transcoding
+  (codec, container, resolution, bitrate, frame rate) via a submit-then-poll
+  tool pair.
 - **Artifacts** — durable media access after provider URLs expire.
 - **Object storage upload** — presigned URL generation for URL-only media
   workflows such as Seedance video references.
@@ -45,6 +47,8 @@ Invoke this skill when the user wants to:
   multimodal reasoning sub-agent;
 - transcribe audio or video into timestamped, speaker-diarized text;
 - enhance a public HTTPS video with the supported VOD AI MediaKit profile;
+- transcode a public HTTPS video (codec, container, resolution, bitrate, frame
+  rate) with the VOD AI MediaKit submit-then-poll tool pair;
 - fetch a previously persisted artifact by ID;
 - upload local or Base64 media to object storage (TOS or S3) to obtain a
   presigned HTTPS URL;
@@ -73,6 +77,8 @@ gracefully degrades to whatever is configured.
 ### Requires `BYTEPLUS_VOD_MEDIAKIT_API_KEY`
 
 - `vod_enhance_video`
+- `vod_transcode_video`
+- `vod_get_transcode_task`
 
 ### Requires `BYTEPLUS_MODELARK_API_KEY`
 
@@ -166,7 +172,8 @@ Returns `SeedMediaGetArtifactOutput` with `artifact_id`, `media_type`,
 
 ### VOD AI MediaKit
 
-Requires `BYTEPLUS_VOD_MEDIAKIT_API_KEY`. Auth scope: `vod:enhance`.
+Requires `BYTEPLUS_VOD_MEDIAKIT_API_KEY`. Auth scopes: `vod:enhance`,
+`vod:transcode`, `vod:read`.
 
 #### `vod_enhance_video`
 
@@ -193,6 +200,46 @@ If a completed response supplies `source_url`, retain it even when the best-effo
 copy fails. `persistence` is `not_applicable`, `persisted`, `failed`, or `not_requested`; durable
 video copies are capped at 200 MiB. `estimated_cost_usd` remains null until
 convenience-endpoint pricing and billing-unit mapping are confirmed.
+
+#### `vod_transcode_video`
+
+Submit an asynchronous video transcoding task. Mutating, non-idempotent,
+open-world. Do not retry the POST automatically (a timeout may be ambiguous).
+The request body and `video` object enums are verified from the official AI
+MediaKit API reference. Defaults reproduce the verified portrait-to-720x720
+letterbox profile (`scale_type=2`, `scale_width=720`, `scale_height=720`,
+`scale_mode=2`).
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `video_url` | URL | Yes | Public HTTPS source; private/link-local targets rejected |
+| `container_format` | `"MP4"` \| `"FLV"` \| `"MPEGTS"` | No | Output container format; default `MP4` |
+| `video` | object | No | See fields below |
+| `persist` | boolean | No | Best-effort durable copy on later poll; default `true` |
+
+`video` fields: `codec` (`h264`/`h265`, default `h264`); `scale_type` (`0`/`1`/`2`,
+default `2`); `scale_mode` (`0`/`1`/`2`, default `2`); `scale_width`/`scale_height`
+(px [0,4320], only when `scale_type=2`, default 720); `scale_short`/`scale_long`
+(px [0,4320], only when `scale_type=1`); `bitrate_mode` (`crf`/`abr`/`cbr`, default
+`crf`); `bitrate_crf` ([0,51], default 25); `bitrate_kbps` (kbps [10,50000],
+default 2000); `fps_mode` (`vfr`/`cfr`, default `vfr`); `fps` ([1,240], unset keeps
+source rate); `is_hdr_to_sdr` (default `true`).
+
+Returns `status="accepted"` plus `task_id` and a heuristic
+`recommended_poll_after_ms`. Poll with `vod_get_transcode_task`.
+
+#### `vod_get_transcode_task`
+
+Read-only poll of a transcode task (`vod:read`). Requires the `task_id` returned
+by `vod_transcode_video`. Maps provider `running`→`processing`,
+`completed`→`succeeded`, `failed`→`failed` (the provider documents no
+queued/expired/cancelled statuses). On success, returns `source_url` (24-hour
+lifetime) plus optional `duration_seconds`/`resolution`/`video_codec` and
+normalized ISO-8601 `created_at`/`finished_at`/`source_expires_at`. With
+`persist_output=true` (default), the completed output is copied once into the
+durable artifact store (200 MiB cap) and cached by task ID so repeated polls do
+not re-download; a persistence failure never erases provider success. On
+failure, `error` carries the safe provider detail.
 
 ---
 
@@ -281,6 +328,29 @@ failed, per-variation results with partial failure capture).
   "persist": true
 }
 ```
+
+---
+
+### Reusing uploaded references across shots (presign pattern)
+
+Presigned URLs expire after 10 minutes (600s). When the same reference
+images or audio are used across multiple shots (e.g., character sheets
+reused across every scene), do **not** re-upload the same file each time.
+Instead:
+
+1. **Upload once** — call `media_upload` for each reference file and store
+   the returned `object_key` (e.g., in a project-level reference registry
+   like `task_ids.json` or a dedicated `ref_cache.json`).
+2. **Presign on demand** — before each new shot submission, call
+   `media_presign` with the stored `object_key` to get a fresh presigned
+   URL in seconds. No file re-upload, no duplicate storage cost.
+3. **Batch presign** — presign all needed references for a shot in one
+   parallel block, then immediately submit the Seedance task while the URLs
+   are still valid.
+
+This reduces upload time from minutes (re-uploading 9–10 files per shot)
+to seconds (presigning 9–10 keys per shot) and avoids filling object
+storage with duplicate copies of the same reference images.
 
 ---
 
@@ -924,7 +994,7 @@ The server normalizes four distinct BytePlus API surfaces:
 | **ModelArk** | `Authorization: Bearer <key>` | `https://ark.ap-southeast.bytepluses.com/api/v3` | Seedream, Seedance |
 | **Seed Speech (TTS)** | `X-Api-Key: <key>` | `https://voice.ap-southeast-1.bytepluses.com` | Seed Audio |
 | **Seed Speech (ASR)** | `X-Api-Key: <key>` (separate key) | `https://voice.ap-southeast-1.bytepluses.com` | Speech-to-Text |
-| **VOD AI MediaKit** | `Authorization: Bearer <key>` | `https://mediakit.ap-southeast-1.bytepluses.com/api/v1` | Video enhancement |
+| **VOD AI MediaKit** | `Authorization: Bearer <key>` | `https://mediakit.ap-southeast-1.bytepluses.com/api/v1` | Video enhancement, video transcoding |
 
 ModelArk and Seed Speech ASR use separate API keys even though ASR shares the
 host with TTS. Tools for a product are only registered when its provider API
@@ -1005,27 +1075,6 @@ default model for that product is used.
 1. If the user has Base64 video or a local video file, call `media_upload`.
 2. Pass the returned presigned HTTPS URL into `seedance_create_task` or
    `seedance_2_5_create_task` as a video reference.
-
-### Reusing uploaded references across shots (presign pattern)
-
-Presigned URLs expire after 10 minutes (600s). When the same reference
-images or audio are used across multiple shots (e.g., character sheets
-reused across every scene), do **not** re-upload the same file each time.
-Instead:
-
-1. **Upload once** — call `media_upload` for each reference file and store
-   the returned `object_key` (e.g., in a project-level reference registry
-   like `task_ids.json` or a dedicated `ref_cache.json`).
-2. **Presign on demand** — before each new shot submission, call
-   `media_presign` with the stored `object_key` to get a fresh presigned
-   URL in seconds. No file re-upload, no duplicate storage cost.
-3. **Batch presign** — presign all needed references for a shot in one
-   parallel block, then immediately submit the Seedance task while the URLs
-   are still valid.
-
-This reduces upload time from minutes (re-uploading 9–10 files per shot)
-to seconds (presigning 9–10 keys per shot) and avoids filling object
-storage with duplicate copies of the same reference images.
 
 ### Speech-to-Text Transcription
 
@@ -1114,9 +1163,10 @@ The server retries only explicitly retryable, non-ambiguous errors:
 - Timeouts are NOT retried (the operation may have succeeded server-side).
 - Provider errors with `retryable=true` are retried.
 
-Exception: `vod_enhance_video` is never automatically retried. Its POST is
-non-idempotent and a transport failure may have ambiguous completion. There is
-no verified polling tool for this asynchronous acceptance contract.
+Exception: `vod_enhance_video` and `vod_transcode_video` are never automatically
+retried. Their POSTs are non-idempotent and a transport failure may have
+ambiguous completion. `vod_get_transcode_task` (a read-only GET poll) IS retried
+on provider-marked retryable errors such as HTTP 429.
 
 For Seedance task polling, a local watcher timeout is not a generation failure.
 Resume `seedance_get_task` with the existing task ID. Only create a new task
@@ -1204,26 +1254,34 @@ Set to `0` (default) for record-only mode with no enforcement.
      `media_presign` to get a fresh URL for each new shot. This avoids
      re-uploading the same character/location/prop sheets for every scene.
 
-13. **`speech_to_text` is synchronous.** It blocks until transcription completes
-    or the poll cap is reached. Provide appropriately sized audio and plan for
-    the blocking duration.
+14. **`speech_to_text` is synchronous.** It blocks until transcription completes
+     or the poll cap is reached. Provide appropriately sized audio and plan for
+     the blocking duration.
 
-14. **Use `seed_understand` for multimodal reasoning.** It can analyze images
-    (OCR, scene description), videos (content analysis, UI review), and
-    reason across multiple media inputs. Enable `thinking=true` for complex
-    analysis. Video Base64 is not supported — upload via `media_upload` first.
+15. **Use `seed_understand` for multimodal reasoning.** It can analyze images
+     (OCR, scene description), videos (content analysis, UI review), and
+     reason across multiple media inputs. Enable `thinking=true` for complex
+     analysis. Video Base64 is not supported — upload via `media_upload` first.
 
-15. **Choose the right Seedance model.** Use 2.0 (`seedance_create_task`)
-    for 4K/1080p or lower cost. Use 2.5 (`seedance_2_5_create_task`) for
-    30-second generation, 50 references, timestamp editing, or multi-round
-    extension. The get/list/cancel tools are shared.
+16. **Choose the right Seedance model.** Use 2.0 (`seedance_create_task`)
+     for 4K/1080p or lower cost. Use 2.5 (`seedance_2_5_create_task`) for
+     30-second generation, 50 references, timestamp editing, or multi-round
+     extension. The get/list/cancel tools are shared.
 
-16. **Treat MediaKit persistence separately from enhancement.** Keep the
-    returned `source_url` whenever `vod_enhance_video` succeeds. Prefer
-    `persist=true`, but inspect `persistence` and `persistence_issue`: the
-    200 MiB limit or a safe-download/storage failure can prevent the durable
-    copy without invalidating the provider result. Do not poll, resubmit after
-    an ambiguous timeout, or present `estimated_cost_usd` as available.
+17. **Treat MediaKit persistence separately from the provider result.** Keep the
+    returned `source_url` whenever `vod_enhance_video` or
+    `vod_get_transcode_task` reports success. Prefer `persist=true`, but inspect
+    `persistence` and `persistence_issue`: the 200 MiB limit or a
+    safe-download/storage failure can prevent the durable copy without
+    invalidating the provider result. Do not resubmit after an ambiguous
+    timeout, and do not present `estimated_cost_usd` as available.
+
+18. **Transcode is submit-then-poll.** Call `vod_transcode_video`, capture the
+    returned `task_id`, then poll with `vod_get_transcode_task` until the
+    status is `succeeded` or `failed`. The default profile is portrait-to-720x720
+    letterbox; set `video.codec`, `scale_*`, `bitrate_*`, `fps`, and
+    `container_format` to target a specific output. Do not retry the POST after
+    an ambiguous timeout — re-poll the task ID instead.
 
 ---
 
@@ -1234,7 +1292,7 @@ Set to `0` (default) for record-only mode with no enforcement.
 - `BYTEPLUS_MODELARK_API_KEY` — enables Seedream and Seedance
 - `BYTEPLUS_SEED_AUDIO_API_KEY` — enables Seed Audio (TTS)
 - `SEED_SPEECH_ASR_API_KEY` — enables Speech-to-Text (ASR)
-- `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement
+- `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement and video transcoding
 - `BYTEPLUS_MODELARK_BASE_URL` — override ModelArk data-plane host
 - `BYTEPLUS_SEED_AUDIO_BASE_URL` — override Seed Audio host
 - `SEED_SPEECH_ASR_BASE_URL` — override ASR host
