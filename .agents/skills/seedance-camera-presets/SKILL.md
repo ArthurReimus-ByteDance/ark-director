@@ -88,11 +88,10 @@ table, then gives a canonical phrase template that satisfies it.
 | Whip pan | Trigger time, direction, occluding element, continuation | `Whip-pan transition: at <N>s, move the camera rapidly to the <left/right>. Cut when the foreground <occluding element> fully covers the frame, then continue moving <direction> at a similar speed in the next scene.` |
 | Aerial reveal | Viewing height, movement direction, area to reveal | `High aerial view at <height> above <scene>; the camera <moves direction> and gradually reveals <area>.` |
 | FPV path | First-person flight/traversal path, speed, turns | `First-person view flying <path>, at <speed>, banking <left/right> through <turns or waypoints>.` |
-| Bullet time | Action to freeze/slow; camera orbit direction | `Bullet time: <action> freezes into slow motion while the camera orbits <clockwise/counterclockwise> around <subject>.` |
+| Bullet time | Camera orbit direction around the frozen subject | `Bullet time: the camera orbits <clockwise/counterclockwise> around <subject> while the action is frozen. Timing (freeze duration, end state) belongs to seedance-pacing-presets.` |
 | Handheld | Subject being followed; amount of shake | `Handheld camera following <subject>, with <slight/moderate/heavy> shake.` |
 | One-take | Subjects, spaces, and events the camera passes through in order | `One-take shot: the camera passes through <subject or space A> as <event A>, then <subject or space B> as <event B>, then <subject or space C> as <event C>, with no cuts.` |
 | Rack focus | Term + subject + visual change + foreground/background + direction | `Rack focus: shift focus smoothly from the <foreground element> to <background subject>. The <foreground> gradually blurs while <background subject> changes from soft to sharp.` |
-| Slow motion / speed ramp | Where action accelerates, decelerates, or rebounds; final resting state | `At <N>s, the action <decelerates into slow motion / snaps into slow motion>; the motion <rebounds or continues> and settles on <final resting state>.` |
 
 For a technique not in the table, follow the uncommon-cinematography-terms
 recipe from `seedance-prompt-25`:

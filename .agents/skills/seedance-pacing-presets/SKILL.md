@@ -67,7 +67,7 @@ accelerates, decelerates, or rebounds, and the **final resting state**.
 | Linear | Constant speed, no emphasis | `<Subject> moves at a constant, even speed throughout the clip.` |
 | Auto | Model-inferred pacing | `Use natural pacing: accelerate or slow where the action itself demands it.` |
 | Slow Motion | Everything moves in deliberate slow-motion detail | `At <N>s, the action drops into slow motion; <subject> moves in deliberate slow-motion detail until <end state>.` |
-| Bullet Time | Action freezes into slow motion while the camera orbits | `Bullet time: at <N>s, <action> freezes into slow motion while the camera orbits <clockwise/counterclockwise> around <subject>; <subject> stays near-frozen in detail until <end state>.` |
+| Bullet Time | Action freezes into slow motion while the camera orbits | `Bullet time: at <N>s, <action> freezes into slow motion; <subject> stays near-frozen in detail until <end state>. The camera orbit direction belongs to seedance-camera-presets.` |
 | Flash In | Fast acceleration into a beat | `At <N>s, the action snaps forward into fast motion, accelerating into <beat>; the frame lands hard on <beat>.` |
 | Flash Out | Fast deceleration out of a beat | `At <N>s, <beat> plays at full speed, then the action drops sharply and decelerates out into <end state>.` |
 | Impact | Hard hit / staccato on a beat | `At <N>s, <action> hits in a single sharp impact beat — <detail> — then the frame holds for half a beat.` |
