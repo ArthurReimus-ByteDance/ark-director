@@ -379,7 +379,7 @@ For languages with special phonetic considerations, include targeted guidance:
 
 ## Output files and naming
 
-Following project conventions from `AGENTS.md`, save outputs alongside source assets in the project directory:
+Save outputs alongside source assets in the project directory:
 
 ```
 projects/<project>/
