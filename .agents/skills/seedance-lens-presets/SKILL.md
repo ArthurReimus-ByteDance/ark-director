@@ -203,7 +203,7 @@ Composition:
 - **4K / 1080p optics route to Seedance 2.0.** Seedance 2.5 outputs 480p or
   720p only. When the user asks for high-resolution optics (e.g. "4K
   anamorphic"), route to `seedance-prompt-20` and the 2.0 model
-  (`dreamina-seedance-2-0-260128`) per the workspace AGENTS.md.
+  (`dreamina-seedance-2-0-260128`).
 - **One lens intent per shot.** Do not overload a single shot with multiple
   competing optics (e.g. anamorphic plus fisheye). Choose one intent; split
   distinct optics across separate shots.

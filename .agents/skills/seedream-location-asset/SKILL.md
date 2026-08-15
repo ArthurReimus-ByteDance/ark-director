@@ -32,7 +32,7 @@ location/environment generation.
 - [Seedream 5.0 Pro official blog](https://seed.bytedance.com/en/blog/beyond-generation-it-understands-design-introducing-seedream-5-0-pro)
 - [Seedream 4.0-5.0 API Tutorial](https://docs.byteplus.com/en/docs/ModelArk/1824121)
 - [Seedream 4.0-4.5 Prompt Guide](https://docs.byteplus.com/en/docs/ModelArk/1829186)
-- Project conventions in `AGENTS.md` for flat `elements/<element-id>/` folders and location sheets
+- Project conventions for flat `elements/<element-id>/` folders and location sheets
 
 When official documentation changes, prefer the live docs over this skill where
 they conflict.

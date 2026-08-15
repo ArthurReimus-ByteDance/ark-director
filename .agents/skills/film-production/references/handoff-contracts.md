@@ -13,11 +13,12 @@ composition anchors. Require explicit panel selection, verify source hashes,
 and choose exactly one supported image mode: I2V, FLF2V, R2V, or T2V. Never
 promote a multi-panel contact sheet as a clean video keyframe.
 
-## Audio to video
+## Audio to video (when user requests lip-synced dialogue)
 
 Use the exact same dialogue text in both prompts. Verify audio duration does not
 exceed video duration, map dialogue to observed audio timing, pass the file as
-`reference_audio`, and record its path and hash in the shot manifest.
+`reference_audio`, and record its path and hash in the shot manifest. Skip this
+handoff when the user has not requested lip-synced audio.
 
 ## Shot to assembly
 

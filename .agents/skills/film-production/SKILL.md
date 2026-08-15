@@ -6,8 +6,9 @@ description: Orchestrate an AI-assisted film, commercial, music video, or narrat
 # Film Production
 
 Manage one coherent production run while keeping specialist skills modular. Read
-`AGENTS.md` first, inspect the existing project before creating anything, and
-advance only as far as the available evidence and approvals permit.
+the project's `project.md` and existing manifests first, inspect the existing
+project before creating anything, and advance only as far as the available
+evidence and approvals permit.
 
 ## Core operating model
 

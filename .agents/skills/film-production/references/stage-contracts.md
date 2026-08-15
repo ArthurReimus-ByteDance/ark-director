@@ -44,19 +44,25 @@ prompt package, continuity review, provenance, and video-handoff eligibility.
 Exit: required panels are approved and all source element hashes remain current,
 or the scene has an explicitly approved direct-to-video path.
 
-## 5. Audio preparation
+## 5. Audio preparation (optional — when user requests lip-synced dialogue)
 
-Entry: exact dialogue and planned scene duration exist.
+Entry: exact dialogue and planned scene duration exist, and the user has
+explicitly requested lip-synced dialogue audio.
 
 Required output: exact audio prompt, local audio file, duration, transcript or
 dialogue timing, media inspection, SHA-256, and manifest linkage.
 
 Exit: audio duration fits the planned video and dialogue mappings are verified.
 
+When the user has not requested lip-synced audio, skip this stage and proceed
+directly to shot generation. Seedance's native audio handles dialogue by
+default.
+
 ## 6. Shot generation
 
 Entry: shot objective, selected video mode, approved inputs, reference roles,
-prompt snapshot target, duration, and any required audio exist.
+prompt snapshot target, duration, and any requested audio (if Stage 5 was
+completed) exist.
 
 Required output: task registry entry, local media, exact prompt snapshot,
 provider metadata, actual media properties, cost fields, SHA-256, semantic QA,
@@ -66,7 +72,7 @@ Exit: the user approves a take or requests a bounded revision.
 
 ## 7. Assembly and review
 
-Entry: approved takes and required audio assets exist.
+Entry: approved takes and any requested audio assets exist.
 
 Required output: ordered edit, review render, transition and continuity review,
 audio presence check, technical decode QA, and outstanding notes.

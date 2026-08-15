@@ -50,7 +50,7 @@ flowchart LR
   C --> D[Seedance - video]
   C --> E[Seedream - image]
   C --> F[Seed Audio - audio]
-  F -->|reference_audio input| D
+  F -.->|reference_audio input (optional)| D
   B -->|submit task_id| C
   B -->|poll task_id| C
   C -->|asset URL| B
@@ -84,11 +84,12 @@ Treat expensive media generation as a gated production workflow:
    travel axis, subject order, boundary behavior, end state, and forbidden
    transitions. Resolve contradictions between the brief, references, and
    prompt before generation.
-4. **Audio-first generation (dialogue scenes)** — when a scene has spoken
-   dialogue, generate the Seed Audio dialogue track before submitting the
-   Seedance video task. Verify the audio duration fits within the planned
-   video duration, then use the audio as a `reference_audio` input to
-   Seedance. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes).
+4. **Audio for dialogue (optional)** — when the user explicitly requests
+   lip-synced dialogue audio, generate the Seed Audio dialogue track before
+   submitting the Seedance video task. Verify the audio duration fits within
+   the planned video duration, then use the audio as a `reference_audio`
+   input to Seedance. This is opt-in, not the default for every dialogue
+   scene. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes).
 5. **Low-cost prototype** — validate motion, geography, anatomy, camera,
    boundary behavior, and audio at the lowest suitable resolution and variant.
 6. **Creative review** — preserve user-approved decisions and write the single
@@ -213,8 +214,8 @@ flowchart TD
   E -->|identity, geometry, prop references| IMG1[scene folder - storyboard keyframe]
   SH -->|panel plan| IMG1
   IMG1 -->|review and explicit approval| KF[approved video keyframe]
-  SH -->|generate audio first| AUD[shot folder - dialogue audio]
-  AUD -->|reference_audio + shot timestamps| VID
+  SH -.->|generate audio first (optional, when user requests lip-sync)| AUD[shot folder - dialogue audio]
+  AUD -.->|reference_audio + shot timestamps| VID
   SH -->|generate video at natural duration 4-30s| VID[shot folder - video take]
   KF -->|I2V, FLF2V, or R2V composition anchor| VID
   SH -->|direct R2V or text-to-video, no storyboard| VID
@@ -314,12 +315,15 @@ coherent throughout the video.
 
 ### Audio-video alignment (dialogue scenes)
 
-When a scene has spoken dialogue, **generate the Seed Audio dialogue track
-first** and use it as a `reference_audio` input to Seedance. The audio drives
-the video — not the other way around. This prevents lip-sync drift, ensures
-the video duration fits the audio, and keeps dialogue timing verifiable.
+When the user explicitly requests lip-synced dialogue audio, **generate the
+Seed Audio dialogue track first** and use it as a `reference_audio` input to
+Seedance. The audio drives the video — not the other way around. This
+prevents lip-sync drift, ensures the video duration fits the audio, and keeps
+dialogue timing verifiable. This is **opt-in** — not every dialogue scene
+needs it. When the user does not request lip-synced audio, generate video
+directly and let Seedance's native audio handle dialogue.
 
-**Audio-first pipeline:**
+**Audio-first pipeline (when requested):**
 
 ```mermaid
 flowchart TD
@@ -336,7 +340,7 @@ flowchart TD
   QA -->|yes| DONE[approved take]
 ```
 
-**Alignment contract:**
+**Alignment contract (when audio is generated):**
 
 1. **Same dialogue text in both prompts.** The exact lines written in the
    Seed Audio `text_prompt` must appear in the Seedance prompt inside
@@ -364,7 +368,7 @@ flowchart TD
    reference input. If the audio is regenerated, both files are updated and
    any video that used the old audio is invalidated.
 
-**Before video submission (dialogue scenes):**
+**Before video submission (when audio is used):**
 
 - verify the audio file exists locally and its SHA-256 matches the manifest;
 - verify `audio_duration ≤ video_duration` (e.g., 28.88s ≤ 30s for 2.5; ≤ 15s for 2.0);
@@ -394,10 +398,11 @@ self-contained per scene. Use the `duration` parameter to right-size each scene
 - **Shared reference bundle.** Pass the same canonical Elements (characters,
   locations, props) as `reference_image` inputs to every scene so identity stays
   consistent across the chain.
-- **Per-scene audio.** Generate Seed Audio for each scene's dialogue at the
-  scene's own duration. Verify `audio_duration ≤ video_duration` per scene, then
-  pass the audio as `reference_audio` to that scene's Seedance task. No need to
-  slice a master audio file.
+- **Per-scene audio (optional).** When the user requests lip-synced dialogue,
+  generate Seed Audio for each scene's dialogue at the scene's own duration.
+  Verify `audio_duration ≤ video_duration` per scene, then pass the audio as
+  `reference_audio` to that scene's Seedance task. No need to slice a master
+  audio file. Skip this when the user does not request lip-synced audio.
 - **Assemble in post.** Concatenate approved scene takes into the final render
   in the scene folder. Mix per-scene dialogue with library music, SFX, and
   ambience at the project level.
@@ -413,18 +418,20 @@ motion across what would otherwise be scene boundaries:
 - **Minimal scene variation** — same location, same characters, gradual change
   that the model handles well in one pass.
 - **Audio-driven long dialogue** — one long dialogue block where lip-sync must
-  be continuous across scene boundaries; extension keeps it seamless.
+  be continuous across scene boundaries; extension keeps it seamless. Only
+  when the user has explicitly requested lip-synced audio.
 
 If using extension: generate a 30s base take, then extend forward (and/or
 backward) in rounds to reach the target runtime. Scene changes happen naturally
 wherever the story needs them; you do **not** have to align to 30s boundaries.
-Generate a Seed Audio master aligned to the **full** timeline (up to ~2 min per
-call) and pass it as `reference_audio`, so dialogue and sound arc stay continuous
-across the extension. The audio-first alignment contract above applies to the
-whole timeline. Caveats: extension boundaries are **not pixel-identical** —
-inspect both sides of each seam (boundary image, motion trend, audio
-continuity). Multi-round extension is **beta**; validate each seam before
-committing. Extension locks the input video's aspect ratio.
+When the user has requested lip-synced dialogue audio, generate a Seed Audio
+master aligned to the **full** timeline (up to ~2 min per call) and pass it as
+`reference_audio`, so dialogue and sound arc stay continuous across the
+extension. The alignment contract above applies to the whole timeline. Caveats:
+extension boundaries are **not pixel-identical** — inspect both sides of each
+seam (boundary image, motion trend, audio continuity). Multi-round extension is
+**beta**; validate each seam before committing. Extension locks the input
+video's aspect ratio.
 
 ### Folder & project naming
 

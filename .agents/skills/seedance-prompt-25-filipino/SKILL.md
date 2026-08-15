@@ -3,8 +3,9 @@ name: seedance-prompt-25-filipino
 description: >
   Write production-grade Seedance 2.5 video prompts for Tagalog/Filipino dialogue
   with vocabulary simplification, phonetic annotation, intonation direction,
-  Taglish code-switching guidance, and an audio-first pipeline (Seed Audio
-  generates Tagalog dialogue, then Seedance uses it as reference_audio). Tagalog
+  Taglish code-switching guidance, and an optional audio-first pipeline (Seed Audio
+  generates Tagalog dialogue, then Seedance uses it as reference_audio, only when
+  the user requests lip-synced audio). Tagalog
   is NOT in Seedance 2.5's officially supported languages, so this skill provides
   vocabulary difficulty tiers, pronunciation guides, stress markers, glottal-stop
   notation, and intonation contours to compensate. Use this skill as a partner to
@@ -107,12 +108,13 @@ skill where they conflict.
 ## Strategy overview: the three-layer approach
 
 Apply the three strategies in order — vocabulary simplification first, then
-audio-first, then in-prompt annotation for any remaining difficult words.
+audio-first (when the user requests lip-synced audio), then in-prompt
+annotation for any remaining difficult words.
 
 | Strategy | When to use | How it works |
 |---|---|---|
 | **Vocabulary simplification (first)** | Always, before any generation | Rewrite dialogue using common, modern Tagalog. Replace deep/literary words with everyday equivalents. Shorten sentences. This reduces the pronunciation burden before the model ever sees the text. |
-| **Audio-first (preferred)** | Dialogue-heavy scenes, any scene where pronunciation accuracy matters | Generate Tagalog dialogue via Seed Audio (cross-lingual), verify it, then pass as `reference_audio` to Seedance |
+| **Audio-first (when user requests lip-sync)** | Dialogue-heavy scenes where pronunciation accuracy matters and the user has explicitly requested lip-synced audio | Generate Tagalog dialogue via Seed Audio (cross-lingual), verify it, then pass as `reference_audio` to Seedance |
 | **In-prompt annotation (last resort)** | Words that remain difficult after simplification, or native audio mode when Seed Audio is unavailable | Embed stress marks, glottal-stop notation, intonation contours, and pronunciation guides directly in the `{dialogue}` |
 
 **Always start with vocabulary simplification.** It is better to remove a
@@ -551,12 +553,14 @@ says:
   loanword, informal alternative to `maaari`), `ganun` (from `ganoon`) mark
   the register as informal.
 
-## Audio-first pipeline: Seed Audio → Seedance
+## Audio-first pipeline: Seed Audio → Seedance (optional)
 
-This is the **preferred strategy** for Tagalog dialogue scenes. Generate the
-dialogue audio with Seed Audio first, verify pronunciation and timing, then
-pass it as `reference_audio` to Seedance. This bypasses Seedance's limited
-Tagalog support entirely — the audio drives lip-sync and timing.
+This pipeline is used **when the user explicitly requests lip-synced dialogue
+audio**. Generate the dialogue audio with Seed Audio first, verify
+pronunciation and timing, then pass it as `reference_audio` to Seedance. This
+bypasses Seedance's limited Tagalog support entirely — the audio drives
+lip-sync and timing. When the user has not requested lip-synced audio, skip
+this pipeline and use the in-prompt annotation fallback below.
 
 ```mermaid
 flowchart TD
@@ -682,9 +686,9 @@ from the scene, with Maria's dialogue clear in the foreground. No background
 music.
 ```
 
-### Alignment contract
+### Alignment contract (when audio-first pipeline is used)
 
-Follow the audio-video alignment contract from the project's `AGENTS.md`:
+When the user has explicitly requested lip-synced dialogue audio:
 
 1. **Same dialogue text in both prompts** — the exact Tagalog lines in the
    Seed Audio prompt must appear in the Seedance prompt inside `{curly braces}`.
@@ -699,10 +703,11 @@ Follow the audio-video alignment contract from the project's `AGENTS.md`:
 
 ## In-prompt annotation (native audio fallback)
 
-When the audio-first pipeline is not available (no time, no Seed Audio access,
-or the scene uses Seedance's native audio), embed pronunciation and intonation
-guidance directly in the Seedance prompt. This is less reliable than
-audio-first but significantly better than unannotated Tagalog.
+When the audio-first pipeline is not requested (no user request for
+lip-synced audio, no time, no Seed Audio access, or the scene uses Seedance's
+native audio), embed pronunciation and intonation guidance directly in the
+Seedance prompt. This is less reliable than audio-first but significantly
+better than unannotated Tagalog.
 
 ### Annotation block placement
 
@@ -1107,7 +1112,7 @@ When composing this skill with `seedance-prompt-25`:
    - Intonation direction (flat baseline, L-H/H-L phrase accents, question/statement contours)
    - Taglish code-switching guidance (Filipino phonology on English words, discourse markers)
    - Speech registers and politeness hierarchy (formal `po`/`opo` vs casual, register pitfalls)
-   - Audio-first pipeline (Seed Audio → Seedance reference_audio)
+    - Audio-first pipeline (Seed Audio → Seedance reference_audio, when user requests lip-synced audio)
 3. **Audio syntax** — continue using the base skill's `{}` for dialogue, `()`
    for music, `<>` for SFX, `【】` for subtitles.
 4. **Dialogue language reinforcement** — use the base skill's formula
