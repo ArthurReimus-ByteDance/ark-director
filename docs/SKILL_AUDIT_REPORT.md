@@ -218,7 +218,7 @@ graph TD
 3. ~~**Register `tig-acting-task` in AGENTS.md** or merge into `seedance-acting-console`~~ — DONE. Merged into `seedance-acting-console` (two-layer: Tig analysis + cue encoding). Registered `tig-scene-engine` and `tig-blocking-map` in AGENTS.md. Deleted `tig-acting-task`.
 4. ~~Fix convention attribution in `seedance-vfx-prompt`~~ — DONE. All references corrected from `seedance-prompt-25` to `seedance-prompt-20`.
 5. ~~Remove duplicated content from `seed-audio-commercial`~~ — DONE. Removed ~190 lines of duplicated prompt structure, voice profile format, best practices, quick reference card, and verification commands. Now pairs with `seed-audio-prompt` instead of duplicating it. Reduced from 717 to 525 lines.
-6. ~~Remove duplicated audio-first contract from `seedance-acting-console` and `seedance-pacing-presets`~~ — PARTIALLY DONE. `seedance-acting-console` now has an optional, self-contained audio section that pairs with `seed-audio-prompt` instead of duplicating the contract. `seedance-pacing-presets` still needs cleanup.
+6. ~~Remove duplicated audio-first contract from `seedance-acting-console` and `seedance-pacing-presets`~~ — DONE. `seedance-acting-console` now has an optional, self-contained audio section that pairs with `seed-audio-prompt`. `seedance-pacing-presets` audio-first contract replaced with a concise pointer; clarified that audio-first is only for lip-sync-critical scenes, not all dialogue. Removed AGENTS.md reference.
 7. Eliminate duplicate subdirectories in `remotion-best-practices`; reduce to index or remove
 8. Merge `remotion-interactivity` into `remotion-markup`
 

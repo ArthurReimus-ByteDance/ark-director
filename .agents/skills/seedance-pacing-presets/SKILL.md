@@ -157,16 +157,18 @@ list before generation.
   cut list lets the model cut or reorder arbitrarily.
 - **30s single-pass or native extension only for continuous seamless motion.**
   Reserve them for a genuine single continuous take or audio-driven long
-  dialogue per the AGENTS.md exception. Otherwise right-size each scene to its
-  natural duration.
+  dialogue where seamless motion across scene boundaries matters more than
+  per-scene iteration. Otherwise right-size each scene to its natural
+  duration.
 - **Per-scene natural duration 4-30s — do not pad.** Set `duration` to the
   length the scene actually needs (7s for a single beat, 12s for a short
   dialogue exchange, 20s for a multi-stage action). 30s is the ceiling, not the
   target.
-- **Dialogue scenes are audio-first.** When dialogue exists, generate the Seed
-  Audio track first, verify `audio_duration <= video_duration`, align the
-  pacing timestamps to the actual audio timing, and pass the audio as
-  `reference_audio`. Use the exact `{dialogue}` text in both prompts.
+- **Dialogue scenes: align pacing to audio.** When dialogue exists with
+  `generate_audio: true`, the pacing timestamps should align to the spoken
+  beats. For lip-sync-critical scenes, pair with `seed-audio-prompt` to
+  generate the Seed Audio track first, then align pacing timestamps to the
+  actual audio timing.
 - **Generation parameters stay in the API.** Duration, resolution, aspect
   ratio, and watermark never go in the prompt. Keep `watermark: false` by
   default.
@@ -183,8 +185,8 @@ Before a pacing block is submitted as part of a Seedance 2.5 prompt, verify:
 2. `ramp` or `pacing` comes from the preset bank.
 3. The pacing block names the beat that lands (subject, action, and end state).
 4. No frame-accurate or impossible-frequency promises are made.
-5. Dialogue scenes note the audio-first alignment (Seed Audio first,
-   `{dialogue}` verbatim, pacing aligned to the audio timeline).
+5. Dialogue scenes align pacing to spoken beats; lip-sync-critical scenes pair
+   with `seed-audio-prompt`.
 6. `duration` is within 4-30s and not padded to fill 30s.
 7. Any cut list uses consecutive, non-overlapping time ranges with ordered shot
    content.
