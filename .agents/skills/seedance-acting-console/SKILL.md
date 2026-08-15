@@ -1,74 +1,187 @@
 ---
 name: seedance-acting-console
 description: >
-  Turn a per-character (emotion, intensity, dialogue) directive into a
-  production-grade Seedance acting block: an emotion bank of six emotions with
-  graduated observable cues, an intensity encoding guide (levels 1-3), the
-  single-transition and multi-stage acting templates, and an optional audio-first
-  pipeline that reinforces the performance through Seed Audio. Use this skill
-  when directing the performance, acting, emotional intensity, mood of the scene,
-  facial expression, delivering a line, or asking a character to act
-  happy/sad/angry/fearful. It composes with seedance-prompt-25 and
-  seed-audio-prompt, never calling generation tools itself.
+  Turn a directing directive into a production-grade Seedance acting block.
+  Two layers: (1) Scene-level acting analysis — read the whole scene, find the
+  shared direction, each character's motive, goal, obstacle, and tactic with
+  eye-work as purposeful action. (2) Cue encoding — map the tactic's visible
+  footprint to directly observable physical cues at three intensity levels using
+  a six-emotion bank. Use this skill when directing the performance, acting,
+  emotional intensity, mood of the scene, facial expression, delivering a line,
+  or when a character reads dead, glassy, flat, or over-acted. Composes with
+  seedance-prompt-25 and optionally with seed-audio-prompt for dialogue
+  reinforcement. Never calls generation tools itself.
 ---
 
 # Seedance Acting Console
 
-The Acting Console turns a single creative directive — `(emotion, intensity,
-dialogue)` for one character — into a complete, generation-ready performance
-spec. It mirrors Higgsfield Cinema Studio's per-character emotion controls
-(emotion dropdown + intensity slider) as a prompt-composition skill on the
-BytePlus stack.
+Turn a single creative directive into a complete, generation-ready performance
+spec. The console has two layers that work in sequence:
 
-It produces two composable layers:
-
-1. **Prompt layer** — an acting block for the Seedance prompt built from
-   directly observable physical cues, using the single-emotional-transition or
-   multi-stage template from `seedance-prompt-25`, with the `{dialogue}` bracket
-   syntax and a delivery style.
-2. **Audio-first layer (reinforcement)** — an optional pipeline that generates
-   a Seed Audio dialogue track carrying the same emotion, verifies
-   `audio_duration <= video_duration`, passes the WAV to Seedance as
-   `reference_audio` (bound as `@Audio 1`), keeps the identical `{dialogue}`
-   text in both prompts, and aligns shot timestamps to the actual audio. This
-   is the stronger "acting" lever: lip-sync constrains the on-screen
-   performance to the voice emotion.
+1. **Analysis layer** — Read the whole scene, find the shared direction, then
+   derive each character's motive, goal, obstacle, and tactic. The emotion is
+   a byproduct of the tactic — never the starting point.
+2. **Encoding layer** — Map the tactic's visible footprint to directly
+   observable physical cues at three intensity levels. The six-emotion bank is
+   a lookup table for encoding, not a menu to pick from.
 
 This skill is **prompt-composition only**. It never calls MCP/Ark generation
-tools directly; it composes with `seedance-prompt-25` (prompt grammar), the
-`seedance_2_5_create_task` MCP tool (generation), and `seed-audio-prompt`
-(Seed Audio voice profiles).
+tools directly; it composes with `seedance-prompt-25` (prompt grammar) and
+optionally with `seed-audio-prompt` (Seed Audio voice profiles).
 
-## Source authority
+---
 
-Accessed 2026-08-13. Emotion words are direction, not control; the official
-Seedance 2.5 guidance requires observable cues for stable performance:
+## Analysis layer
 
-- [Seedance 2.5 Prompt Guide (Lark)](https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh) — emotional-direction section (single transition + multi-stage templates, emotion externalization table, 2-4 cue guidance)
-- [Seedance 2.5 Prompt Guide (ModelArk)](https://docs.byteplus.com/en/docs/ModelArk/2607689) — same guidance on the official doc surface
-- [Seedance 2.5 Launch Blog](https://seed.bytedance.com/en/blog/one-take-creation-flexible-referencing-introducing-seedance-2-5) — audio-first, native audio+video co-generation
-- [Seed Audio 1.0 API Reference](https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01) — dialogue generation, voice profiles, duration limits
-- [Seed Audio 1.0 Prompting Guide](https://bytedance.larkoffice.com/wiki/WgU4wFVQ8iZgvjkHHdbcDmhCnug) — voice profile ingredients (age, gender, accent, emotion, tone, speed, timbre) and T2A/TA2A conventions
-- [Higgsfield Cinema Studio help center](https://higgsfield.ai/creator-hub/help-center/tools-and-workflows/how-do-i-use-cinema-studio) and [3.5 tutorial](https://higgsfield.ai/blog/cinema-studio-3.5-full-tutorial) — the per-character emotion + intensity console this skill mirrors
+### Core principle
 
-**Provenance note:** Higgsfield documents a per-character emotion control and
-an intensity slider. The six-emotion set below (Serenity, Joy, Terror, Rage,
-Fear, Vigilance) comes from hands-on review (Modern Creator Cinema Studio
-tutorial), not from official Higgsfield documentation, and is adopted here as a
-documented design decision. The "3 intensity levels" are likewise a skill
-design choice, not a Higgsfield control — treat them as encoding levels, not
-model-exposed numbers.
+An acting task is when the character is **INVESTED in their tactic of reaching
+the goal.**
 
-Where the official guide is updated, prefer the live page over this skill where
-they conflict.
+- It is NOT a description of external behavior ("eyes flick," "brows lift," "he
+  looks sad") — that is playing the result, and it produces dead faces.
+- It is NOT necessarily physical action. The tactic can live entirely **in the
+  eyes**: a different look when someone humiliates vs. begs; a person arguing
+  from conviction constantly checks BOTH eyes of the partner, hunting for a
+  sparkle of trust, registering whether the partner is interested or drifting —
+  and adjusts to what they find.
+- The eye movement IS the doing. Aliveness = the mind visibly working on the
+  task, moment to moment.
+- Never fix dead eyes with lighting tricks (catchlights etc.). Fix them by
+  giving the eyes a task.
 
-## Emotion bank
+### The ladder (work strictly in this order)
 
-The core of the console. Six emotions, each externalized as **directly
-visible or audible cues** at three intensity levels. Intensity is never encoded
-with degree adjectives ("very sad", "extremely angry") — it is encoded purely
-through graduated cues: number of cue channels engaged, amplitude, movement
-degree, and vocal delivery.
+#### 0. Read the WHOLE scene dialogue first
+
+Never build a task from one line. The task lives across the entire exchange —
+where it holds, where it breaks. Check every line of every character before
+directing any of them.
+
+#### 1. Goal of the SCENE — one shared direction
+
+The scene has ONE goal: a single direction ALL characters play toward, usually
+unspoken — a mutual silent agreement about how this time will be lived.
+
+Example (mother packs son's suitcase, army in an hour): the goal of the scene
+is **make it painless — hide the feeling, don't leave each other with pain or
+sorrow, never lose the positiveness.** It belongs to both at once.
+
+The scene goal is NOT the film's dramaturgic function (the reveal, the theme).
+Characters never know or play the film's purposes — those are accomplished
+THROUGH them, as a byproduct.
+
+#### 1a. The ENDING names the event
+
+Always look at how the scene ENDS before naming its event. The last line/beat
+is the key you read the whole scene backward through. Watch for the
+double-meaning last line — spoken about one thing, meant about another ("Poor
+bastard. Just can't forgive himself" — said looking at the patient, meant about
+himself).
+
+#### 1b. ALL in one event
+
+The event must contain EVERY character in the scene — including silent or
+unconscious ones — as participants or mirrors of the same process. If a
+character stands outside the named event, the event is named wrong.
+
+#### 1c. The PHYSICAL ACTION is the channel
+
+The surface activity of the scene (the "terrain" — e.g., routine rounds;
+packing a suitcase) stays as the PHYSICAL ACTION, and each character pursues
+the event THROUGH it — each via their own distinct, visible physical behavior.
+The invisible task must have a physical channel the camera can read.
+
+Rule: give every character in the scene their own physical channel for the same
+event — different behaviors, one event, one terrain.
+
+#### 2. Each character's MOTIVE — different fuel, same direction
+
+Every character pushes along the same scene direction, but each **for their own
+reason**. The son keeps it painless *for mom*; the mother *out of superstition*
+(no tears before a journey — bad omen). Same vector, different fuel — the fuel
+is what makes each performance distinct while the scene reads unified.
+
+Motives can be alternative hypotheses; the director picks. Given circumstances
+constrain motives: a man who took the job at an experimental convict lab is
+ALREADY compromised — he cannot play a moral innocent.
+
+#### 3. Each character's GOAL — the personal fight
+
+Born from the motive: what this person is fighting for themselves inside the
+scene. Ordinary, personal, playable. Never the same words as the scene goal,
+never the theme.
+
+#### 4. OBSTACLE — what presses against the direction
+
+The thing threatening to break the scene's line (the real feeling pressing to
+surface; the case too horrifying to stay routine). One crack and the shared goal
+collapses. This pressure is what the audience actually feels — precisely because
+nobody plays it; everyone plays keeping it out.
+
+#### 5. TACTIC — the acting task proper
+
+The invested, moment-to-moment pursuit, written as what the character is DOING
+to the partner — with the eye-work named as purposeful action:
+
+- checking both of the partner's eyes for a sparkle of trust
+- registering after each point: did it land? interested or about to smirk?
+- stealing looks and snapping back before being caught
+- measuring the partner, memorizing them, comparing what I feel with what they
+  show
+
+Beats are keyed to the actual dialogue words. Where the script demands it, mark
+the point where a character's fuel runs out and the line breaks (the medic's
+"...Poor bastard," under his breath — the break IS the delivery of the scene).
+
+### Contrast pairing (build duos on mirrored +/-)
+
+A two-character scene is richer when the pair is built on CONTRAST — each
+character carries a plus and a minus, mirrored against the other, with one axis
+being the essential one the audience reads.
+
+Rules:
+- Each character gets one + and one −, inverted relative to the partner.
+- Name the ESSENTIAL AXIS of the scene — that opposition is what the audience
+  actually reads; the other traits are the color.
+- Both still push the same scene direction — the contrast lives UNDER the shared
+  direction and leaks out through the tactics and the eyes.
+- The seeming trait is often scar tissue over its opposite: "careless" = hope
+  lost, not care absent. Direct the history, not the surface.
+
+### Common analysis failures to catch
+
+- Task built from one line instead of the whole dialogue → re-read the scene
+  first.
+- The film's reveal/theme assigned to a character as their task → characters
+  never play the film's purposes.
+- Scene goal confused with character goal → scene goal is the shared direction;
+  character goals are personal and differ.
+- Motive ignores given circumstances (playing innocence while already
+  complicit) → re-derive motive.
+- Prescribed eye/face choreography instead of eye-work as purposeful action →
+  rewrite as verbs at the partner.
+- Emotion adjectives as direction → replace with the task that produces the
+  emotion.
+
+---
+
+## Encoding layer
+
+The analysis layer determines *what the character is doing*. The encoding layer
+translates that into *what the model needs to render*. The cues are derived from
+the **tactic**, not the emotion label — instead of "character is angry →
+clenched fists" (playing the result), it becomes "character is checking the
+partner's eyes for trust after being humiliated — jaw tightens, eyes sharpen,
+breathing controlled" (the cues come from what the character is doing, not what
+they're feeling).
+
+### Emotion bank
+
+Six emotions, each externalized as **directly visible or audible cues** at three
+intensity levels. Intensity is never encoded with degree adjectives ("very
+sad", "extremely angry") — it is encoded purely through graduated cues: number
+of cue channels engaged, amplitude, movement degree, and vocal delivery.
 
 | Emotion | Abstract one-liner | Intensity 1 (low) | Intensity 2 (medium) | Intensity 3 (high) | Seed Audio delivery hint |
 |---|---|---|---|---|---|
@@ -79,29 +192,21 @@ degree, and vocal delivery.
 | **Fear** | Anxious apprehension and watchfulness about a perceived danger. | Eyes darting; fingers tapping; weight shifting; frequent glancing. | Rapid breathing; eyes darting; biting the lip; hands fidgeting. | Body pulled back; shoulders hunched; gaze searching; voice cracking; quick shallow breaths. | Shaky, rapid; hesitant, tremulous, quickened. |
 | **Vigilance** | Sharpened, controlled alertness scanning for threat or opportunity. Built from gaze fixed, brows lowered, tense stillness. | Gaze steady; brows level; posture still but ready. | Gaze fixed and scanning; brows lowered; body still; breathing held. | Utterly still; eyes narrow and unblinking; head slowly panning; hands ready at the sides. | Low, steady; measured, controlled, clipped. |
 
-### Relationship to the official 5-emotion externalization table
+### Using the bank with the analysis
 
-`seedance-prompt-25` documents five emotions (Sadness, Joy, Nervousness /
-anxiety, Anger, Relief) with canonical cue vocabulary:
+The bank is a **lookup table**, not a menu. After completing the analysis
+ladder, identify which emotion family the tactic's visible footprint belongs
+to, then select cues from the appropriate intensity level. Adapt the cues to
+serve the tactic — the tactic determines which cues are relevant, not the other
+way around.
 
-| Console emotion | Official table entry | Overlap / build note |
-|---|---|---|
-| Joy | Joy | Direct: corners of the mouth rising, brows relaxing, light steps, humming, spinning. |
-| Rage | Anger | Direct: fists clenched, jawline tense, chest heaving, eyes sharp, words through gritted teeth. |
-| Fear | Nervousness / anxiety | Overlaps: eyes darting, rapid breathing, tapping, fidgeting. Fear leans further into withdrawal and flight. |
-| Serenity | Relief | Overlaps: long exhale, shoulders relaxing. Serenity is a resting state; Relief is a release after tension. |
-| Terror | (none) | Build from cue vocabulary: gaze fixed, brows lowered, tense stillness, plus widened pupils, choked breath, trembling. |
-| Vigilance | (none) | Build from cue vocabulary: gaze fixed, brows lowered, tense stillness, plus narrow unblinking scanning, slow head pan, hands ready. |
-| Sadness *(routed)* | Sadness | Direct: use the official cues verbatim — lowering the head, shoulders trembling slightly, eyes reddening, fingers unconsciously clutching clothing, tears welling but not falling. Sadness is not in the console six; route any "sad" request here and apply the same 3-level intensity encoding. |
+Example: The analysis produces a tactic of "checking the partner's eyes for a
+sparkle of trust after being humiliated." This lives in the **Fear** family at
+intensity 2, but the cues are adapted: eyes darting becomes eyes deliberately
+searching; biting the lip becomes jaw controlled to prevent a tremor. The
+emotion label is a reference point; the tactic owns the cues.
 
-**Terror vs Vigilance:** both borrow the "gaze fixed, brows lowered, tense
-stillness" family. Differentiate them by body control — Terror is a panicked
-freeze (pupils widen, choking breath, trembling), Vigilance is controlled
-scanning (narrow unblinking eyes, slow head pan, hands ready, held breath).
-State that difference explicitly in the prompt; do not write the bare emotion
-word alone.
-
-## Intensity encoding guide
+### Intensity encoding guide
 
 Intensity level is a **design-level encoding choice**, not a number the model
 reads. Levels 1/2/3 differ on the same emotion through three graduated levers:
@@ -110,41 +215,51 @@ reads. Levels 1/2/3 differ on the same emotion through three graduated levers:
    only), more channels at level 3 (face + hands + breathing + body + voice).
 2. **Amplitude** — faint and contained (a flicker) vs pronounced (a shaking
    fist, tears streaming).
-3. **Movement degree** — static containment (held breath, frozen stillness)
-   vs full-body release (spinning, shouting, recoiling).
-4. **Vocal delivery** — calm and measured, strained and quickened, or
-   shouted / cracking.
+3. **Movement degree** — static containment (held breath, frozen stillness) vs
+   full-body release (spinning, shouting, recoiling).
+4. **Vocal delivery** — calm and measured, strained and quickened, or shouted /
+   cracking.
 
-Worked example — **Joy** at all three levels:
+Never write "very happy" or "extremely terrified" — replace the adjective with
+more cues and more amplitude.
 
-| Level | Encoding (cues, not adjectives) |
-|---|---|
-| 1 (low) | The corner of @character's mouth lifts faintly; the eyes soften. |
-| 2 (medium) | An uncontrollable smile spreads; the brows relax; the steps become light. |
-| 3 (high) | @character laughs, spins in place, breathless, eyes crinkled. |
+---
 
-The same structure applies to every emotion in the bank: level 1 stays in the
-face, level 3 releases into the body and voice. Never write "very happy" or
-"extremely terrified" — replace the adjective with more cues and more amplitude.
+## Output grammar
 
-## Parameter schema
+### The ACTING TASK block
 
-The console accepts a single directive object:
+Format inside a Seedance prompt:
 
-| Parameter | Type | Required | Meaning |
-|---|---|---|---|
-| `character` | string | yes | Character id / element id or named subject (e.g. `gloria` or `@gloria`). |
-| `emotion` | string | yes | One of the six bank emotions: `serenity`, `joy`, `terror`, `rage`, `fear`, `vigilance`. |
-| `intensity` | int | yes | 1 (low) / 2 (medium) / 3 (high), encoded per the intensity guide. |
-| `arc` | list | no | Ordered list of emotion x intensity beats, each with a trigger and timestamp, for multi-stage performance. |
-| `dialogue` | string | no | The EXACT spoken line(s), verbatim. If present, used identically in Seed Audio and Seedance prompts. |
-| `delivery` | string | no | Optional delivery-style override (e.g. "through gritted teeth", "breathless"). Defaults to the bank's delivery hint for the emotion. |
-| `reinforce_with_audio` | bool | no | If true, run the audio-first layer (Seed Audio dialogue → `reference_audio` → Seedance). Recommended whenever `dialogue` is set. |
+```
+ACTING TASK — [NAME] (invested in their tactic; the work happens in the eyes):
+SCENE DIRECTION (shared, unspoken): [one line]
+MOTIVE (their fuel): [why THEY push that direction]
+GOAL: [their personal fight]
+OBSTACLE: [what presses against the line, what one crack costs]
+TACTIC: [what they do to the partner, with the eye-work as action]
+CUES: [observable physical cues derived from the tactic — gaze, brows, mouth,
+breathing, hands, body — at the appropriate intensity level]
+Moment to moment:
+— "[dialogue words]" — [verb at the partner + what the eyes check]
+— "[dialogue words]" — [verb + eye-work]
+— [where the line breaks, if it breaks]
+(Safety: gaze always engaged in the task — never a frozen, glassy, unfocused
+stare; natural blink cadence, actors blink now and then to moisturize their eyes.)
+```
 
-`arc` beat shape: `{emotion, intensity, trigger, at_seconds}`. Example:
-`[{joy,1,"she sees the letter",0}, {rage,2,"she reads the name",6}, {fear,3,"footsteps approach",11}]`.
-
-## Prompt layer output grammar
+Rules:
+- Verbs directed at the partner; no adjectives of emotion as instruction
+  ("sadly," "nervously").
+- No facial choreography ("brows lift," "mouth trembles") — externals only as
+  the safety line above.
+- Nobody plays the emotion; everyone plays the direction. The audience
+  receives the feeling through the pressure.
+- One safety line against the frozen stare is allowed and recommended (AI-model
+  necessity).
+- Every character in frame gets living eyes this way — including silent
+  listeners: a listener's task is also real (e.g., "decide if they're serious,"
+  "wait for the punchline," "protect the mood").
 
 ### Single emotional transition (one emotion, one change)
 
@@ -160,8 +275,7 @@ Finally, <character> expresses <target emotion> through <restrained or explicit 
 
 ### Multi-stage emotion (arc over time)
 
-Use when the emotion changes several times, with trigger events and
-timestamps.
+Use when the emotion changes several times, with trigger events and timestamps.
 
 ```
 When <character> hears or sees <first triggering event>, <first observable reaction>.
@@ -173,101 +287,74 @@ Finally, <character's final action, expression, or manner of speaking>.
 
 ### Dialogue, delivery, and language
 
-When `dialogue` is set, place the exact line inside `{curly braces}` and give
-the delivery style plus the dialogue language (non-Chinese dialogue needs the
+When dialogue is set, place the exact line inside `{curly braces}` and give the
+delivery style plus the dialogue language (non-Chinese dialogue needs the
 language stated):
 
 ```
 Dialogue language: <language>. <character> <says/shouts/whispers> in <delivery style>: {<exact line>}
 ```
 
-### Worked prompt example
+### Worked example
 
-Directive: `character: gloria, emotion: rage, intensity: 2, dialogue: "Get out
-of my way.", delivery: "through gritted teeth", reinforce_with_audio: true`.
+Directive: A woman confronts a locked door. Her husband just left. Scene
+direction: keep it together, don't break down. Tactic: checking the door for
+signs he'll come back, eyes hunting for a reason. Emotion family: Fear at
+intensity 2. Dialogue: "Get out of my way."
 
 ```
-@Image 1 defines @gloria's appearance, hairstyle, and clothing. Do not use the
-background or other people in the image.
+ACTING TASK — GLORIA (invested in checking whether he's really gone; the work
+happens in her eyes):
+SCENE DIRECTION (shared, unspoken): keep it together — don't let this be real yet.
+MOTIVE (her fuel): superstition — if she doesn't break, he might still come back.
+GOAL: find proof it's not over.
+OBSTACLE: the locked door; the silence on the other side; the feeling pressing
+to surface.
+TACTIC: pressing the door, testing the handle, eyes hunting the frame for
+anything he left behind — checking the threshold, the mat, the hallway.
+CUES: eyes darting and searching (Fear I2); rapid breathing; biting the lip;
+hands fidgeting with the handle; weight shifting toward the door.
+Moment to moment:
+— presses the handle — finds it locked — eyes snap to the gap under the door
+— "Get out of my way." — said at the door, voice strained, eyes still searching
+the frame
+— the line breaks at "way" — she heard her own voice and it scared her
+(Safety: gaze always engaged in the task; natural blink cadence.)
+```
 
-The overall emotion shifts from restrained calm to rising rage.
-After the locked door does not open, @gloria first clenches both fists and her
-jaw tightens.
-Then her chest heaves, her eyes sharpen, and her breathing quickens.
-Finally, @gloria expresses rage through explicit outward behavior, pushing
-against the door.
-Dialogue language: American English. @gloria says in a sharp, strained voice
+Dialogue language: American English. Gloria says in a sharp, strained voice
 through gritted teeth: {Get out of my way.}
-```
 
 For the full scene prompt, drop this acting block into the six-part formula
 (Subject + Action + Scene + Visual Style + Camera + Audio) as the subject/action
 section, per `seedance-prompt-25`.
 
-## Audio-first layer (reinforcement)
+---
 
-The stronger acting lever. Run this whenever `reinforce_with_audio` is true or
-`dialogue` is present. The audio drives the video — never the other way around.
+## Audio reinforcement (optional)
 
-```mermaid
-flowchart TD
-  A[directive: emotion x intensity x dialogue] --> B[Seed Audio prompt: voice profile from bank + exact dialogue]
-  B --> C[generate dialogue track -> dlg_<scene>_sh<NNN>_<char>_t<NN>_v<NN>.wav]
-  C --> D{duration <= video duration?}
-  D -->|no| E[trim audio prompt - pauses, ambience tails; regenerate]
-  E --> C
-  D -->|yes| F[pass WAV as reference_audio, bind as @Audio 1]
-  F --> G[Seedance task: same {dialogue} text, shot timestamps aligned to audio]
-  G --> H[record audio path / SHA-256 / duration + dialogue-to-shot map in shot.md and scene.md]
-```
+When the scene has spoken dialogue and the user wants lip-sync, generate the
+Seed Audio dialogue track first and pass it as `reference_audio` to Seedance.
+This is the stronger acting lever: lip-sync constrains the on-screen performance
+to the voice emotion.
 
-### Step-by-step
+**Pair with `seed-audio-prompt`** for Seed Audio voice profile composition and
+generation. The exact dialogue lines in the Seed Audio `text_prompt` must appear
+verbatim inside `{curly braces}` in the Seedance prompt. If one changes, both
+change.
 
-1. **Compose the Seed Audio prompt.** Build a voice profile from the bank's
-   delivery hint for the emotion plus the character's baseline: age, gender,
-   accent, emotion, tone, speed, timbre. Keep the voice profile stable with
-   the character's canonical `character.md`. Use T2A for a described voice, or
-   TA2A with `<<TGT_SPK1>>` when a voice reference clip exists. Include the
-   EXACT dialogue in double quotes. See `seed-audio-prompt`.
-2. **Generate the dialogue track.** Save it to the shot folder as
-   `dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.wav`, with its immutable
-   prompt snapshot `prompt_dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.md`
-   beside it.
-3. **Verify `audio_duration <= video_duration`.** Seed Audio output must fit
-   within the planned Seedance `duration` parameter. If it exceeds it, trim
-   the audio prompt (shorter ambience tails, fewer pauses, tighter scene
-   description) and regenerate. Never pad the video to fit an over-long audio.
-4. **Pass the WAV as `reference_audio`.** Submit via
-   `seedance_2_5_create_task` (2.5, up to 10 audio refs, 30s) or
-   `seedance_create_task` (2.0, up to 3 audio refs, 15s). In the Seedance
-   prompt, label it `@Audio 1` and bind it in every shot that contains
-   dialogue: `@Audio 1 defines <character>'s voice and specified dialogue`.
-5. **Keep the SAME `{dialogue}` text.** The exact lines in the Seed Audio
-   `text_prompt` must appear verbatim inside `{curly braces}` in the Seedance
-   prompt. No paraphrasing, no reordering, no omission. If one changes, both
-   change.
-6. **Align shot timestamps to actual audio.** After generating the audio,
-   inspect it (or transcribe with `speech_to_text`) and set the `Shot N
-   (start-end)` time ranges in the Seedance prompt so each line lands at the
-   second it actually occurs.
-7. **Record the alignment.** `scene.md` records the audio asset path, SHA-256,
-   verified duration, and the dialogue-to-shot timestamp mapping; `shot.md`
-   records the same audio asset as a reference input with `@Audio 1`. If the
-   audio is regenerated, update both files and invalidate any video that used
-   the old audio.
+Keep `audio_duration <= video_duration`. If the audio exceeds the video
+duration, trim the audio prompt (shorter ambience tails, fewer pauses, tighter
+scene descriptions) and regenerate. Never pad the video to fit an over-long
+audio.
 
-### Alignment contract (from AGENTS.md)
+After generating the audio, inspect it (or transcribe with `speech_to_text`)
+and set the shot timestamps so each line lands at the second it actually occurs.
 
-1. **Same dialogue text in both prompts** — Seed Audio `text_prompt` and the
-   Seedance `{curly braces}` must match verbatim.
-2. **Audio duration <= video duration** — trim the audio prompt if needed;
-   never pad the video.
-3. **Shot timestamps align to audio** — place each line at the second it
-   actually occurs in the generated audio.
-4. **Audio as `reference_audio`** — pass the `.wav`, label `@Audio 1`, and
-   bind it in every dialogue/music shot.
-5. **Single source of truth** — audio path, SHA-256, duration, and the
-   dialogue-to-shot mapping live in `scene.md` and `shot.md`.
+Record the audio asset path, SHA-256, verified duration, and the
+dialogue-to-shot timestamp mapping in `shot.md` and `scene.md`.
+
+---
 
 ## Edge cases and guardrails
 
@@ -279,31 +366,38 @@ flowchart TD
 - **No degree adjectives.** "Very sad", "extremely angry", "super happy" are
   banned. Encode intensity via graduated cues (channel count, amplitude,
   movement degree, vocal delivery).
+- **Cues serve the tactic, not the emotion label.** Always derive visible
+  behavior from what the character is doing (the tactic), not from what they're
+  feeling. The emotion bank is a lookup table, not a menu.
 - **Dialogue must be verbatim across both prompts.** If the Seed Audio line or
   the Seedance `{line}` changes, change both. A mismatch causes lip-sync drift.
 - **Audio longer than video: trim audio, never pad video.** Reduce pauses,
   ambience tails, and scene description in the Seed Audio prompt; regenerate.
 - **Emotion arcs need the multi-stage template + timestamps.** A single
   transition template cannot carry several emotion changes.
-- **`reference_audio` forces lip-sync, not acting fidelity.** It locks the
-  voice and mouth timing to the audio emotion. Whether Seedance visibly acts
-  the emotion needs an empirical A/B: same prompt, neutral voice vs angry
-  voice.
-- **`watermark: false` by default** for all image, video, and audio
-  generation. Enable the AIGC watermark only when explicitly requested.
+- **`reference_audio` forces lip-sync, not acting fidelity.** It locks the voice
+  and mouth timing to the audio emotion. Whether Seedance visibly acts the
+  emotion needs an empirical A/B: same prompt, neutral voice vs angry voice.
+- **`watermark: false` by default** for all image, video, and audio generation.
+  Enable the AIGC watermark only when explicitly requested.
 - **Cost.** Audio and video bill per generation. Prototype at the lowest
-  suitable resolution and duration; confirm duration fits before submitting
-  the video task.
+  suitable resolution and duration; confirm duration fits before submitting the
+  video task.
 - **Content safety.** Do not direct performances depicting identifiable real
   people without rights or otherwise restricted content.
+
+---
 
 ## Self-check checklist
 
 Before finalizing an acting block or plan, verify:
 
-- [ ] The emotion is one of the six bank emotions, or is built explicitly from
-      the cue vocabulary (gaze, brows, mouth, breathing, hands, body) when not
-      in the bank.
+- [ ] The whole scene dialogue was read before building any character's task.
+- [ ] The scene direction is shared, unspoken, and belongs to all characters.
+- [ ] Each character has a distinct motive, goal, obstacle, and tactic.
+- [ ] The tactic names eye-work as purposeful action — not facial choreography.
+- [ ] No emotion adjectives as direction ("sadly," "nervously," "angrily").
+- [ ] The cues are derived from the tactic, not from the emotion label.
 - [ ] Every cue is directly observable or audible — no bare abstract emotion
       words standing alone.
 - [ ] Intensity is encoded via graduated cues (channel count, amplitude,
@@ -311,13 +405,12 @@ Before finalizing an acting block or plan, verify:
 - [ ] A single emotional transition uses 2-4 cues max; more beats use the
       multi-stage template.
 - [ ] Every arc beat carries a trigger event and a timestamp.
-- [ ] When `dialogue` is set, the line appears verbatim inside `{}` with a
-      delivery style and dialogue language.
-- [ ] When `reinforce_with_audio` is true, the plan includes: Seed Audio voice
-      profile from the bank, a duration check (`audio_duration <= video_duration`),
-      `reference_audio` with `@Audio 1` binding, and identical `{dialogue}` text.
-- [ ] Shot timestamps are aligned to actual audio timing (post-audio inspection
-      or transcription).
+- [ ] When dialogue is set, the line appears verbatim inside `{}` with a delivery
+      style and dialogue language.
+- [ ] When audio reinforcement is used: Seed Audio voice profile composed,
+      duration checked (`audio_duration <= video_duration`), `reference_audio`
+      passed as `@Audio 1`, identical `{dialogue}` text in both prompts, shot
+      timestamps aligned to actual audio.
 - [ ] `shot.md` records the audio asset path, SHA-256, verified duration, and
       the dialogue-to-shot mapping; `scene.md` carries the same single source
       of truth.

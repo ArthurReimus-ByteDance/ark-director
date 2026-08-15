@@ -10,6 +10,12 @@ Produce dramatic, story-driven audio commercials using BytePlus Seed Audio 1.0
 prompts that produce dialogue, background music, sound effects, and ambience in
 a single generation pass — no separate mixing, scoring, or Foley required.
 
+**Pairs with `seed-audio-prompt`** for Seed Audio prompt structure, voice
+profile formatting, timestamp control, API limits, and pricing. This skill
+specializes the commercial workflow: story arc design, commercial-specific SFX
+and music patterns, multilingual safety filter guidance, cost management, and
+the production lifecycle.
+
 ## What this skill produces
 
 A finished audio commercial asset, saved locally, with:
@@ -34,25 +40,13 @@ A finished audio commercial asset, saved locally, with:
 
 - **Plain TTS or single-voice narration** — use `seed-audio-prompt` directly
   without the commercial story structure.
-- **Video generation** — use Seedance skills (`seedance-prompt-25` for 2.5, `seedance-prompt-20` for 2.0).
-  If the dialogue track is for a Seedance video, follow the audio-first pipeline in `AGENTS.md`
-  (generate audio, verify duration ≤ video duration, pass as `reference_audio`).
+- **Video generation** — use Seedance skills (`seedance-prompt-25` for 2.5,
+  `seedance-prompt-20` for 2.0). If the dialogue track is for a Seedance video,
+  follow the audio-first pipeline (generate audio, verify duration ≤ video
+  duration, pass as `reference_audio`).
 - **Image generation** — use Seedream skills (`seedream-prompt`).
 - **Voice cloning for consistent characters across multiple clips** — use
   `seed-audio-prompt` in TA2A mode with reference audio clips.
-
-## Mandatory routing
-
-This skill composes the prompt and manages the generation lifecycle. It depends
-on:
-
-- `seed-audio-prompt` — the authoritative reference for Seed Audio 1.0 prompt
-  structure, voice profiles, and API limits. Load it for full prompt-writing
-  rules when needed.
-- `modelark-mcp` skill — the MCP tool surface. Use `seed_audio_generate` (or
-  `seed_audio_generate_variations` for multiple takes) to invoke the model.
-- `ffmpeg` skill — for post-generation verification (ffprobe, full decode
-  check).
 
 ## Production workflow
 
@@ -113,8 +107,9 @@ graph LR
 
 ### Step 3 — Compose the T2A prompt
 
-Assemble the prompt following the `seed-audio-prompt` skill's five ingredients,
-arranged as one chronological audio scene. Use this template:
+Assemble the prompt following `seed-audio-prompt`'s five ingredients (scene and
+atmosphere, characters and dialogue, ending), arranged as one chronological
+audio scene. Use this commercial template:
 
 ```text
 Scene and atmosphere
@@ -172,14 +167,16 @@ Call `seed_audio_generate` with the composed prompt:
 
 ```python
 seed_audio_generate(
-    text_prompt=<composed_prompt>,
-    output={
-        "format": "mp3",
-        "sample_rate": 24000,
-        "subtitle": true,          # request subtitles (may not be returned)
-        "subtitle_type": "utterance"
-    },
-    persist=true                    # always persist to artifact store
+    input={
+        "text_prompt": <composed_prompt>,
+        "output": {
+            "format": "mp3",
+            "sample_rate": 24000,
+            "subtitle": True,
+            "subtitle_type": "utterance"
+        },
+        "persist": True
+    }
 )
 ```
 
@@ -215,16 +212,6 @@ After generation succeeds:
 5. **Save the prompt snapshot** — write the exact submitted prompt to a
    `.md` file beside the audio asset.
 
-```bash
-# Download
-curl -sL -o <asset_path> "<source_url>"
-
-# Verify
-ffprobe -v quiet -print_format json -show_format -show_streams <asset_path>
-ffmpeg -v error -i <asset_path> -f null -
-shasum -a 256 <asset_path>
-```
-
 ### Step 7 — Save manifests
 
 Create or update these project files:
@@ -241,8 +228,7 @@ else.** Use the `prompt_` prefix followed by the audio asset name (without
 extension). For a scene-level commercial mix: `prompt_mix_s01_v01.md` beside
 `mix_s01_v01.mp3`. For shot-level dialogue:
 `prompt_dlg_s01_sh010_<character-id>_t01_v01.md` beside
-`dlg_s01_sh010_<character-id>_t01_v01.mp3`. See AGENTS.md for the full audio
-prompt-snapshot naming table.
+`dlg_s01_sh010_<character-id>_t01_v01.mp3`.
 
 ### Step 8 — Present for review
 
@@ -320,56 +306,7 @@ classification on each generated audio chunk. Lighter Taglish (short phrases
 within English-dominant dialogue) passes; sustained Tagalog sentences trigger
 rejection.
 
-## Prompt best practices
-
-### Do
-
-- **Write as one chronological audio scene.** Interleave dialogue, actions,
-  SFX, and music changes in the exact order the listener should hear them.
-- **Give each character a full voice profile on first mention.** Include age,
-  gender, accent, timbre, emotional baseline, and delivery style. Later lines
-  can shorten to just the name and delivery note.
-- **Make voices contrast.** Differentiate characters through pitch, timbre,
-  accent, pacing, or emotional baseline so the listener can tell them apart.
-- **Tie music changes to story events.** "The piano shifts warmer" should
-  follow an observable action, not appear in isolation.
-- **Describe SFX with acoustic character and position.** "A crisp golden
-  crackle of fried chicken skin" is better than "crunching sound."
-- **Use onomatopoeia in quotes** when it clarifies texture: `CRUNCH`, `CLANG`,
-  `zzzip`. Do not use it as a substitute for describing the sound.
-- **Specify the ending.** State what fades, sustains, stops abruptly, or
-  carries into silence.
-- **Keep the prompt under 3,000 characters.** Be concise — omit unused
-  sections and trim redundant stage directions.
-- **Use event-relative cues** to tie sounds to actions: "as she opens the door,"
-  "under his line," "after the impact." Second-level `[start_time:end_time]`
-  timestamps are also available by default — use them when precise placement
-  matters and omit them when event-relative cues suffice.
-- **Describe voices through devices or spaces** when relevant: "telephone
-  compression," "public-address echo," "whispered proximity."
-
-### Don't
-
-- **Don't write unrelated inventories.** "Music: sad. Ambience: rain.
-  SFX: crunch." is wrong — weave them into the chronological scene.
-- **Don't use generic music descriptions.** "Cinematic music" tells the model
-  nothing. Use "low somber strings with distant war drums" or "a melancholic
-  solo piano, slow and measured."
-- **Don't leave the ending unspecified.** The model will choose something;
-  it may not match your intent.
-- **Don't overload one generation with too many acts.** If the story has more
-  than 5 distinct scene changes, consider splitting into multiple calls and
-  chaining via TA2A.
-- **Don't use `<<TGT_SPKN>>` tags in T2A mode.** Those are only for TA2A
-  (reference-audio) mode.
-- **Don't use `[start_time:end_time]` timestamps on every single line.** The
-  notation is a prompting-guide convention, not an API field. Use it when
-  precise timing placement matters; omit it when event-relative cues or
-  natural ordering suffice.
-- **Don't add `Max duration: 120 seconds` to the prompt.** Duration is a
-  request parameter, not prompt content.
-
-### Music direction patterns
+## Commercial music direction patterns
 
 Music is the emotional spine of a dramatic commercial. Describe it as a dynamic
 arc, not a static label.
@@ -395,7 +332,7 @@ Common commercial music arcs:
 | Energetic / fun | Upbeat percussion + synth | Bass drop + rhythm intensifies | Full bright pop mix |
 | Sad / dramatic | Solo cello or violin | Music drops to silence | Single sustained note resolving |
 
-### SFX patterns for food commercials
+## SFX patterns for food commercials
 
 Food commercials live or die on their SFX. The product interaction sound is the
 emotional trigger — describe it with sensory, acoustic detail.
@@ -423,7 +360,7 @@ hissing softly in the background.]
 Position SFX relative to actions: "as he takes the first bite," "immediately
 after the pour," "under her gasp of delight."
 
-### Ambience transition patterns
+## Ambience transition patterns
 
 Commercials often move between locations. Describe the transition as an
 audible state change, not two independent palettes.
@@ -469,63 +406,6 @@ Audio state B: [new ambience, new music mood, new intensity]
   audio is generated before the audit rejects it). Validate multilingual
   prompts carefully before submitting.
 - Set `DAILY_BUDGET_USD` on the MCP server to enforce a hard daily limit.
-
-## Project structure
-
-Follow the ai-director workspace conventions for all generated assets:
-
-```
-projects/
-  <project-name>/
-    project.md
-    scenes/
-      scene-01/
-        scene.md
-        mix_s01_v01.mp3                          # scene-level commercial mix
-        prompt_mix_s01_v01.md                    # prompt snapshot beside asset
-        s01_sh010/
-          shot.md
-          dlg_s01_sh010_<character-id>_t01_v01.mp3  # shot-level dialogue
-          prompt_dlg_s01_sh010_<character-id>_t01_v01.md
-    library/                                     # reusable, non-shot-specific assets
-      mus_<descriptor>_v01.wav
-      prompt_mus_<descriptor>_v01.md
-```
-
-### Asset file naming
-
-Follow the AGENTS.md structured-token conventions. Audio assets use these
-prefixes:
-
-| Asset | Pattern | Example |
-|---|---|---|
-| Dialogue | `dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.<ext>` | `dlg_s01_sh010_marco_t01_v01.mp3` |
-| Music | `mus_<descriptor>_v<NN>.<ext>` | `mus_tension-build_v01.wav` |
-| Ambience | `amb_<scene>_<descriptor>_v<NN>.<ext>` | `amb_s01_rain_v01.wav` |
-| Scene mix | `mix_<scene>_v<NN>.<ext>` | `mix_s01_v01.mp3` |
-
-Prompt snapshots use the `prompt_` prefix followed by the audio asset name
-(without extension):
-
-| Prompt | Pattern | Example |
-|---|---|---|
-| Dialogue prompt | `prompt_dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.md` | `prompt_dlg_s01_sh010_marco_t01_v01.md` |
-| Music prompt | `prompt_mus_<descriptor>_v<NN>.md` | `prompt_mus_tension-build_v01.md` |
-| Ambience prompt | `prompt_amb_<scene>_<descriptor>_v<NN>.md` | `prompt_amb_s01_rain_v01.md` |
-| Scene mix prompt | `prompt_mix_<scene>_v<NN>.md` | `prompt_mix_s01_v01.md` |
-
-- Takes: 2-digit, `t01`, `t02`, `t03` (one take = one generation attempt).
-- Versions: 2-digit, `v01`, `v02` (revisions of the same take's prompt).
-- Approved/final suffix: `final`.
-
-### Manifest lifecycle states
-
-`draft → ready → submitted → queued/running → review → approved/rejected`
-
-- `review` — generation succeeded and technical QA passed; awaiting creative
-  approval.
-- `approved` — only set by explicit user choice.
-- `rejected` — user rejected the take.
 
 ## Full example: Jollibee Chickenjoy (Taglish)
 
@@ -634,74 +514,7 @@ The kitchen ambience settles into a warm silence with a final distant child's la
 
 **Result**: ~28 seconds, full soundscape in one pass.
 
-## Quick reference card
-
-### Model identity
-- Model ID: `seed-audio-1.0`
-- Endpoint: `POST https://voice.ap-southeast-1.bytepluses.com/api/v3/tts/create`
-- Auth: `X-Api-Key` header (`BYTEPLUS_SEED_AUDIO_API_KEY`)
-- Mode: T2A (text-only, no reference audio)
-
-### Hard limits
-| Parameter | Limit |
-|---|---|
-| `text_prompt` max characters | 3,000 |
-| Max generated audio duration | 120 seconds (2 minutes) |
-| Max reference audio clips | 3 (TA2A mode only) |
-| Artifact store max size | 10 MB (use MP3, not WAV) |
-
-### Recommended output config
-| Parameter | Value | Reason |
-|---|---|---|
-| `format` | `mp3` | WAV at 44.1kHz exceeds 10 MB artifact limit |
-| `sample_rate` | `24000` | Sufficient quality for voice + music; keeps file small |
-| `subtitle` | `true` | Request subtitles (provider may not return them) |
-| `subtitle_type` | `utterance` | Sentence-level timestamps |
-| `persist` | `true` | Always persist to artifact store |
-
-### Pricing
-- **$0.15/min** ($0.0025/second), billed per second on `original_duration`.
-- 60-minute free trial on service activation.
-- Content safety rejections still bill for the generation attempt.
-
-### MCP tool calls
-
-```python
-# Single generation
-seed_audio_generate(
-    input={
-        "text_prompt": <prompt>,
-        "output": {"format": "mp3", "sample_rate": 24000,
-                   "subtitle": True, "subtitle_type": "utterance"},
-        "persist": True
-    }
-)
-
-# Multiple parallel takes
-seed_audio_generate_variations(
-    input={
-        "variation_prompts": [<prompt_v1>, <prompt_v2>, <prompt_v3>],
-        "variations": 3,
-        "output": {"format": "mp3", "sample_rate": 24000},
-        "persist": True
-    }
-)
-```
-
-### Verification commands
-
-```bash
-# Probe audio properties
-ffprobe -v quiet -print_format json -show_format -show_streams <file>
-
-# Full decode integrity check (no output = no errors)
-ffmpeg -v error -i <file> -f null -
-
-# SHA-256 hash
-shasum -a 256 <file>
-```
-
-### Story arc template (5 acts)
+## Story arc template (5 acts)
 
 ```
 Act 1 — Setup:        [emotional state] + [environment] + [melancholic/tense music]
@@ -710,8 +523,3 @@ Act 3 — Journey:      [character moves toward product] + [ambience transition]
 Act 4 — Turn/Reveal:   [product trigger] + [SFX: crunch/pour/sizzle] + [music transforms]
 Act 5 — Resolution:    [emotional resolution] + [announcer tagline] + [bright music]
 ```
-
-### Sources
-- [Seed Audio 1.0 API Reference](https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01)
-- [Seed Audio 1.0 Prompting Guide](https://bytedance.larkoffice.com/wiki/WgU4wFVQ8iZgvjkHHdbcDmhCnug)
-- [Seed Audio 1.0 Pricing](https://docs.byteplus.com/en/docs/byteplusvoice/audiopricing)
