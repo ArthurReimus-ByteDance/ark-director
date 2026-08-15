@@ -1,0 +1,84 @@
+{
+  "skill_name": "seedance-animation-styles",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a 15-second Seedance animation prompt for a needle-felt kraken wrapping its tentacles around a tiny wool-and-burlap sailing ship during a storm. The sea, clouds, spray, and creature must all stay visibly handcrafted. Use an ordered shot plan and end with the ship disappearing below the water.",
+      "expected_output": "A material-first needle-felt prompt with coherent felt environmental effects, deliberate craft imperfections, readable shots, and a submerged final state.",
+      "files": [],
+      "expectations": [
+        "The prompt names needle-felted wool or stitched fabric before describing the story action.",
+        "The ship, kraken, sea, clouds, and spray inherit felt, wool, stitching, thread, beads, or other handcrafted construction.",
+        "The prompt contains two to four deliberate craft cues such as visible fibers, stitched seams, needle marks, compressed wool, or subtle frame jitter.",
+        "The prompt uses an ordered shot or stage plan that fits within 15 seconds.",
+        "The final state shows the ship disappearing beneath the felt sea."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a 20-second Seedance prompt in wax-crayon animation. A boy runs down a red corridor that continuously redraws into a forest, then a beach, then a dark tunnel. It must be one unbroken tracking shot with no cuts, and the paper and pigment should remain visible throughout.",
+      "expected_output": "A one-take wax-crayon prompt whose environments redraw continuously while preserving paper grain, pigment, line boil, and one camera path.",
+      "files": [],
+      "expectations": [
+        "The prompt names wax crayon, colored pencil, or textured paper before the action.",
+        "The prompt explicitly specifies one continuous unbroken shot with no cuts.",
+        "The corridor, forest, beach, and tunnel transform by redrawing, erasing, extending, or overwriting crayon marks.",
+        "The style includes line boil, visible paper grain, pigment buildup, or imperfect overlapping outlines.",
+        "The camera follows one continuous path and the sequence fits within 20 seconds."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a 12-second toy-miniature Seedance prompt. Three articulated action figures play poker in a noir hideout. A door opens, and a reverse shot reveals the hideout is a toy house inside a child's bedroom. Keep the same figures, scale, accessories, and visible plastic joints after the reveal.",
+      "expected_output": "A toy-material prompt with coherent articulation and miniature scale across the reveal.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes articulated plastic toys or a practical toy miniature before the action.",
+        "The figures retain visible joints, molded construction, toy accessories, and rigid toy mechanics.",
+        "The reverse shot reveals the child's bedroom while preserving the same figures and toy-house scale.",
+        "The prompt guards against human-skin drift, disappearing joints, or full-scale character conversion.",
+        "The shot plan fits within 12 seconds and ends in a clear post-reveal state."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a quiet 10-second Seedance stop-motion prompt about a nervous carved wooden puppet carrying flowers to an apartment door. Keep the puppet made from wood with cloth clothes and visible joints; do not turn it into clay. The acting should be restrained and awkward.",
+      "expected_output": "A coherent carved-wood prompt that avoids clay mechanics and expresses awkwardness through small actions and deliberate timing.",
+      "files": [],
+      "expectations": [
+        "The prompt names carved wood, cloth clothing, visible joints, and a practical miniature set.",
+        "The prompt does not describe the puppet with plasticine, clay fingerprints, or clay-like stretching.",
+        "Motion follows rigid joint mechanics with cloth or hair follow-through and deliberate stepped timing.",
+        "Awkward emotion is externalized through hesitation, grip changes, delayed knocks, gaze, or held silence.",
+        "The prompt contains one primary action per shot or stage and fits within 10 seconds."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a 10-second stylized handcrafted 3D Seedance animation prompt. A tired office worker notices a smug orange cat slowly pushing her coffee mug off the desk, then reacts in disbelief. Use tactile authored materials and expressive feature-animation timing. Do not accidentally ban CGI.",
+      "expected_output": "A coherent handcrafted-3D prompt with tactile surfaces, controlled rig behavior, visible acting, and a completed mug fall.",
+      "files": [],
+      "expectations": [
+        "The prompt names stylized handcrafted 3D or crafted CGI before the action.",
+        "The style uses tactile authored materials, subtle asymmetry, modeled seams, surface wear, or similar crafted cues.",
+        "Motion uses expressive rigged timing and controlled squash-and-stretch while preserving volume and identity.",
+        "The worker's disbelief is shown through observable facial or body cues.",
+        "The mug fully leaves the desk before the reaction and the final state makes the completed fall observable.",
+        "The prompt does not contain a no-CGI exclusion."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a 12-second Seedance animation prompt in a handmade paper-cutout collage style. A red fox crosses a moonlit village, enters a house, and curls beside a paper fireplace. Keep every character, building, shadow, flame, and transition visibly made from layered cut paper.",
+      "expected_output": "A custom-medium prompt that derives coherent paper construction, surface cues, motion, effects, and readable staging without relying on a predefined recipe.",
+      "files": [],
+      "expectations": [
+        "The prompt names handmade layered paper cutouts or collage before the story action.",
+        "The fox, village, house, shadows, fire, and transitions share the same paper construction system.",
+        "The prompt defines paper-specific motion such as hinged rotation, sliding layers, replacement shapes, folds, or stepped movement.",
+        "The prompt includes two to four craft cues such as torn edges, scissor marks, paper fibers, visible layer shadows, tabs, or slight registration drift.",
+        "The sequence fits within 12 seconds and ends with the fox curled beside the paper fireplace."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Animation Styles"
+  short_description: "Write prompts for Seedance animation styles"
+  default_prompt: "Use $seedance-animation-styles to write a material-coherent Seedance animation prompt in the requested style."
