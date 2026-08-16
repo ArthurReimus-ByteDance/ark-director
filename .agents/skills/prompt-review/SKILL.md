@@ -86,32 +86,21 @@ For each prompt:
 
 ### Step 3 — Spawn the review sub-agent
 
-Delegate the review to a sub-agent. The sub-agent receives:
+Delegate the review to sub-agents using the `opencode-subagents` skill. That
+skill defines the canonical delegation contract: how to spawn workers,
+concurrency limits (max 5), the worker model (`byteplus/glm-5-2-260617`), and
+the fallback when no sub-agent mechanism exists. Do not duplicate those
+mechanics here — load the skill and follow its patterns.
+
+Each review sub-agent receives:
 - The full text of each prompt being reviewed.
 - The applicable checklist section(s) from `references/review-checklists.md`.
 - The universal directing principles.
-- Clear instructions on what to check and how to report.
+- Clear instructions on what to check and how to report (see Step 4).
 
 **Batching strategy:**
 - All prompts of the same type → one sub-agent reviews them all in one pass.
 - Prompts of different types → spawn one sub-agent per type, run in parallel.
-- Maximum 5 sub-agents concurrent.
-
-**Delegation mechanisms (host-agnostic):**
-
-Use whichever mechanism the current host provides:
-
-- **OpenCode CLI (non-interactive):**
-  `opencode run -m byteplus/glm-5-2-260617 "<worker prompt>"`
-  Pass the prompt text and checklist inline. Capture stdout for findings.
-
-- **Host Task / sub-agent tool:**
-  Delegate each review batch as a separate task with the prompt text and checklist
-  embedded in the task prompt.
-
-- **Fallback (no sub-agent mechanism):**
-  The main agent runs the review itself using the same checklist and findings format.
-  Do not skip the review — just run it inline.
 
 ### Step 4 — Sub-agent prompt template
 
