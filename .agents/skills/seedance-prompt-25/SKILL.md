@@ -54,6 +54,27 @@ Use <shot size, camera angle, camera movement, or cuts>.
 Audio includes <dialogue, ambience, sound effects, or music>.
 ```
 
+### Visual Style slot composition
+
+When combining multiple Visual Style presets (lighting, lens character, color
+grade, sensor/film look), chain them in this order within a single "The visuals
+feature ..." sentence:
+
+> **lighting → lens character → color grade → sensor/film look**
+
+Example with three presets active:
+
+```
+The visuals feature warm golden key light from screen-right, shallow depth of
+field with compressed bokeh, a teal-and-orange cinematic grade, and subtle
+film grain with soft halation.
+```
+
+Each preset skill (`seedance-lighting-presets`, `seedance-lens-presets`,
+`color-grade-palettes`) produces one phrase; this rule defines how they
+assemble. Use only the presets the user requested — do not pad the slot with
+unused defaults.
+
 ### Example
 
 ```

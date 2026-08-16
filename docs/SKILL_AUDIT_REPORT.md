@@ -227,6 +227,6 @@ graph TD
 9. Merge `remotion-render` into `remotion-markup` or expand it
 10. Remove "go back to best-practices" back-references from Remotion spoke skills
 11. ~~Resolve bullet-time/slow-motion duplication between camera-presets and pacing-presets~~ — DONE. Bullet Time in camera-presets stripped to camera orbit only; pacing-presets stripped of orbit direction. Slow Motion removed from camera-presets (purely a pacing concept). Both entries cross-reference the other skill for the missing half.
-12. Add Visual Style slot composition order to `seedance-prompt-25` or AGENTS.md
+12. ~~Add Visual Style slot composition order to `seedance-prompt-25`~~ — DONE. Added composition rule (lighting → lens character → color grade → sensor/film look) with a worked example showing three presets combined.
 13. ~~Fix paradoxical template ownership in `seedance-acting-console`~~ — DONE. The combined skill now owns both the analysis templates and the encoding templates; no paradox.
 14. Clean up stale external reference in `ffmpeg`
