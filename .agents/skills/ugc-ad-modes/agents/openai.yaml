@@ -1,0 +1,4 @@
+interface:
+  display_name: "UGC Ad Modes"
+  short_description: "Write Seedance prompts for 9 ad modes"
+  default_prompt: "Use $ugc-ad-modes to write a mode-specific Seedance 2.5 video ad prompt in the requested ad format."

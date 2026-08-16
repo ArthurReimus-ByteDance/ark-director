@@ -1,0 +1,130 @@
+{
+  "skill_name": "ugc-ad-modes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a 15-second Seedance 2.5 prompt for a UGC ad for a vitamin C serum. The creator is a woman in her 30s in her bathroom. She should mention one honest drawback. Give me 3 hook variants. Vertical 9:16 for TikTok.",
+      "expected_output": "A UGC mode prompt with phone-shot visual texture, natural bathroom lighting, 5-beat structure (hook, problem, demo, payoff, CTA), 3 distinct hook variants, one honest drawback in the creator performance, and a soft CTA.",
+      "files": [],
+      "expectations": [
+        "The prompt names casual UGC creator-style video or phone-shot texture before describing the story action.",
+        "The prompt contains 3 distinct hook variants for the 0-2s opening, using different formula patterns (e.g., contrarian, specific number, curiosity gap).",
+        "The 5-beat structure (hook, problem, demo, payoff, CTA) is present with timestamps fitting within 15 seconds.",
+        "The creator performance direction includes conversational delivery with contractions, filler words, or casual language, and mentions one honest drawback or learning curve.",
+        "The CTA is soft — permission, not pressure — with one action and one destination.",
+        "The prompt specifies 9:16 vertical, natural window lighting, and a real-environment background."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a 15-second Seedance prompt for a UGC unboxing ad for wireless earbuds. Show the box opening, the product reveal, and the first reaction. Three angles: overhead, 45-degree, and close-up.",
+      "expected_output": "A UGC unboxing prompt with three camera angles, layered reveal in beats, genuine first-reaction performance, sensory audio detail, and product visible by 0:03.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes UGC unboxing mode with phone-shot texture and three angles (overhead, 45-degree, close-up macro) before the action.",
+        "The reveal is structured in beats (e.g., seal break, lid lift, product emerges, first impression) rather than showing everything at once.",
+        "The product is visible by approximately 0:03 within the beat structure.",
+        "The creator performance includes genuine first-reaction cues (eyes widen, breath catch, honest reaction).",
+        "The audio direction includes sensory detail (tape peeling, cardboard, click of lid) or natural voice reactions.",
+        "The prompt includes text and logo protection directives for the product packaging."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a 15-second Seedance prompt for a UGC how-to ad showing how to use a portable espresso maker. The creator should demonstrate the steps in a real kitchen. Include captions guidance.",
+      "expected_output": "A UGC how-to tutorial prompt with real-environment staging, step-by-step demonstration, conversational explainer tone, burned-in captions, and a harder CTA including brand name.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes UGC how-to mode with real-environment context (kitchen) before the action.",
+        "The narrative uses a problem-to-solution structure with step-by-step demonstration beats.",
+        "The creator delivery is a calm explainer tone — clear, step-by-step, confident but not corporate.",
+        "The prompt includes caption guidance (bold sans-serif, 28px+, bottom 20%, white with black stroke, synced with voiceover).",
+        "The CTA is harder than typical UGC — direct with brand name included.",
+        "The prompt specifies cutting every 2-4 seconds and product filling 50%+ of frame."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a 6-second Seedance prompt for a product showcase of a stainless steel water bottle. Product-as-hero, no presenter, studio lighting. Use the 1-2-1 structure.",
+      "expected_output": "A product showcase prompt with product-as-hero framing, 1-2-1 beat structure, one camera move per beat, studio lighting directives, and text/logo protection.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes product showcase mode with studio-quality, product-as-hero framing before the action.",
+        "The 1-2-1 structure is present: 1 establishing shot, 2 detail/action shots, 1 brand identity shot.",
+        "Camera direction specifies one camera move per beat and caps rotation to 10-15 degrees to protect text and logos.",
+        "Lighting direction includes 45-degree hard key with soft fill for hero and raking light for macro texture.",
+        "The prompt has no presenter or voiceover — the product speaks through motion and material.",
+        "The prompt includes text and logo protection directives: rigid, sharp, undeformed."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write a 15-second Seedance prompt for a product review ad for a skincare device. The creator should use a skeptic-to-convert structure. Mention one honest con. Natural lighting, real bathroom setting.",
+      "expected_output": "A product review prompt with skeptic-to-convert hook, hands-on product demonstration, one honest limitation, mandatory voice, and a single soft CTA.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes product review mode with UGC-adjacent texture (real bathroom, natural lighting, handheld framing) before the action.",
+        "The hook uses a skeptic-to-convert formula (e.g., 'I was skeptical but...').",
+        "The product is shown in active use, not sitting on a shelf — hands-on demonstration with visible proof.",
+        "The creator performance includes one honest con or limitation alongside the wins.",
+        "The audio direction specifies voice as mandatory with natural room sound.",
+        "The CTA is a single action, single destination, soft not pushy."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a 30-second Seedance prompt for a TV spot for a premium coffee brand. Use the PAS framework (Problem-Agitate-Solve). Brand name should appear early. Multiple emotional peaks. 16:9 broadcast quality.",
+      "expected_output": "A TV spot prompt with PAS narrative framework, 0-5-22-30 timing structure, broadcast-grade cinematography, multiple emotional peaks, brand cues interspersed throughout, and brand lock-in in the final 3-5 seconds.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes TV spot mode with broadcast-grade visual texture and 16:9 aspect ratio before the action.",
+        "The narrative uses the PAS framework (Problem-Agitate-Solve) with the 0-5-22-30 timing structure.",
+        "Brand name appears in the first 3-5 seconds and brand cues are interspersed throughout, not saved for the end.",
+        "The prompt specifies multiple emotional peaks rather than a single grand finale.",
+        "The final 3-5 seconds include brand lock-in with name, URL, or visual identity.",
+        "The product is shown in context, in use — not on a white background."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Write a 15-second Seedance prompt for a UGC virtual try-on for a summer dress. The creator should show the fit, do a turn, and mention her height and size. One honest fit note. Real bedroom setting, natural light.",
+      "expected_output": "A UGC virtual try-on prompt with waist-level camera, real-environment setting, natural daylight, full-body multi-angle coverage with movement passes, spontaneous reactions, one honest fit note, and no color grading or logo overlays.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes UGC virtual try-on mode with phone-shot texture, real bedroom setting, and natural daylight before the action.",
+        "Camera direction specifies waist-level camera height, phone perpendicular to floor, and 2-2.5m distance.",
+        "The prompt includes movement passes: at least a turn and a walk to show drape and hem swing.",
+        "The creator states her height and usual size, and mentions one honest fit note (e.g., runs large, true to size).",
+        "The prompt explicitly avoids color grading, logo overlays, or consistent typography — stated as positive instructions.",
+        "The prompt includes text and label protection directives for the garment."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Write a 10-second Seedance prompt for a wild card ad for a new energy drink. I want something experimental — surprise me, but make sure the visual texture is consistent throughout.",
+      "expected_output": "A wild card prompt with one explicitly stated dominant visual texture, one clear creative deviation from a standard mode, a defined narrative structure, and a compact mode seal.",
+      "files": [],
+      "expectations": [
+        "The prompt explicitly names one dominant visual texture (e.g., UGC, studio, broadcast) rather than leaving it ambiguous.",
+        "The prompt identifies one clear creative deviation from a standard mode (e.g., reversed chronology, split-screen, match cut).",
+        "The narrative structure is defined with timestamps fitting within 10 seconds.",
+        "The mode seal reinforces the dominant texture, the creative deviation, and the audio direction.",
+        "The prompt does not mix incompatible visual textures without explaining which governs each element."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Write a 20-second Seedance prompt for a Pro virtual try-on for a designer blazer. Professional model, studio lighting, editorial quality. Show the fit, a detail macro, and a movement pass.",
+      "expected_output": "A Pro virtual try-on prompt with studio 3-point lighting, 85mm compression lens, editorial color grade, professional model delivery, brand-forward CTA, and garment label protection — clearly distinct from UGC try-on.",
+      "files": [],
+      "expectations": [
+        "The prompt establishes Pro virtual try-on mode with studio-quality, editorial visual texture before the action.",
+        "Camera direction specifies tripod or gimbal with 85-135mm equivalent lens — not handheld phone or waist-level camera.",
+        "Lighting direction specifies soft 3-point studio lighting (key softbox, fill, backlight) — not natural daylight or window light.",
+        "The prompt includes a detail macro shot (neckline, cuff, lapel, stitching, or fabric weave).",
+        "The prompt includes at least one movement pass (turn, walk, or sit) to show drape and fit in motion.",
+        "The CTA is brand-forward and aspirational, not direct-response — clearly distinct from UGC try-on's softer CTA."
+      ]
+    }
+  ]
+}
