@@ -10,9 +10,12 @@ Entry: user intent or an existing `project.md`.
 
 Required output: audience, format, runtime, aspect ratio, story objective, tone,
 creative constraints, known rights constraints, budget posture, and unresolved
-questions recorded in `project.md`.
+questions recorded in `project.md`. Confirmed directorial defaults (structure,
+camera, lens, lighting, grade, pacing, acting, staging, medium, audio) from
+`brief-intake` persisted as a `locked` block in `project.md` frontmatter.
 
-Exit: the production objective and constraints are clear enough to break down.
+Exit: the production objective, constraints, and directorial defaults are clear
+enough to break down.
 
 ## 2. Scene and production breakdown
 

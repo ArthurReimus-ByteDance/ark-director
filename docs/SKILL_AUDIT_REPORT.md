@@ -130,6 +130,7 @@ Claims to defer to `seedance-prompt-25` for single-transition and multi-stage te
 | `seedream-storyboard` | Standalone. Most comprehensive standalone skill. |
 | `seed-audio-prompt` | Standalone. Base audio skill. |
 | `audio-dubbing` | Standalone pipeline skill. |
+| `brief-intake` | Standalone. Two-mode genre-aware default proposal (fast + full Q&A). Prompt-composition only. |
 | `film-production` | Orchestrator by design. References are a routing table, not imports. |
 | `modelark-mcp` | Standalone. 1294-line API reference. |
 | `media-review` | Standalone. Single-purpose. |
@@ -175,12 +176,12 @@ graph TD
   end
 
   subgraph "Orchestration & Infra"
+    INTK[brief-intake]
     FILM[film-production]
     MCP[modelark-mcp]
     FFM[ffmpeg]
     MED[media-review]
     BUN[mediabunny]
-    TIG[tig-acting-task]
     LARK[lark-showcase-aigc]
   end
 
@@ -196,8 +197,15 @@ graph TD
     UP[remotion-upgrade]
   end
 
-  TIG -->|now resolved| TIGSE[tig-scene-engine]
-  ANIM -.->|missing file| REC[??? style-recipes.md]
+  INTK -->|suggests knobs| CAM
+  INTK -->|suggests knobs| LENS
+  INTK -->|suggests knobs| LIGHT
+  INTK -->|suggests knobs| GRADE
+  INTK -->|suggests knobs| PACE
+  INTK -->|suggests knobs| ACT
+  INTK -->|suggests knobs| ANIM
+  INTK -->|suggests knobs| TIGSE
+  INTK -->|suggests knobs| BKM[tig-blocking-map]
   BP -->|duplicates| MK
   BP -->|duplicates| CAP
   BP -->|duplicates| CRE

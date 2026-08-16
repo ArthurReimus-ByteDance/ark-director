@@ -48,6 +48,7 @@ between modalities.
 
 | Production need | Primary skill |
 | --- | --- |
+| Brief intake and directorial defaults | `brief-intake` |
 | Character identity asset | `seedream-character-sheet` |
 | Character sheet cleanup | `seedream-character-sheet-cleanup` |
 | Location identity asset | `seedream-location-asset` |
@@ -82,6 +83,12 @@ For the active stage:
 6. Set outputs to `review` and present material differences, known defects, and
    the recommended next decision.
 7. Advance only when the stage exit contract is satisfied.
+
+At the brief/development stage, run `brief-intake` before writing the brief's
+required output: it proposes genre-appropriate defaults per directorial axis
+(structure, camera, lens, lighting, grade, pacing, acting, staging, medium,
+audio) in fast mode by default, or full Q&A when the user opts in, and persists
+the confirmed set as a `locked` block in `project.md`.
 
 ## Approval and spending gates
 
