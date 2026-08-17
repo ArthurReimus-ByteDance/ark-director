@@ -5,7 +5,7 @@ description: >
   visible-result phrase for Seedance 2.5 prompts or the Seedream style.
   Trigger words: lens, focal length, 35mm, 50mm, 85mm, wide angle, telephoto,
   anamorphic, fisheye, macro, aperture, f-stop, f/1.4, depth of field, bokeh,
-  shallow DOF, deep focus. For 4K or 1080p optics requests, route to the
+  shallow DOF, deep focus. For 4K optics requests, route to the
   `seedance-prompt-20` skill instead.
 ---
 
@@ -200,9 +200,9 @@ Composition:
 - **Anamorphic needs the flare cue.** Include "oval/stretched bokeh" and
   "horizontal lens flare" explicitly; without them the anamorphic intent is
   ambiguous.
-- **4K / 1080p optics route to Seedance 2.0.** Seedance 2.5 outputs 480p or
-  720p only. When the user asks for high-resolution optics (e.g. "4K
-  anamorphic"), route to `seedance-prompt-20` and the 2.0 model
+- **4K optics route to Seedance 2.0.** Seedance 2.5 outputs up to 1080p.
+  When the user asks for high-resolution optics (e.g. "4K anamorphic"),
+  route to `seedance-prompt-20` and the 2.0 model
   (`dreamina-seedance-2-0-260128`).
 - **One lens intent per shot.** Do not overload a single shot with multiple
   competing optics (e.g. anamorphic plus fisheye). Choose one intent; split

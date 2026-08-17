@@ -26,7 +26,7 @@ the canonical names.
 
 | Family | Model(s) | Modality | Key capabilities | Ark API surface |
 |---|---|---|---|---|
-| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — up to 30s per pass, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback; configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
+| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — up to 30s per pass, up to 1080p output, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback (for 4K output or Fast/Mini); configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
 | Seedream | Seedream 5.0 Pro (`dola-seedream-5-0-pro-260628`); configured Lite/4.x bindings | Image | Text-to-image, reference-based generation/editing, multi-reference fusion, sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
 | Seed Audio | Seed Audio 1.0 (`seed-audio-1.0`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, voice references, cross-lingual generation, up to ~2 min/clip | BytePlus Seed Speech audio generation API |
 | Seed / Doubao | `seed-2-0-lite-260228` and siblings | Text | Prompt expansion, scene scripting, structured output for pipelines | `POST /responses` (OpenAI-compatible) |
@@ -282,7 +282,7 @@ reference roles, paths, hashes, and approval status in `shot.md` before
 submitting the video task.
 
 For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
-`seedance-prompt-20` (2.0, for 4K/1080p output or Fast/Mini variants).
+`seedance-prompt-20` (2.0, for 4K output or Fast/Mini variants).
 
 **Compose directorial axes from the preset skills when the user names them.**
 Each preset skill resolves one axis into canonical prompt phrasing that drops
@@ -292,7 +292,7 @@ Audio); they are prompt-composition only and never call the API themselves.
 | Axis | Skill | Notes |
 |---|---|---|
 | Camera movement & MoveSet styles | `seedance-camera-presets` | Moves, techniques (dolly zoom, FPV, bullet-time orbit, one-take), and 10 MoveSet styles; keep ≤2 moves per clip |
-| Lens / focal length / aperture / sensor | `seedance-lens-presets` | Always pairs numeric optics with the visible result; 4K/1080p routes to `seedance-prompt-20` |
+| Lens / focal length / aperture / sensor | `seedance-lens-presets` | Always pairs numeric optics with the visible result; 4K routes to `seedance-prompt-20` |
 | Lighting | `seedance-lighting-presets` | Causal lighting presets; emit both the Seedream `Lighting:` recipe (elements) and the Seedance visual-style phrase so image + video share one lighting intent |
 | Color grading | `color-grade-palettes` | Named palettes + film looks in the Visual Style slot; keep one project-wide palette; optional FFmpeg match graphs in the mix step |
 | Acting / emotion | `seedance-acting-console` | Scene-level analysis (motive, tactic, eye-work) + per-character cue encoding (6 emotions × 3 intensities); optional audio reinforcement via `seed-audio-prompt` |
@@ -650,7 +650,7 @@ Keep a single project-level task registry at `projects/<project>/task_ids.json`.
 
 ## Costs & guardrails
 - These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
-- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — up to 30s per pass, 30/10/10 refs, structured editing, native extension. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 1080p/4K output (2.5 caps at 720p), Fast/Mini speed variants, or lower cost per generation.
+- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — up to 30s per pass, 30/10/10 refs, structured editing, native extension, up to 1080p output. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 4K output, Fast/Mini speed variants, or lower cost per generation.
 - Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
 - Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
 - For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.

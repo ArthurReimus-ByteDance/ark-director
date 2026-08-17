@@ -56,11 +56,11 @@
     {
       "id": 5,
       "prompt": "Write a prompt for a 4K anamorphic optics look — full widescreen flare and anamorphic bokeh at 4K resolution.",
-      "expected_output": "A response that resolves the anamorphic optics but routes the 4K resolution request to Seedance 2.0, noting that Seedance 2.5 caps at 720p and pointing to the seedance-prompt-20 skill.",
+      "expected_output": "A response that resolves the anamorphic optics but routes the 4K resolution request to Seedance 2.0, noting that Seedance 2.5 caps at 1080p and pointing to the seedance-prompt-20 skill.",
       "files": [],
       "expectations": [
-        "The output notes that Seedance 2.5 outputs 480p or 720p only.",
-        "The output routes 4K or 1080p optics requests to `seedance-prompt-20` and the 2.0 model.",
+        "The output notes that Seedance 2.5 outputs up to 1080p.",
+        "The output routes 4K optics requests to `seedance-prompt-20` and the 2.0 model.",
         "The output still resolves the anamorphic look into visible markers (horizontal lens flare, oval bokeh).",
         "The output does not silently write a 4K claim into a Seedance 2.5 prompt."
       ]

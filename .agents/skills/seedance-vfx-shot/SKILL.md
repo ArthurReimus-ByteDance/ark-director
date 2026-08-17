@@ -14,7 +14,7 @@ conventions.
 > **Version note**: This pipeline targets Seedance 2.0 video-to-video VFX with
 > 4K face protection. For Seedance 2.5's structured editing (subject replacement,
 > background replacement, audio editing) and native forward/backward extension,
-> use the `seedance-prompt-25` skill. Note that 2.5 supports only 480p/720p
+> use the `seedance-prompt-25` skill. Note that 2.5 supports up to 1080p
 > output — the 4K face-protection path below is 2.0-only. For 2.0 T2V/R2V
 > prompts, use `seedance-prompt-20`.
 
@@ -118,7 +118,7 @@ Before submitting, verify:
    be `4k`. Only allow `1080p` for pure landscape/environment shots with no
    human faces.
 
-> **2.5 guard**: Seedance 2.5 supports only 480p/720p. If using the 2.5 model (`dreamina-seedance-2-5-260628`), set `resolution` to `"720p"` — `"4k"` and `"1080p"` are invalid and will be rejected.
+> **2.5 guard**: Seedance 2.5 supports 480p/720p/1080p. If using the 2.5 model (`dreamina-seedance-2-5-260628`), set `resolution` to `"720p"` or `"1080p"` — `"4k"` is invalid and will be rejected.
 
 5. **Duration** — 1 to 15 seconds. The API also accepts `-1` (auto/match-source),
    but for VFX prefer an explicit duration matching the source clip. If the
@@ -157,7 +157,7 @@ Call `seedance_create_task` on the `mcp_modelark-seed` MCP server.
           "role": "reference_image"
         }
       ],
-      "model": "{{model_id}}",  # default: dreamina-seedance-2-0-260128 (2.0); use dreamina-seedance-2-5-260628 for 2.5 (note: 2.5 supports only 480p/720p)
+      "model": "{{model_id}}",  # default: dreamina-seedance-2-0-260128 (2.0); use dreamina-seedance-2-5-260628 for 2.5 (note: 2.5 caps at 1080p)
       "resolution": "4k",
       "ratio": "16:9",
       "duration": 5,
@@ -320,7 +320,7 @@ safety_identifier: <project>-<scene>-<shot>
 
 ## Generation parameters
 
-- **Model**: `dreamina-seedance-2-0-260128` (Seedance 2.0 Standard; for 2.5 use `dreamina-seedance-2-5-260628` — note 2.5 caps at 720p)
+- **Model**: `dreamina-seedance-2-0-260128` (Seedance 2.0 Standard; for 2.5 use `dreamina-seedance-2-5-260628` — note 2.5 caps at 1080p)
 - **Resolution**: 4K (3840×2160)
 - **Ratio**: 16:9
 - **Duration**: <N>s

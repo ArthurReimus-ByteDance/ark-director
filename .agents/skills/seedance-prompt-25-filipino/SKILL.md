@@ -12,8 +12,8 @@ description: >
   seedance-prompt-25 whenever the scene contains Tagalog, Filipino, or Taglish
   dialogue. Invoke when the user asks for Filipino video prompts, Tagalog
   dialogue in Seedance, Philippine-language content, or pronunciation and
-  intonation guidance for Filipino speech in AI video generation. For 4K or
-  1080p output resolution not supported by Seedance 2.5, fall back to the
+  intonation guidance for Filipino speech in AI video generation. For 4K
+  output resolution not supported by Seedance 2.5, fall back to the
   seedance-prompt-20 skill with the 2.0 model.
 ---
 
@@ -1029,7 +1029,7 @@ Teacher Mae asks: {Naiintindihan ba ninyo?}
 
 ### Fallback to Seedance 2.0
 
-Seedance 2.5 supports only 480p/720p output resolution. For 1080p or 4K output,
+Seedance 2.5 supports 480p/720p/1080p output resolution. For 4K output,
 or for Fast/Mini speed variants, use the `seedance-prompt-20` skill with model
 `dreamina-seedance-2-0-260128`. Note that 2.0 has a 15s max duration (vs 30s on
 2.5) and fewer reference slots (9 imgs / 3 vids / 3 audios vs 30/10/10).
