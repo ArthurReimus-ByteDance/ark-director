@@ -261,7 +261,7 @@ projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md
 project: <project>
 scene: <scene>
 shot: <shot>
-model: dreamina-seedance-2-0-260128  # 2.0 default; use dreamina-seedance-2-5-260628 for 2.5 (720p max)
+model: dreamina-seedance-2-0-260128  # 2.0 default; use dreamina-seedance-2-5-260628 for 2.5 (1080p max)
 mode: V2V
 vfx_level: <1 | 2 | 3>
 references:
@@ -345,7 +345,7 @@ To re-create this take from this manifest alone:
 
 1. Encode the source video and element reference images.
 2. Call `seedance_create_task` on `mcp_modelark-seed` with the prompt from
-   `prompt_sNN_shNNN_t01_v01.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (720p max)`,
+   `prompt_sNN_shNNN_t01_v01.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (1080p max)`,
    `resolution=4k`, `ratio=16:9`, `duration=<N>`, `generate_audio=true`,
    `return_last_frame=true`.
 3. Poll with `seedance_get_task` until `status=succeeded`.

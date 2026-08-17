@@ -80,6 +80,10 @@ Treat expensive media generation as a gated production workflow:
 2. **Reference preflight** — classify each asset as visible identity, visible
    environment, motion/camera reference, or control-only. Control-only images
    can leak into output; translate them to text and omit them by default.
+   The ordered reference array you submit must match the `references:` list in
+   `shot.md` exactly — same files, same order, same `@Image N` / `@Video N` /
+   `@Audio N` bindings. Submit only what the prompt actually binds; if the
+   prompt does not bind an asset, do not include it in the request.
 3. **Spatial and temporal preflight** — for movement-heavy scenes, record start,
    travel axis, subject order, boundary behavior, end state, and forbidden
    transitions. Resolve contradictions between the brief, references, and
@@ -547,6 +551,9 @@ For generated video and audio, also record when available:
 - Estimated cost, confirmed cost, and usage as separate fields
 - Output path, byte size, and SHA-256
 - Actual media properties from inspection
+- The exact ordered reference inputs submitted (count + paths), verified 1:1
+  against the `references:` list in `shot.md` and the `@Image N` / `@Video N` /
+  `@Audio N` bindings in the prompt snapshot
 - Locked decisions, requested delta, acceptance criteria, and known rejections
 
 ### Prompt files
@@ -609,11 +616,43 @@ Keep a single project-level task registry at `projects/<project>/task_ids.json`.
       "model": "dreamina-seedance-2-5-260628",
       "status": "succeeded",
       "asset_path": "scenes/scene-01/s01_sh010/s01_sh010_t01_v01.mp4",
+      "references": 2,
       "submitted_at": "2026-08-07T10:30:00Z"
     }
   ]
 }
 ```
+
+### Reference object-key registry
+
+Every asset uploaded to object storage via `media_upload` must record its
+`object_key` so later sessions can mint fresh presigned URLs with
+`media_presign` instead of re-uploading. Keep one registry per project at
+`projects/<project>/ref_cache.json`:
+
+```json
+{
+  "project": "<project>",
+  "region": "ap-southeast-1",
+  "references": [
+    {
+      "object_key": "references/<project>/image/<uuid>",
+      "local_path": "elements/<id>/<file>.png",
+      "role": "@Image 1 — <what it defines>",
+      "media_type": "image",
+      "mime_type": "image/png",
+      "bytes": 4381580,
+      "uploaded_at": "2026-08-17T10:11:47Z"
+    }
+  ]
+}
+```
+
+Rules:
+- Upload once, record the `object_key`, then call `media_presign` on demand.
+  Never re-upload the same file — presigned URLs expire in ~10 minutes.
+- Before a shot submission, presign all needed keys in one batch and submit
+  the task immediately while the URLs are still valid.
 
 ## Conventions
 

@@ -225,8 +225,8 @@ Before delivering a prompt built with this skill, verify:
    single shot.
 3. **Anamorphic includes the flare and bokeh cue** — "horizontal lens flare"
    and "oval/stretched bokeh" wording is present.
-4. **4K / 1080p requests route to `seedance-prompt-20`** — high-res optics are
-   flagged as a Seedance 2.0 concern, not silently placed in a 2.5 prompt.
+4. **4K requests route to `seedance-prompt-20`** — 1080p stays on Seedance 2.5;
+   only 4K is a Seedance 2.0 concern, never silently placed in a 2.5 prompt.
 5. **The phrase sits in the camera line (Seedance) or Style section (Seedream)** —
    the optics line is not duplicated elsewhere in the prompt.
 6. **The subject of the sharp plane is named** — "face sharp", "eyes sharp"

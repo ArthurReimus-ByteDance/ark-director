@@ -338,9 +338,10 @@ images or audio are used across multiple shots (e.g., character sheets
 reused across every scene), do **not** re-upload the same file each time.
 Instead:
 
-1. **Upload once** — call `media_upload` for each reference file and store
-   the returned `object_key` (e.g., in a project-level reference registry
-   like `task_ids.json` or a dedicated `ref_cache.json`).
+1. **Upload once** — call `media_upload` for each reference file and record
+   the returned `object_key` (plus `local_path`, `role`, `mime_type`,
+   `bytes`, `uploaded_at`) in the project's `projects/<project>/ref_cache.json`
+   (see AGENTS.md, "Reference object-key registry").
 2. **Presign on demand** — before each new shot submission, call
    `media_presign` with the stored `object_key` to get a fresh presigned
    URL in seconds. No file re-upload, no duplicate storage cost.
