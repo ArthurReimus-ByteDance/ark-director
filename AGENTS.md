@@ -137,6 +137,20 @@ Seedance video prompts.
    staging, and blocking are your contribution. If a prompt reads like a static
    description with no event or intent, it is not yet a shot.
 
+### Prompt review gate
+
+After writing or updating any model prompt — Seedance 2.5/2.0, Seedance VFX,
+Filipino dialogue, Seed Audio, Seedream image, character/location/prop sheets,
+or storyboards — the main agent **must** run the `prompt-review` skill (or the
+`/prompt-review` command) before submitting any generation task. This is a
+mandatory quality gate, not an optional check. The review spawns a sub-agent
+per prompt type against the applicable checklist plus the universal directing
+principles, and CRITICAL/MAJOR findings must be fixed before submission.
+
+This gate covers prompts only — it does not apply to `project.md`, `scene.md`,
+or `shot.md` manifest edits, and frozen prompt snapshots are exempt unless the
+user explicitly asks to re-review one.
+
 ## Project & asset directory structure
 
 The entire `projects/` tree is **local-only working state — never commit it to
