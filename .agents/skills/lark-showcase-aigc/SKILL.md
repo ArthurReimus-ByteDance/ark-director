@@ -148,9 +148,7 @@ Use this structure by default, trimming or expanding only when the user asks.
 7. **Input assets** — one consolidated table with reference images **and their prompts as a column** (see Table-first layout, principle 1)
 8. **Audio assets** (if applicable) — one consolidated table per modality (see Table-first layout, principle 2)
 9. **Scene-by-scene breakdown** — one table per scene showing video prompt + generated clip; use a "Scene" column if scenes share the same structure
-10. **Enterprise adaptation guidance**
-11. **Limitations and review notes**
-12. **Next steps**
+10. **Conclusion**
 
 ## Section blueprint
 
@@ -576,7 +574,7 @@ Unless the user specifies otherwise, follow this sequence:
 7. Build the **input assets table** with reference images and their prompts as a column (Table-first layout, principle 1).
 8. Build **audio assets table** (if applicable) as a single consolidated table with a Scene column (Table-first layout, principle 2).
 9. Build one **scene-by-scene table** per scene with prompt + generated result side by side; consolidate into a single table when scenes share the same structure.
-10. Add adaptation guidance, limitations, and next steps.
+10. Add a conclusion section.
 11. Fetch the final structure and verify no internal path or local-file wording remains.
 
 ## When information is missing
