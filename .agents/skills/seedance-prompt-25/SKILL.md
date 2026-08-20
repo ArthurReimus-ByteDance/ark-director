@@ -97,6 +97,15 @@ construction, deformation, craft-imperfection, and still-anchor contract; this
 skill remains the authority for the full six-part prompt, reference roles,
 scene staging, timestamps, audio syntax, and generation limitations.
 
+### Music-video treatment
+
+When the prompt's timing, energy, and structure must follow a song — music
+video, lyric video, visualizer, or performer-driven clip — load the partner
+`seedance-music-video` skill. It owns the format selection, song-section map,
+beat/cut-density contract, audio-first lip-sync contract, and per-genre style
+lock; this skill remains the authority for the six-part formula, reference
+roles, audio bracket syntax, timestamps, and generation limitations.
+
 ## Reference materials
 
 ### Limits and recommended ranges

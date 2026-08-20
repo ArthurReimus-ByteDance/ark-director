@@ -318,6 +318,7 @@ Audio); they are prompt-composition only and never call the API themselves.
 | Staging / blocking | `tig-blocking-map` | Color-coded outline schematic for character disposition; geometry only, no style bleed |
 | Pacing / rhythm | `seedance-pacing-presets` | Speed ramps + montage pacing as timestamped blocks; timestamps are a time budget, not frame-accurate |
 | Animation medium & handcrafted style | `seedance-animation-styles` | Material-first Seedance prompts for clay, felt, wood puppets, toys, vintage cel, painterly 2D, crafted 3D, silicone, crayon, and custom media |
+| Music video | `seedance-music-video` | Song-first Seedance prompts: format (performance/narrative/conceptual/lyric/visualizer/hybrid), song-section map, beat/cut-density contract, audio-first lip-sync, and a per-genre style lock |
 
 Use a preset skill only when the user asks for a concrete axis ("dolly in on
 her face", "teal and orange grade", "Rage at medium intensity", "bullet-time
@@ -329,7 +330,9 @@ snapshot. Load `seedance-lighting-presets` / `color-grade-palettes` alongside
 `seedream-prompt` when generating matching element sheets. Use
 `seedance-animation-styles` when writing a Seedance prompt whose animation
 medium, surface behavior, motion cadence, and handmade imperfections must stay
-coherent throughout the video.
+coherent throughout the video. Use `seedance-music-video` when the prompt's
+timing, energy, and visual structure must follow the music (music video, lyric
+video, visualizer, performance clip) rather than a spoken story.
 
 ### Audio-video alignment (dialogue scenes)
 

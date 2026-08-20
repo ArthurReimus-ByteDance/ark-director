@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Music Video"
+  short_description: "Write prompts for Seedance music videos"
+  default_prompt: "Use $seedance-music-video to write a music-driven Seedance 2.5 prompt with a locked format, song map, beat contract, and genre style."
