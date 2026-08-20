@@ -52,6 +52,14 @@ talking head stops reading as a product showcase. The mode is the
 physical law of the ad, just as the medium is the physical law of an
 animation scene.
 
+**Do not burn in captions, on-screen text overlays, or lower-thirds in
+Seedance video prompts.** Seedance cannot reliably render readable text
+in generated video. Platforms (TikTok, Reels, YouTube Shorts) generate
+captions natively from the audio track. For broadcast/CTV delivery
+(TV Spot mode), closed captions are added in post-production as
+sidecar files (SRT/TTML/CEA-608/708), not embedded in the video by
+Seedance.
+
 For every prompt, define:
 
 ```text
@@ -218,9 +226,11 @@ Audio direction depends on the mode and whether the user requests
 lip-synced dialogue:
 
 - **UGC modes**: natural voice with room echo, ambient background noise
-  mixed in, no background music during speech. Captions burned in with
-  platform-native fonts. 85% of social video is watched on mute — design
-  for sound-off, reward sound-on.
+  mixed in, no background music during speech. Do not burn in captions or
+  on-screen text overlays — Seedance cannot reliably render readable text.
+  Platforms (TikTok, Reels, YouTube Shorts) generate captions natively;
+  rely on the platform's caption system instead of embedding text in the
+  video itself.
 - **Product Showcase**: typically no voiceover. Product speaks through
   motion and material. When audio is requested, use Seed Audio for
   sensory SFX (pour, click, sparkle) + subtle music bed.
