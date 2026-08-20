@@ -183,6 +183,15 @@ Ending: Clean ending matching @Audio1 exactly, same tail silence and room tone.
 
 Prepare the source audio for upload as a Seed Audio reference. The **30-second per-clip limit** is the primary constraint — not file size.
 
+**Use the `audio-split` skill to do this.** It splits sources into ≤30s reference clips at cut points you choose, snaps cuts to subtitle gaps when given the target `.srt` (`-s` flag, never cuts mid-line), outputs MP3 320kbps clips + a `manifest.txt` with offsets, and can print per-segment relative timestamps for prompt authoring:
+
+```bash
+# Split source at scene boundaries, snapped to SRT gaps (never mid-line)
+.agents/skills/audio-split/scripts/split_segments.sh -i source.wav -o segs -s script.srt 22 40
+# Show per-segment relative [start:end] timestamps for the prompts
+python3 .agents/skills/audio-split/scripts/srt_timestamps.py table script.srt 22 40
+```
+
 **Single reference clip (source ≤30s):**
 When the source is under 30s and under 10MB, compress to MP3 and upload one clip labeled `@Audio1`. This is the simplest case — one generation covers the full source.
 
@@ -252,6 +261,37 @@ persist: true
 
 Download the generated audio and adjust timing to match the original exactly.
 
+**Downloading generated audio:**
+The generation response contains a durable artifact (e.g. `seed-media://artifacts/<id>`) and an expiring `source_url` (provider CDN, ~2h). Prefer downloading the `source_url` directly — it avoids base64 round-trips:
+
+```bash
+curl -L -o seg1.wav "<source_url>"
+```
+
+Fallback: if only the artifact ID is available, fetch it via `seed_media_get_artifact` (`artifact_id`), which returns base64 data. Note the payload can exceed MCP output limits (~5MB truncates in chat), so decode it with a script rather than pasting it directly:
+
+```bash
+# Extract base64 payload from the tool result and decode to WAV
+python3 - <<'EOF'
+import json, base64
+data = open("artifact_result.txt").read()
+obj = json.loads(data[data.find("{"):])
+def find_b64(o):
+    if isinstance(o, dict):
+        for v in o.values():
+            if isinstance(v, str) and len(v) > 10000:
+                return v
+            r = find_b64(v)
+            if r: return r
+    elif isinstance(o, list):
+        for it in o:
+            r = find_b64(it)
+            if r: return r
+    return None
+open("seg1.wav","wb").write(base64.b64decode(find_b64(obj)))
+EOF
+```
+
 **Single-segment assembly:**
 1. Download generated audio from the artifact URL
 2. Compare duration with source (use `ffprobe`)
@@ -289,7 +329,7 @@ ffmpeg -y \
 - `normalize=0` — prevents amix from attenuating volume when inputs overlap (overlap regions from the 2–3s reference splits would otherwise be quieter)
 - `dropout_transition=0` — prevents volume ramping when an input ends
 - `duration=longest` — extends to the longest input including delays
-- `apad=pad_dur=X` — pad the final output to match the exact source duration
+- `apad=whole_dur=X` — pad the final output to match the exact source duration (the bundled `mix_segments.sh` does this automatically now; it also trims to `-t` if a segment ever runs long)
 
 **Why not concat:**
 `ffmpeg concat` assumes segments are contiguous end-to-end. When segments have 2–3s reference overlaps, the overlap regions would be duplicated or trimmed. `adelay` + `amix` places each segment at its exact absolute position, preserving original gaps and handling overlaps gracefully.
@@ -494,7 +534,7 @@ ffmpeg -i original-en-video.mp4 -i dub_tagalog_v03.wav \
 
 ### scripts/mix_segments.sh
 
-Mixes multiple generated segments at their absolute time offsets using `adelay` + `amix normalize=0`. Use after multi-segment generation (reference or generation segmentation) to reassemble the full track with correct timing and gaps preserved.
+Mixes multiple generated segments at their absolute time offsets using `adelay` + `amix normalize=0`. Use after multi-segment generation (reference or generation segmentation) to reassemble the full track with correct timing and gaps preserved. Pads the output to the exact source duration automatically (no manual `apad` needed).
 
 Usage:
 ```bash

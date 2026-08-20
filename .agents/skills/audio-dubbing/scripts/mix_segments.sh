@@ -42,7 +42,7 @@ for entry in "$@"; do
   SEG_COUNT=$((SEG_COUNT+1))
 done
 
-MIX_INPUTS="${MIX_INPUTS}amix=inputs=${SEG_COUNT}:duration=longest:dropout_transition=0:normalize=0,apad=pad_dur=0[out]"
+MIX_INPUTS="${MIX_INPUTS}amix=inputs=${SEG_COUNT}:duration=longest:dropout_transition=0:normalize=0,apad=whole_dur=${SOURCE_DURATION}[out]"
 
 echo "=== Mixing ${SEG_COUNT} segments ==="
 for entry in "$@"; do
