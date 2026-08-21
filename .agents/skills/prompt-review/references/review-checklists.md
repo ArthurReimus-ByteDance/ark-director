@@ -16,6 +16,7 @@ sub-agent along with the prompt text.
 - [Seedream character sheet](#seedream-character-sheet)
 - [Seedream location asset](#seedream-location-asset)
 - [Seedream storyboard](#seedream-storyboard)
+- [Seedance music video](#seedance-music-video)
 
 ---
 
@@ -1059,3 +1060,75 @@ Source skill: `seedream-storyboard`
 
 24. **Explicit user choice.** Only explicit user choice sets `selected_variant` or
     `approved`.
+
+---
+
+## Seedance music video
+
+Source skill: `seedance-music-video`
+
+### Format and genre
+
+1. **Format declared.** Performance, narrative, conceptual, lyric, visualizer,
+   or hybrid — with address mode (direct / indirect / none).
+
+2. **Genre lock is a single recipe.** Not a mixture of two genres. The prompt
+   names one genre and follows its palette, lighting, camera grammar, and motion
+   cadence consistently.
+
+### Song map
+
+3. **One event per section.** Each song section has one primary visual
+   assignment and a visible end state.
+
+4. **Chorus repeats escalate.** A second chorus has rising visual energy —
+   not identical to the first.
+
+5. **Bridge departs.** The bridge introduces a new angle, location, wardrobe,
+   or image not yet shown.
+
+### Audio contract
+
+6. **Audio treatment explicit.** Native audio brackets, `@Audio N` timing
+   authority, or hybrid (reference + native generation) — never ambiguous.
+
+7. **Lip-sync lines verbatim in `{...}`.** Match the audio master exactly —
+   no paraphrasing, no reordering, no omitted lines.
+
+8. **Timestamped lyric timeline used when coverage is critical.** Each lyric
+   line is bound to its own `[X-Ys] { line }` beat slot — not grouped into
+   large blocks. Applies to rap, fast vocal delivery, and any verse where
+   complete lyric coverage is a hard requirement.
+
+9. **"No line skipped" mandate present.** When the timestamped timeline is
+   used, the prompt includes an explicit instruction that no line may be
+   skipped, shortened, mumbled, or reordered.
+
+10. **Native audio caveat acknowledged.** If `generate_audio` is true, the
+    prompt accounts for re-performance risk (the model re-performs, not copies,
+    the reference).
+
+### Beat contract
+
+11. **Audio events named.** Which beats trigger cuts and camera moves —
+    not just "cuts on the beat."
+
+12. **Cut density matches section energy.** Low for verses, high for chorus;
+    the prompt states the relationship.
+
+### Structure
+
+13. **Right-sized (4–30s).** One song section per pass, or an explicit
+    continuous one-take. Not padded to fill 30s.
+
+14. **Style seal present.** Compact closing sentence with genre, palette,
+    motion cadence, beat contract, and tone — does not contradict the format
+    or genre.
+
+### Rap-specific (when applicable)
+
+15. **Rap uses timestamped timeline.** Rap and fast vocal delivery always
+    use the timestamped lyric timeline (never large `{...}` blocks).
+
+16. **Delivery cue present.** The prompt includes a physical delivery cue
+    (e.g., "jaw opening fully on vowels, lips stay in frame throughout").

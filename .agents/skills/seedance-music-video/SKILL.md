@@ -30,6 +30,12 @@ and the genre lock visible in the prompt, not just the scene content.
 - Music-video craft and beat-sync practice — format taxonomy, song-section
   energy mapping, and section-relative cut density (sources below).
 - Genre conventions — per-genre visual recipes, vertical-vs-landscape norms.
+- **Field-tested learnings from `mv-bryce-vine` (2026-08-20):** the timestamped
+  lyric timeline technique (section 3b), native audio re-performance behavior
+  (section 3a), hybrid audio mode (section 3), and ASR-based lyric
+  verification (section 3c) were derived from three generation takes where
+  large `{...}` blocks caused lyric dropouts. See
+  `docs/improving-seedance-music-video-skill.md` for the full case study.
 
 Key third-party sources (accessed 2026-08-20): Magnific
 [Seedance 2.5 animation guide](https://www.magnific.com/blog/seedance-2-5-animation-prompts/),
@@ -116,7 +122,7 @@ that does not escalate reads flat. Use the bridge for the creative risk.
 
 ### 3. Set the audio contract
 
-Choose one of two audio modes; state it explicitly.
+Choose one of three audio modes; state it explicitly.
 
 **Native audio (default).** Seedance co-generates audio and video in one pass.
 Use the bracket syntax in the Audio slot and inside `{...}` for sung or spoken
@@ -159,6 +165,106 @@ prompt inside `{...}` — no paraphrasing, no reordering. If one changes, both
 change. `@Audio N` conditions the timing and lip-sync; the generated file may
 not carry the master as a usable track, so re-mux the original master onto the
 approved video in assembly.
+
+**Hybrid audio (reference + native generation).** When you need both lip-sync
+to a specific track AND a native audio output, combine the two: pass the
+audio master as `reference_audio` (`@Audio 1`) and set `generate_audio: true`.
+The model uses the reference for timing and lip-sync, then generates a native
+audio track that follows (but does not copy) the reference. Lip-sync timing
+is good; audio fidelity is approximate; lyric coverage may drop (use the
+timestamped lyric timeline in section 3b to mitigate). For exact audio
+fidelity, use `generate_audio: false` and re-mux the master.
+
+### 3a. Native audio caveat: re-performance, not reproduction
+
+When `generate_audio` is enabled with a reference audio, the model
+**re-performs** the track — it does not copy the reference bit-for-bit.
+This means:
+
+### 3b. Timestamped lyric timeline (for performance videos with lip-sync)
+
+When the performer must lip-sync the full verse and complete lyric coverage
+is critical, **do NOT** group all lyrics into one or two large `{...}` blocks.
+Instead, bind each lyric line to its own timestamped slot:
+
+```
+[2-4 seconds] { I used to pray before I went to bed, }
+[5-7 seconds] { back when I was like eleven or ten. }
+[7-8 seconds] { I don't remember the facts, }
+```
+
+Add an explicit mandate:
+
+```
+The performer performs every line below in full, in order, at its timestamp.
+No line may be skipped, shortened, mumbled, or reordered.
+```
+
+**When to use this technique:**
+- Rap or fast-paced vocal delivery (high dropout risk)
+- Any performance video where complete lyric coverage is a hard requirement
+- When the audio reference has dense, continuous vocals with no long pauses
+
+**When NOT needed:**
+- Ballads with long pauses between lines
+- Videos where the visual story matters more than lyric accuracy
+- Native audio where the model has space to breathe
+
+**How to get the timestamps (ASR-to-timeline procedure):**
+
+1. Run speech recognition (ASR) on the audio master
+2. Extract word-level `start_time_ms` and `end_time_ms` from the result
+3. Group words into lyric lines at natural phrase boundaries (commas, periods,
+   bar changes)
+4. For each line, take the first word's start time and the last word's end
+   time
+5. Round each line's start/end to the nearest beat (or clean second)
+6. Use those as the `[X-Ys] { line }` slots in the prompt
+
+Example ASR-to-timeline conversion:
+
+```
+# ASR returns word-level timestamps:
+"ever" start=17170ms  "really" start=17530ms  "took" start=17810ms
+"charge" start=18170ms  "like" start=18530ms  "a" start=18690ms
+"wiring" start=18890ms  "fee" start=19450ms end=19730ms
+
+# Group into a lyric line:
+[17-20 seconds] { ever really took charge like a wiring fee, }
+```
+
+### 3c. Post-generation lyric verification (for audio-first / native audio)
+
+After generation, verify that the output audio contains all expected lyrics:
+
+1. Extract the audio track from the generated video (`ffmpeg -vn`)
+2. Run speech recognition (ASR) on the extracted audio
+3. Compare the transcription against the expected lyrics
+4. Flag any missing, reordered, or garbled lines
+5. If lines are missing: use the timestamped lyric timeline technique
+   (section 3b) and regenerate, OR re-mux the original master if exact
+   fidelity is needed
+
+This step is especially important for:
+- Rap and fast vocal delivery
+- Long verses (10+ lines)
+- Native audio generation (re-performance risk)
+
+### 3d. Rap and fast vocal delivery
+
+Rap is the highest-risk vocal mode for lyric dropout:
+- Dense, continuous delivery with few pauses
+- The model can skip bars without creating obvious silence
+- ASR verification (section 3c) is essential after generation
+
+Specific guidance for rap:
+- **Always** use the timestamped lyric timeline (section 3b) — never large
+  `{...}` blocks
+- Set the "no line may be skipped, shortened, mumbled, or reordered" mandate
+- Run ASR on the output to verify coverage
+- Consider splitting very long verses (>15 lines) into multiple clips
+- Include a delivery cue: "jaw opening fully on vowels, lips stay in frame
+  throughout"
 
 ### 4. Set the beat and cut-density contract
 
@@ -298,6 +404,9 @@ captions. Match <performer>'s visible mouth only to <performer>'s voice in
 The visuals feature <genre lock: palette, lighting, lens, grade, look>.
 Use <shot sizes, camera moves, and cuts>, with <beat contract>.
 Audio includes <(music)> <{sung lines}> <sound effects>.
+Audio: <@Audio N timing binding, or native brackets>. For rap or fast vocals,
+       use a timestamped lyric timeline: <[X-Ys] { line }> per line with a
+       "no line skipped" mandate (see section 3b).
 
 [Shot Plan] or [Stage Plan]
 Shot 1 (<time range>): <one event and visible end state>.
@@ -393,11 +502,16 @@ Before returning the prompt, verify:
 2. The song map assigns one primary event and a visible end state per section.
 3. The beat contract names the audio events and their visual relationship.
 4. Chorus repeats are set to escalate, and the bridge departs tonally.
-5. The audio treatment is explicit: native brackets or `@Audio N` timing
-   authority, never ambiguous.
+5. The audio treatment is explicit: native brackets, `@Audio N` timing authority,
+   or hybrid — never ambiguous.
 6. Lip-sync lines appear verbatim in `{...}` and match the audio-first master.
-7. Each generation is right-sized (4–30s) with one section per pass, or is an
+7. **If the vocal delivery is rap or fast-paced:** the timestamped lyric timeline
+   (section 3b) is used with per-line `[X-Ys] { line }` slots and a "no line
+   skipped" mandate — not large `{...}` blocks.
+8. **If `generate_audio` is true:** the prompt accounts for re-performance risk
+   (section 3a) and the timestamped timeline is used when coverage is critical.
+9. Each generation is right-sized (4–30s) with one section per pass, or is an
    explicit continuous one-take.
-8. The genre lock is a single recipe, not a mixture.
-9. The style seal is compact and does not contradict the format or genre.
-10. The response contains the prompt, not an unrelated production workflow.
+10. The genre lock is a single recipe, not a mixture.
+11. The style seal is compact and does not contradict the format or genre.
+12. The response contains the prompt, not an unrelated production workflow.
