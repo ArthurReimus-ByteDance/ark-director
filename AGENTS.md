@@ -736,6 +736,8 @@ Rules:
 - Skills must assert end-to-end that an asset is produced, saved, hashed, and associated with its exact submitted prompt.
 - For video, record `ffprobe` output, run a full decode check, and inspect contact sheets covering the opening, major transitions, and ending.
 - For native audio, confirm the audio stream exists and evaluate the requested sound arc. Loudness measurements support but do not replace listening.
+- **Assembly A/V sync.** Before concatenating or crossfading takes, verify each take's audio duration equals its video duration (ffprobe both streams). Generated clips often carry audio slightly shorter than video; pad each audio track to the video duration (`apad`) before crossfading, otherwise audio and video drift apart cumulatively across boundaries. The exact recipe lives in the `ffmpeg` skill's "Crossfade assembly — A/V sync pitfall" section.
+- **Single-person video references.** The 3-panel character sheet is a design deliverable, not a video identity reference — feeding it directly to Seedance can clone the character into two. For video generation, derive a single front-view identity image per character (one person per image, verified) and add an "exactly one, never a second" guard in the prompt.
 - Technical success sets a take to `review`; only explicit user approval sets it to `approved`.
 - Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface.
 - Run the project's linter and type checker before finalizing any change. Record the exact commands in `.trae/rules/project_rules.md` once the runtime is established.

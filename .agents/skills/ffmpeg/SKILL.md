@@ -117,6 +117,40 @@ ffmpeg -f concat -safe 0 -i list.txt -c copy output.mp4
 ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -c:a aac output.mp4
 ```
 
+### Crossfade assembly — A/V sync pitfall
+
+When crossfading multiple AI-generated clips into one film, the video and audio
+timelines can drift apart across boundaries. Cause: each clip's audio stream is
+often slightly shorter than its video (e.g. ~90 ms per 30 s at 32 kHz AAC
+padding). `xfade` advances the video timeline by *video* duration while
+`acrossfade` advances the audio timeline by *audio* duration — the mismatch
+accumulates per boundary (4 boundaries → ~0.36 s of lip-sync drift by the last
+scene).
+
+Check first, then fix:
+
+```bash
+# Per-clip A/V durations
+ffprobe -v error -select_streams v:0 -show_entries stream=duration -of csv=p=0 clip.mp4
+ffprobe -v error -select_streams a:0 -show_entries stream=duration -of csv=p=0 clip.mp4
+```
+
+If audio < video, pad each audio input to the exact video duration before the
+`acrossfade` chain so both chains use the same per-clip length and stay locked:
+
+```bash
+ffmpeg -i a.mp4 -i b.mp4 -filter_complex "\
+[0:v]settb=AVTB[v0];[1:v]settb=AVTB[v1];\
+[v0][v1]xfade=transition=fade:duration=0.5:offset=<durA-0.5>[v];\
+[0:a]apad=whole_dur=<durA>[a0];[1:a]apad=whole_dur=<durB>[a1];\
+[a0][a1]acrossfade=d=0.5[a]" \
+ -map "[v]" -map "[a]" -c:v libx264 -c:a aac out.mp4
+```
+
+Then confirm the final A/V totals agree within ~10 ms. Also set `settb=AVTB` on
+every video branch so `xfade` does not fail with a timebase mismatch when the
+chain mixes a `concat` output with raw inputs.
+
 ### Add Fade In/Out
 
 ```bash
