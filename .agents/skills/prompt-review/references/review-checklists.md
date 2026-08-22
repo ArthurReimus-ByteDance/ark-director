@@ -80,130 +80,136 @@ Source skill: `seedance-prompt-25`
 
 3. **No double-description.** The same action is not described in multiple sections.
 
+4. **Action granularity.** The Action slot describes motion at the body-part
+   level (hands, arms, legs, head, shoulders, back, hips, feet) with range,
+   speed, and force, grounded in weight, balance, momentum, and contact — not
+   as bare verbs. High-burst, large-dynamic actions are avoided unless the
+   shot requires them.
+
 ### Reference materials
 
-4. **Material mapping in prompt.** Every reference material is mapped directly in the
+5. **Material mapping in prompt.** Every reference material is mapped directly in the
    prompt text — the model never has to guess which asset belongs to which
    person/prop/scene.
 
-5. **Individual naming.** Each subject is named and bound individually. The prompt
+6. **Individual naming.** Each subject is named and bound individually. The prompt
    does not use lazy groupings like "@Images 1 through 4 define four characters."
 
-6. **Grouped by type.** References are organized as [Characters], [Props], [Scenes],
+7. **Grouped by type.** References are organized as [Characters], [Props], [Scenes],
    [Motion and Audio] sections.
 
-7. **Centralized profiles.** Important subjects have a centralized profile block with
+8. **Centralized profiles.** Important subjects have a centralized profile block with
    stable attributes that is referenced in each scene.
 
-8. **Per-scene selection.** Each scene names only the references it uses — not all
+9. **Per-scene selection.** Each scene names only the references it uses — not all
    materials at once.
 
-9. **Exclusion phrasing.** "Do not use..." exclusions appear only when leakage is
+10. **Exclusion phrasing.** "Do not use..." exclusions appear only when leakage is
    genuinely possible. Not as a generic negative-prompt dump.
 
-10. **Multiple views.** If multiple images define one subject, the prompt explicitly
+11. **Multiple views.** If multiple images define one subject, the prompt explicitly
     states "The output must contain only one [subject] throughout."
 
-11. **Video reference inheritance.** If inheriting from a reference video, only the
+12. **Video reference inheritance.** If inheriting from a reference video, only the
     attributes to inherit are stated. The prompt does not restate every action from
     the reference (which can conflict).
 
-12. **Control-only references.** Control-only images are preferably translated to text
+13. **Control-only references.** Control-only images are preferably translated to text
     and omitted. If kept, they are labeled as control-only with explicit extraction
     instructions.
 
-13. **Reference count limits.** ≤ 30 images, ≤ 10 videos, ≤ 10 audio. Recommended:
+14. **Reference count limits.** ≤ 30 images, ≤ 10 videos, ≤ 10 audio. Recommended:
     1-8 image subjects, 1-5 video subjects (5-10s each), only directly relevant audio.
 
 ### Scene staging
 
-14. **Stage structure.** The story is divided into consecutive stages. Each stage has
+15. **Stage structure.** The story is divided into consecutive stages. Each stage has
     ONE primary state change and a clear end state.
 
-15. **Natural duration.** Each scene is generated at its natural duration (4-30s),
+16. **Natural duration.** Each scene is generated at its natural duration (4-30s),
     not padded to 30s. 30s single-pass or extension is the exception, not the default.
 
-16. **Timestamp ranges.** Time ranges are consecutive and non-overlapping. They are
+17. **Timestamp ranges.** Time ranges are consecutive and non-overlapping. They are
     treated as a time budget, not precise edit points.
 
-17. **No impossible frequencies.** The prompt does not demand impossible action
+18. **No impossible frequencies.** The prompt does not demand impossible action
     densities (e.g., "complete three actions in one second").
 
 ### Audio syntax
 
-18. **Audio bracket syntax.** Dialogue in `{}`, music in `()`, SFX in `<>`, subtitles
+19. **Audio bracket syntax.** Dialogue in `{}`, music in `()`, SFX in `<>`, subtitles
     in `【】`. All audio content uses the correct bracket type.
 
-19. **Dialogue language reinforcement.** Non-Chinese dialogue includes: Dialogue
+20. **Dialogue language reinforcement.** Non-Chinese dialogue includes: Dialogue
     Language + Regional Variety/Accent + Delivery Style + Speaker + `{dialogue}`.
 
-20. **Same dialogue in both prompts.** If audio-first pipeline is used, the exact
+21. **Same dialogue in both prompts.** If audio-first pipeline is used, the exact
     dialogue text in the Seed Audio prompt matches the `{curly brace}` text in the
     Seedance prompt. No paraphrasing, reordering, or omitted lines.
 
 ### Emotional direction
 
-21. **Visible/audible cues.** Abstract emotions are paired with directly visible or
+22. **Visible/audible cues.** Abstract emotions are paired with directly visible or
     audible cues (eye movement, brow tension, mouth movement, breathing, gaze, hand
     movement). 2-4 clear cues per emotional transition.
 
-22. **No bare emotion words.** The prompt does not rely solely on emotion labels like
+23. **No bare emotion words.** The prompt does not rely solely on emotion labels like
     "very sad" or "extremely angry" without physical externalization.
 
 ### Camera language
 
-23. **One camera movement per clip.** The prompt specifies one camera movement and
+24. **One camera movement per clip.** The prompt specifies one camera movement and
     states which subject the camera follows, where it begins, and where it ends.
 
-24. **Uncommon cinematography terms.** If used, they follow the format:
+25. **Uncommon cinematography terms.** If used, they follow the format:
     Term + Target Subject + Visual Change + Foreground/Background Relationship +
     Direction or Speed.
 
 ### Spatial continuity
 
-25. **Spatial map present.** Movement-heavy scenes include: Start positions,
+26. **Spatial map present.** Movement-heavy scenes include: Start positions,
     Travel axis, Subject order, Boundary behavior, End state, Forbidden transitions.
 
-26. **Physical locations.** Uses physical locations and ordered states, not relative
+27. **Physical locations.** Uses physical locations and ordered states, not relative
     verbs alone.
 
-27. **Invariants repeated.** Critical spatial invariants are repeated in every
+28. **Invariants repeated.** Critical spatial invariants are repeated in every
     shot/stage since every cut can reset relationships.
 
 ### Parameter auto-lock
 
-28. **Editing task.** Aspect ratio and duration are not set (locked to input). Edit
+29. **Editing task.** Aspect ratio and duration are not set (locked to input). Edit
     scope, target quantity, and content to preserve are defined.
 
-29. **First/last-frame task.** Aspect ratio locks to first image. First and last
+30. **First/last-frame task.** Aspect ratio locks to first image. First and last
     frames share the same aspect ratio.
 
-30. **Extension task.** Aspect ratio is not set (locked to input). Duration can be
+31. **Extension task.** Aspect ratio is not set (locked to input). Duration can be
     set. Boundary image, motion trend, and audio continuity are checked.
 
 ### Preflight review (14-point)
 
-31. **Subject & action** clearly stated.
-32. **Reference roles**: every reference states what to use and what not to use.
-33. **Subject binding**: every distinct character/product/prop named and bound to a
+32. **Subject & action** clearly stated.
+33. **Reference roles**: every reference states what to use and what not to use.
+34. **Subject binding**: every distinct character/product/prop named and bound to a
     reference.
-34. **Scene selection**: references selected by scene, not forced to appear all at once.
-35. **Stage structure**: each stage has only one primary change and a clear end state.
-36. **Consistency**: character count, clothing, prop ownership, spatial relationships
+35. **Scene selection**: references selected by scene, not forced to appear all at once.
+36. **Stage structure**: each stage has only one primary change and a clear end state.
+37. **Consistency**: character count, clothing, prop ownership, spatial relationships
     stay consistent.
-37. **Editing master**: for editing, sole editing master, edit scope, target quantity,
+38. **Editing master**: for editing, sole editing master, edit scope, target quantity,
     content to preserve defined.
-38. **Emotion & camera**: abstract emotions and cinematography terms paired with
+39. **Emotion & camera**: abstract emotions and cinematography terms paired with
     visible/audible cues.
-39. **First/last frames**: one role per image; first and last share aspect ratio.
-40. **Storyboards & blockouts**: storyboard states which structure to inherit;
+40. **First/last frames**: one role per image; first and last share aspect ratio.
+41. **Storyboards & blockouts**: storyboard states which structure to inherit;
     blockouts identify coarse vs fine.
-41. **Auto-lock rules**: editing, first/last-frame, and extension follow locked
+42. **Auto-lock rules**: editing, first/last-frame, and extension follow locked
     aspect-ratio and duration rules.
-42. **Extension boundary**: boundary image, motion trend, and audio continuity checked.
-43. **One-click video**: material roles, image order, motion amount, editing style,
+43. **Extension boundary**: boundary image, motion trend, and audio continuity checked.
+44. **One-click video**: material roles, image order, motion amount, editing style,
     and audio defined.
-44. **Seamless transitions**: two videos' roles, trigger action, transition process,
+45. **Seamless transitions**: two videos' roles, trigger action, transition process,
     and arrival state defined.
 
 ---

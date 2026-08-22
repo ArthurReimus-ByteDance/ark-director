@@ -43,9 +43,10 @@ they conflict.
 
 Only **Subject + Action** is required. Every other part is optional — omit what
 does not apply. Summarize the main action first; add detail only to critical
-movements. **Do not describe the same action twice.** Generation parameters
-(duration, resolution, aspect ratio) belong in the generation interface or API,
-not in the prompt.
+movements. Write the Action slot as granular physical detail — see
+[Action description](#action-description). **Do not describe the same action
+twice.** Generation parameters (duration, resolution, aspect ratio) belong in
+the generation interface or API, not in the prompt.
 
 ```
 <Subject> performs <primary action or event> in <scene and environment>.
@@ -339,6 +340,29 @@ Rules:
 - They are a **time budget**, not a precise edit point — actions may occur slightly before or after a boundary.
 - Too little content gives the model too much freedom; too much causes excessive cutting or omitted events.
 - **Never** demand impossible frequencies (e.g., "complete three actions in one second").
+
+## Action description
+
+The Action slot is the only required part of the six-part formula. Write it as
+granular, physical motion — not as a bare verb. "She enters the lab" is open to
+interpretation; "she steps through the doorway, shifts her weight onto the
+front foot, and scans the room left to right" is testable.
+
+- **Body-part level.** Describe hands, arms, legs, head, shoulders, back, hips,
+  and feet with range, speed, and force.
+- **Physics grounding.** State where weight and balance sit, what stays planted,
+  and what the body pushes against or reacts to: ground contact, momentum
+  through a turn, inertia carried between actions.
+- **Prefer slow, gentle, continuous motion.** "Slowly raise a hand," "gently
+  lower the head," "naturally sit down."
+- **Avoid high-burst, large-dynamic actions** — sprinting, big jumps, violent
+  rolls — unless the shot explicitly requires them.
+- **Describe transitions between actions** for continuity: "use the inertia of
+  turning around to naturally raise a hand."
+- **Externalize emotions as physical detail**, never bare emotion labels. Use
+  the [Emotional direction](#emotional-direction) cues below.
+- **Stay inside the stage budget.** Detail only the movements critical to the
+  stage; one primary state change per stage.
 
 ## Special audio and text syntax
 
@@ -948,6 +972,7 @@ Before generation, verify:
 12. **Extension boundary**: For extension, are the boundary image, motion trend, and audio continuity checked?
 13. **One-click video**: Are material roles, image order, motion amount, editing style, and audio defined?
 14. **Seamless transitions**: Are the two videos' roles, trigger action, transition process, and arrival state defined?
+15. **Action granularity**: Is the primary action described at the body-part level with range, speed, force, and physics grounding — not as a bare verb?
 
 ## Usage limitations
 
