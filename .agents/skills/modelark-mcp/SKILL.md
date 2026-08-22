@@ -1,6 +1,6 @@
 ---
 name: modelark-mcp
-description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5, BytePlus VOD AI MediaKit enhancement, and video transcoding), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance tasks, upload reference media, and fetch persisted artifacts.
+description: Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, and video (including Seedance 2.5, BytePlus VOD AI MediaKit enhancement, video transcoding, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance tasks, upload reference media, and fetch persisted artifacts.
 ---
 
 # ModelArk Seed Multimodal MCP Server
@@ -23,9 +23,10 @@ behind one server:
   sub-agent.
 - **Speech-to-Text** — synchronous audio transcription via Seed Speech ASR.
 - **VOD AI MediaKit** — asynchronous video-enhancement submission using the exact
-  common/professional/4K/high/24-fps profile, and asynchronous video transcoding
+  common/professional/4K/high/24-fps profile, asynchronous video transcoding
   (codec, container, resolution, bitrate, frame rate) via a submit-then-poll
-  tool pair.
+  tool pair, and voice + background (or voice + music + sfx) audio separation
+  via a submit-then-poll tool pair.
 - **Artifacts** — durable media access after provider URLs expire.
 - **Object storage upload** — presigned URL generation for URL-only media
   workflows such as Seedance video references.
@@ -49,6 +50,8 @@ Invoke this skill when the user wants to:
 - enhance a public HTTPS video with the supported VOD AI MediaKit profile;
 - transcode a public HTTPS video (codec, container, resolution, bitrate, frame
   rate) with the VOD AI MediaKit submit-then-poll tool pair;
+- separate voice from background audio (or voice + music + sfx) for a public
+  HTTPS audio or video URL using the VOD AI MediaKit tool pair;
 - fetch a previously persisted artifact by ID;
 - upload local or Base64 media to object storage (TOS or S3) to obtain a
   presigned HTTPS URL;
@@ -65,13 +68,10 @@ gracefully degrades to whatever is configured.
 - `seed_media_get_artifact`
 - `seed-health://status` resource
 
-### Requires `BYTEPLUS_SEED_AUDIO_API_KEY`
+### Requires `BYTEPLUS_SEED_SPEECH_API_KEY`
 
 - `seed_audio_generate`
 - `seed_audio_generate_variations`
-
-### Requires `SEED_SPEECH_ASR_API_KEY`
-
 - `speech_to_text`
 
 ### Requires `BYTEPLUS_VOD_MEDIAKIT_API_KEY`
@@ -79,6 +79,8 @@ gracefully degrades to whatever is configured.
 - `vod_enhance_video`
 - `vod_transcode_video`
 - `vod_get_transcode_task`
+- `vod_separate_audio`
+- `vod_get_audio_separation`
 
 ### Requires `BYTEPLUS_MODELARK_API_KEY`
 
@@ -115,9 +117,8 @@ Copy `.env.example` to `.env` and configure at minimum:
 
 ```bash
 BYTEPLUS_MODELARK_API_KEY=your-modelark-key   # required for Seedream + Seedance
-BYTEPLUS_SEED_AUDIO_API_KEY=your-audio-key    # required for Seed Audio
-BYTEPLUS_VOD_MEDIAKIT_API_KEY=your-mediakit-key # required for VOD enhancement
-SEED_SPEECH_ASR_API_KEY=your-asr-key          # required for Speech-to-Text
+BYTEPLUS_SEED_SPEECH_API_KEY=your-speech-key  # required for Seed Audio + Speech-to-Text
+BYTEPLUS_VOD_MEDIAKIT_API_KEY=your-mediakit-key # required for VOD enhancement, transcoding, and audio separation
 ```
 
 Optional object storage upload support (TOS default, S3 alternative):
@@ -195,7 +196,8 @@ started, and there is no MediaKit polling tool in the current integration.
 | `persist` | boolean | No | Best-effort durable artifact copy; default `true` |
 
 The verified response is `status="accepted"` with a task ID. No Bearer-surface
-polling route is verified, so do not substitute the separate AK/SK VOD APIs.
+polling route is verified for enhancement, so do not substitute the transcode or
+audio-separation tools (which do have polling routes) for enhancement results.
 If a completed response supplies `source_url`, retain it even when the best-effort
 copy fails. `persistence` is `not_applicable`, `persisted`, `failed`, or `not_requested`; durable
 video copies are capped at 200 MiB. `estimated_cost_usd` remains null until
@@ -243,9 +245,63 @@ failure, `error` carries the safe provider detail.
 
 ---
 
+### VOD AI MediaKit audio separation
+
+Requires `BYTEPLUS_VOD_MEDIAKIT_API_KEY` (same Bearer key as enhancement and
+transcoding). Auth scopes: `vod:extract` (submit) and `vod:read` (poll).
+
+#### `vod_separate_audio`
+
+Submit an asynchronous voice and background audio separation task
+(`POST /api/v1/tools/separate-voice`). Mutating, non-idempotent, open-world —
+do not retry the POST automatically (timeout/5xx means ambiguous completion).
+The source is a public HTTPS URL (audio or video), exactly one of the two.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `audio_url` | URL | Exactly one of `audio_url`/`video_url` | Public HTTPS audio URL (mp3, m4a, wav) |
+| `video_url` | URL | Exactly one of `audio_url`/`video_url` | Public HTTPS video URL (mp4, flv, ts, avi, mov, wmv, mkv) |
+| `scene` | `"Audio"` \| `"Music"` \| `"Drama"` \| `"Narrate"` | No | Default `Audio`. `Audio`/`Music` = 2-track; `Drama`/`Narrate` = 3-track |
+| `output_format` | `"aac"` \| `"mp3"` \| `"wav"` \| `"m4a"` \| `"flac"` | No | Default `aac` |
+
+Returns `status="accepted"` plus `task_id`, `request_id`, and
+`provider_log_id`. Poll with `vod_get_audio_separation`.
+
+**Source URL liveness.** The provider downloads `audio_url`/`video_url`
+asynchronously after submission, so the URL must stay fetchable until the
+provider has downloaded it. A presigned URL (default 1800s / 30 min,
+configurable 60–604800s via `TOS_PRESIGN_TTL_SECONDS`/`S3_PRESIGN_TTL_SECONDS`)
+may expire before the provider fetches it, causing the task to fail. For VOD
+inputs, upload via `media_upload` with `expires_in_seconds` (e.g. 3600) or use
+a stable public URL.
+
+#### `vod_get_audio_separation`
+
+Read-only poll of a separation task (`vod:read`). Requires the `task_id`
+returned by `vod_separate_audio`. Maps provider `running`→`processing`,
+`completed`→`succeeded`, `failed`→`failed`. On success, `voice`, `background`,
+`music`, and `sfx` each carry the track's expiring `source_url` (24-hour
+lifetime) and, with `persist_output=true` (default), a durable `artifact`
+reference copied once and cached by task ID. A persistence failure never erases
+provider success. On failure, `error` carries the safe provider detail.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `task_id` | string | Yes | Task ID returned by `vod_separate_audio` |
+| `persist_output` | boolean | No | Best-effort durable copy on first successful poll; default `true` |
+
+**Latency and transient failures.** A completed separation typically takes
+tens of seconds but can take minutes; keep polling until a terminal state
+rather than giving up after the first `processing` response. A provider
+`failed` result with `error.code` `AbilityProcessingError` /
+`InternalError` is usually transient — re-submit the same source rather than
+treating the input as invalid.
+
+---
+
 ### Seed Audio Tools
 
-Requires `BYTEPLUS_SEED_AUDIO_API_KEY`. Auth scope: `seed:audio:generate`.
+Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:audio:generate`.
 
 #### `seed_audio_generate`
 
@@ -333,15 +389,15 @@ failed, per-variation results with partial failure capture).
 
 ### Reusing uploaded references across shots (presign pattern)
 
-Presigned URLs expire after 10 minutes (600s). When the same reference
-images or audio are used across multiple shots (e.g., character sheets
-reused across every scene), do **not** re-upload the same file each time.
+Presigned URLs expire after 30 minutes by default (1800s, configurable
+60–604800s via `TOS_PRESIGN_TTL_SECONDS`/`S3_PRESIGN_TTL_SECONDS`). When the
+same reference images or audio are used across multiple shots (e.g., character
+sheets reused across every scene), do **not** re-upload the same file each time.
 Instead:
 
-1. **Upload once** — call `media_upload` for each reference file and record
-   the returned `object_key` (plus `local_path`, `role`, `mime_type`,
-   `bytes`, `uploaded_at`) in the project's `projects/<project>/ref_cache.json`
-   (see AGENTS.md, "Reference object-key registry").
+1. **Upload once** — call `media_upload` for each reference file and store
+   the returned `object_key` (e.g., in a project-level reference registry
+   like `task_ids.json` or a dedicated `ref_cache.json`).
 2. **Presign on demand** — before each new shot submission, call
    `media_presign` with the stored `object_key` to get a fresh presigned
    URL in seconds. No file re-upload, no duplicate storage cost.
@@ -857,7 +913,7 @@ where speed matters more than reasoning depth.
 
 ### Speech-to-Text
 
-Requires `SEED_SPEECH_ASR_API_KEY`. Auth scope: `seed:asr:transcribe`.
+Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:asr:transcribe`.
 
 #### `speech_to_text`
 
@@ -917,6 +973,7 @@ which cannot be inlined as Base64.
 | `data` | `str` | No* | Base64-encoded media bytes. Mutually exclusive with `file_path`. |
 | `file_path` | `str` | No* | Absolute path to a local file. stdio transport only. Mutually exclusive with `data`. |
 | `key_prefix` | `str` | No | Object key prefix (default `references`). Alphanumeric, `-`, `_`, `/` only. |
+| `expires_in_seconds` | `int` | No | Presigned URL validity in seconds (60–604800). Defaults to the configured presign TTL. Use a long value (e.g. 3600) for uploads destined for VOD tools, which fetch the source asynchronously. |
 
 Returns `MediaUploadOutput` with `url`, `expires_at`, `object_key`, `bytes`.
 
@@ -949,6 +1006,7 @@ reference's presigned URL has expired or is about to expire.
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `object_key` | `str` | Yes | Object key returned by a prior `media_upload` call |
+| `expires_in_seconds` | `int` | No | Presigned URL validity in seconds (60–604800). Defaults to the configured presign TTL. Use a long value (e.g. 3600) when renewing for VOD tools, which fetch the source asynchronously. |
 
 Returns `MediaPresignOutput` with `url`, `expires_at`, `object_key`.
 
@@ -992,18 +1050,17 @@ artifact backend, and the active transport.
 
 ### Four-Provider Design
 
-The server normalizes four distinct BytePlus API surfaces:
+The server normalizes five distinct BytePlus API surfaces:
 
 | Provider | Auth | Base URL | Products |
 |---|---|---|---|
 | **ModelArk** | `Authorization: Bearer <key>` | `https://ark.ap-southeast.bytepluses.com/api/v3` | Seedream, Seedance |
-| **Seed Speech (TTS)** | `X-Api-Key: <key>` | `https://voice.ap-southeast-1.bytepluses.com` | Seed Audio |
-| **Seed Speech (ASR)** | `X-Api-Key: <key>` (separate key) | `https://voice.ap-southeast-1.bytepluses.com` | Speech-to-Text |
-| **VOD AI MediaKit** | `Authorization: Bearer <key>` | `https://mediakit.ap-southeast-1.bytepluses.com/api/v1` | Video enhancement, video transcoding |
+| **Seed Speech** | `X-Api-Key: <key>` | `https://voice.ap-southeast-1.bytepluses.com` | Seed Audio, Speech-to-Text |
+| **VOD AI MediaKit** | `Authorization: Bearer <key>` | `https://mediakit.ap-southeast-1.bytepluses.com/api/v1` | Video enhancement, video transcoding, voice + background audio separation |
 
-ModelArk and Seed Speech ASR use separate API keys even though ASR shares the
-host with TTS. Tools for a product are only registered when its provider API
-key is set.
+One Seed Speech key covers both Seed Audio and ASR — the provider distinguishes
+them by `X-Api-Resource-Id`, not by the key. ModelArk uses a separate Bearer
+key. Tools for a product are only registered when its provider API key is set.
 
 ### Runtime Services
 
@@ -1168,10 +1225,11 @@ The server retries only explicitly retryable, non-ambiguous errors:
 - Timeouts are NOT retried (the operation may have succeeded server-side).
 - Provider errors with `retryable=true` are retried.
 
-Exception: `vod_enhance_video` and `vod_transcode_video` are never automatically
-retried. Their POSTs are non-idempotent and a transport failure may have
-ambiguous completion. `vod_get_transcode_task` (a read-only GET poll) IS retried
-on provider-marked retryable errors such as HTTP 429.
+Exception: `vod_enhance_video`, `vod_transcode_video`, and `vod_separate_audio`
+are never automatically retried. Their POSTs are non-idempotent and a transport
+failure may have ambiguous completion. `vod_get_transcode_task` and
+`vod_get_audio_separation` (read-only GET polls) ARE retried on provider-marked
+retryable errors such as HTTP 429.
 
 For Seedance task polling, a local watcher timeout is not a generation failure.
 Resume `seedance_get_task` with the existing task ID. Only create a new task
@@ -1192,7 +1250,7 @@ Set to `0` (default) for record-only mode with no enforcement.
 
 | Symptom | Cause | Resolution |
 |---|---|---|
-| Tool not appearing | Missing API key | Set the corresponding `BYTEPLUS_*` or `SEED_SPEECH_ASR_*` env var |
+| Tool not appearing | Missing API key | Set the corresponding `BYTEPLUS_*` env var |
 | Model not found | Unbound custom model ID | Add to `*_MODEL_BINDINGS` JSON |
 | URL expired | Provider URL TTL elapsed | Use `persist=true` and reference `ArtifactRef.uri` |
 | Auth error (JWT mode) | Missing or invalid token | Check JWT configuration and scopes |
@@ -1254,7 +1312,7 @@ Set to `0` (default) for record-only mode with no enforcement.
     and pass the presigned URL into `seedance_create_task` (2.0) or `seedance_2_5_create_task` (2.5).
 
 13. **Reuse references with `media_presign` — do not re-upload.** Presigned URLs
-    expire after 10 minutes, but the underlying object persists in TOS/S3.
+    expire after 30 minutes by default, but the underlying object persists in TOS/S3.
     Upload each reference file once, store the `object_key`, and call
     `media_presign` to get a fresh URL for each new shot. This avoids
     re-uploading the same character/location/prop sheets for every scene.
@@ -1295,9 +1353,8 @@ Set to `0` (default) for record-only mode with no enforcement.
 ### Provider Credentials
 
 - `BYTEPLUS_MODELARK_API_KEY` — enables Seedream and Seedance
-- `BYTEPLUS_SEED_AUDIO_API_KEY` — enables Seed Audio (TTS)
-- `SEED_SPEECH_ASR_API_KEY` — enables Speech-to-Text (ASR)
-- `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement and video transcoding
+- `BYTEPLUS_SEED_SPEECH_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR)
+- `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement, video transcoding, and audio separation
 - `BYTEPLUS_MODELARK_BASE_URL` — override ModelArk data-plane host
 - `BYTEPLUS_SEED_AUDIO_BASE_URL` — override Seed Audio host
 - `SEED_SPEECH_ASR_BASE_URL` — override ASR host
