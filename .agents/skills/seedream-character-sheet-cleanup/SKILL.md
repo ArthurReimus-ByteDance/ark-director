@@ -1,6 +1,6 @@
 ---
 name: seedream-character-sheet-cleanup
-description: Cleans Seedream character sheets by removing duplicate faces from full-body panels so only the close-up panel keeps a readable face. Invoke immediately after generating a multi-panel character sheet for Seedance use.
+description: Cleans Seedream character sheets by removing the head from the full-body panels so only the close-up panel keeps a readable face. Invoke immediately after generating a multi-panel character sheet for Seedance use.
 ---
 
 # Seedream Character Sheet Cleanup
@@ -46,15 +46,14 @@ sheet: the close-up panel.
 The front full-body panel should preserve:
 - pose
 - clothing
-- silhouette
-- hair shape or headwear outline
+- silhouette below the shoulders
 - panel spacing
 - background consistency
 
-The front full-body panel should not preserve:
-- readable eyes
-- readable nose and mouth structure
-- any second face that competes with the close-up panel
+The front full-body panel should NOT preserve the head at all. Remove the
+entire head (and optionally the neck) so the figure is headless. Do not blur
+the face and do not replace it with a featureless surface: the head must be
+gone, with the studio background filling the space where it was.
 
 ## Default Cleanup Target
 
@@ -66,50 +65,58 @@ only authoritative face and should stay untouched.
 
 ## Recommended Editing Mode
 
-Use `seedream_edit_image` with a bounding box around the face area in the
+Use `seedream_edit_image` with a bounding box around the entire head in the
 full-body panel. This is a deletion or cleanup edit, not a full regeneration.
 
-Target only the head and face region that needs cleanup. Do not box the entire
-panel unless absolutely necessary.
+Box the whole head (hair and headwear included), not just the facial features.
+Do not box the entire panel unless absolutely necessary.
 
 ## Prompt Template
 
 Use this as the default edit instruction:
 
 ```text
-Erase the face from the full-body shot on the first panel. Keep the body pose,
-head silhouette, hair or headwear, costume details, panel spacing, divider
-lines, studio background, and the close-up face panel unchanged. The finished
-sheet must contain only one readable face: the close-up panel.
+Remove the entire head from the full-body front-view panel so the figure is
+headless. There must be no head, no face, no hair and no headwear in that
+panel. Fill the space where the head was with the studio background. Keep the
+neck, shoulders, body, costume, pose, panel spacing, divider lines, studio
+background, and the close-up face panel unchanged.
 ```
 
 ## Stronger Prompt Variant
 
-Use this variant when the edit keeps recreating facial features:
+Use this variant when the user also wants the neck removed, or when the edit
+keeps recreating a head:
 
 ```text
-Remove all readable facial features from the full-body front-view panel while
-preserving the character's head shape, hair, headwear, neck, costume, pose, and
-overall panel composition. Do not alter the close-up portrait panel. The sheet
-must present a single canonical face only in the close-up panel.
+Remove the entire head and neck from the full-body front-view panel so the
+body begins at the shoulders and collarbone. Fill the space where the head and
+neck were with the studio background. Keep the shoulders, body, costume, pose,
+panel spacing, divider lines, studio background, and the close-up face panel
+unchanged.
 ```
 
 ## Coordinate Guidance
 
 When using `seedream_edit_image`:
-- place the bbox tightly around the front-view face and immediate head area
-- include enough surrounding pixels to let the model inpaint naturally
-- avoid covering the torso, divider line, or close-up panel
-- if the headwear is important, keep enough margin so the model preserves it
+- place the bbox around the entire head in the full-body panel (hair and
+  headwear included, down to the neck), not just the facial features
+- include the neck inside the box when the user wants the neck removed too
+- avoid covering the shoulders, torso, divider line, or close-up panel
+- a box that is too small leaves a blurred or featureless head — widen it to
+  the full head before changing the prompt
 
 ## Acceptance Check
 
 The cleanup is successful when:
 - the close-up panel is the only readable face on the sheet
+- the front full-body panel shows no head at all — the figure is headless and
+  the studio background fills the space where the head was
 - the front full-body panel still reads as the same character and costume
 - the sheet layout remains stable
 - the background and divider lines stay consistent
-- no new facial detail appears elsewhere on the sheet
+- no blurred face, featureless head, or new facial detail appears in the body
+  panels
 
 ## Workflow Pairing
 
