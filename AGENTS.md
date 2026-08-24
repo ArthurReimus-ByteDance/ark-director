@@ -124,7 +124,13 @@ Seedance video prompts.
    locked `@tag`. **The model has no memory — describe everything, every time.**
    Descriptors, voice locks, and spatial maps go into every prompt **word for
    word**: never summarize, shorten, or imply a locked descriptor; copy the
-   exact canonical phrasing into each prompt that touches that element.
+       exact canonical phrasing into each prompt that touches that element.
+
+    Objects a character holds, wears, or operates on camera — devices, weapons,
+    eyewear, tools — are canonical props too. Author a `prop_` sheet for each
+    one before storyboarding or video, and bind it as an `@Image N` reference.
+    A text-only prop renders as the wrong object: a pen-shaped device comes
+    back as a laser, eyewear as the wrong frame.
 
 2. **Say what you want, not what you avoid.** The words you write are the words
    you summon — including the ones inside a "no". A prohibition still names and

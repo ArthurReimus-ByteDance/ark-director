@@ -304,6 +304,18 @@ sentence.
 Control-only floor plans and sketches may guide structure, but state that their
 lines, labels, and colors must not appear in the finished panel.
 
+Held, worn, and used props are a known failure mode. Any object a character
+holds, wears, or operates on camera — a device, weapon, eyewear, or tool — must
+have its own canonical prop sheet and be bound as an `@Image N` input. Never
+describe a held or worn prop in text only: a text-only prop renders as the wrong
+object (a pen-shaped device can come back as a laser, eyewear as the wrong
+frame). If the prop has no sheet, generate the prop sheet first with the prop
+workflow, then return to the board.
+
+Bind the active location in every panel, including close-ups and medium shots.
+A panel without a location reference drifts to an unrelated setting (a night
+field can come back as a city).
+
 ### 6. Establish geography and continuity
 
 For dialogue, pursuit, combat, or multi-character action, define:
@@ -412,7 +424,10 @@ Lighting:
 [Source, direction, quality, color, and atmosphere. In sketch mode, describe
 lighting as directional shading cues (e.g. "light from upper left, cast
 shadows to the lower right") rather than color temperature and material
-response.]
+response. Never describe a light source as a point or dot: name the physical
+emitter that produces it (the device, the lamp, the window) and state its
+full-frame effect. A "red point light" reads as a literal dot — instead write
+"the silver device fires a bright flash that fills the frame."]
 
 Composition:
 [Aspect ratio, shot size, camera height/angle, lens intent, framing, depth, and

@@ -112,6 +112,12 @@ Always include:
 - key accessories
 - explicit statement that it is the **same person in all panels**
 
+Signature accessories the character always wears or carries (eyewear, a device,
+a weapon, a hat) belong in the descriptor word for word. If an accessory is
+story-critical or will be used on camera (held, worn, aimed), also author a
+dedicated `prop_` sheet for it so downstream storyboards and video can bind it
+as an `@Image N` reference instead of describing it in text.
+
 ## 4. Setting
 
 The setting for character sheets is typically simple and controlled.
