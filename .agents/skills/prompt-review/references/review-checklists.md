@@ -845,8 +845,9 @@ Source skill: `seedream-character-sheet`
 1. **Three-panel default.** Back full-body, front full-body, face close-up. Unless user
    explicitly asks for more panels.
 
-2. **Light gray background.** Default studio background. Deviates only if user
-   explicitly wants stylized/filmic sheet background.
+2. **Neutral gray background.** Default studio background — neutral gray, never
+   scene-specific. Deviates only if user explicitly wants stylized/filmic sheet
+   background.
 
 3. **Panel order.** Back full-body first, front full-body second, frontal close-up
    third.
@@ -860,42 +861,48 @@ Source skill: `seedream-character-sheet`
 
 6. **Same person statement.** Explicitly states it is the same person in all panels.
 
+7. **No held props.** Nothing held, carried, aimed, or operated appears in the sheet;
+   those are authored as separate `prop_` sheets. Scene-variant wearables (e.g.
+   sunglasses worn only in some scenes) are also excluded and made props instead.
+   Only always-worn outfit elements (hat, helmet, eyewear, jewelry) may appear.
+
 ### Setting
 
-7. **Default background.** Light gray seamless, no props, no furniture, no
-   environmental clutter.
+8. **Default background.** Neutral gray seamless, no props, no held objects, no
+   furniture, no environmental clutter.
 
 ### Lighting
 
-8. **Soft studio.** Soft studio key, gentle fill, neutral white balance, no hotspots,
-   no blown highlights.
+9. **Neutral, not scene-specific.** Soft, even studio light, flat fill, neutral
+   white balance, no mood, no dramatic shadows, no hotspots, no blown highlights.
+   Lighting never changes to match the character's scene or story mood.
 
-9. **Consistent across panels.** Lighting is consistent across all three panels even
-   when mood is more cinematic.
+10. **Consistent across panels.** Lighting is identical across all three panels.
 
 ### Composition
 
-10. **Three panels only.** No extra panels.
+11. **Three panels only.** No extra panels.
 
-11. **Same identity.** Same character identity across all panels.
+12. **Same identity.** Same character identity across all panels.
 
-12. **Readable silhouette.** Costume silhouette readable in body panels.
+13. **Readable silhouette.** Costume silhouette readable in body panels.
 
-13. **Face authority.** Close-up panel is the face authority.
+14. **Face authority.** Close-up panel is the face authority.
 
 ### Constraints
 
-14. **Common negatives.** No extra panels, no profile panel, no 3/4 panel, no props in
-    hands, no background variation, no distorted hands, no extra fingers, no watermark.
+15. **Common negatives.** No extra panels, no profile panel, no 3/4 panel, no props in
+    hands, no held objects/weapons, no background variation, no scene lighting or
+    color cast, no distorted hands, no extra fingers, no watermark.
 
 ### Workflow
 
-15. **Cleanup check.** Body panels inspected for extra readable faces after generation.
+16. **Cleanup check.** Body panels inspected for extra readable faces after generation.
     If found, `seedream-character-sheet-cleanup` invoked.
 
-16. **Element saved.** Saved under `elements/<character-id>/`.
+17. **Element saved.** Saved under `elements/<character-id>/`.
 
-17. **Selected variant.** Approved filename recorded as `selected_variant` in
+18. **Selected variant.** Approved filename recorded as `selected_variant` in
     `character.md`.
 
 ---

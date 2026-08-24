@@ -3,6 +3,12 @@
 This folder contains a sample generated character sheet for the
 `seedream-character-sheet` skill.
 
+> **Note:** This sample was generated before the skill's current default —
+> neutral gray studio background and neutral, even lighting. It predates the
+> rule that sheets never use scene-specific lighting. Use the image only for
+> layout and panel balance; do not copy its low-key, moody lighting into new
+> sheets.
+
 ## File
 
 - `pirate-character-sheet-generated-sample.png`

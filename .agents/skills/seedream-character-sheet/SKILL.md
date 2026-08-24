@@ -38,8 +38,10 @@ user explicitly asks for more angles:
 2. **Front full-body**
 3. **Face close-up**
 
-Use a **light gray** studio background by default unless the user provides a
-different requirement.
+Use a **neutral gray** studio background and **neutral, even studio lighting**
+by default. Lighting never changes to fit a scene or mood — character sheets
+are identity references, not scene stills. The sheet lighting stays neutral
+unless the user explicitly asks otherwise.
 
 ## Why this layout
 
@@ -112,11 +114,21 @@ Always include:
 - key accessories
 - explicit statement that it is the **same person in all panels**
 
-Signature accessories the character always wears or carries (eyewear, a device,
-a weapon, a hat) belong in the descriptor word for word. If an accessory is
-story-critical or will be used on camera (held, worn, aimed), also author a
-dedicated `prop_` sheet for it so downstream storyboards and video can bind it
-as an `@Image N` reference instead of describing it in text.
+Signature accessories the character always wears — eyewear, a hat, a helmet,
+jewelry, footwear — belong in the descriptor word for word **as part of the
+outfit**, so identity and costume stay consistent across generations.
+
+**Never put held props in the character sheet.** Anything the character holds,
+carries, aims, or operates on camera (devices, weapons, tools, bags) is a
+separate canonical prop. Author a dedicated `prop_` sheet for each one and bind
+it as an `@Image N` reference downstream — do not describe or show it in the
+character sheet.
+
+**Scene-variant wearables are props, not outfit.** A wearable that is not worn
+in every scene (e.g. sunglasses the character wears in some scenes and removes
+in others) must be **excluded from the character sheet** and generated as a
+`prop_` sheet instead. Only include wearables that are always part of the look
+in every scene.
 
 ## 4. Setting
 
@@ -124,12 +136,13 @@ The setting for character sheets is typically simple and controlled.
 
 ```text
 Setting:
-Clean light gray studio background, consistent across all three panels.
+Clean neutral gray studio background, consistent across all three panels.
 ```
 
 Default:
-- light gray seamless background
+- neutral gray seamless background
 - no props
+- no held objects
 - no furniture
 - no environmental clutter
 
@@ -153,22 +166,26 @@ Recommended anchors:
 
 ## 6. Lighting
 
-Character sheets should be stable and readable.
+Character sheets use **neutral, even studio lighting** — never scene-specific
+lighting. Do not change the light to match the character's world or story mood;
+the sheet is an identity reference, so lighting must stay flat, readable, and
+identical across all panels.
 
 ```text
 Lighting:
-[Soft studio light, even fill, no harsh shadows, consistent across all panels.]
+[Soft, even, neutral studio light, flat fill, no mood, no dramatic shadows, consistent across all panels.]
 ```
 
 Default:
 - soft studio key
-- gentle fill
+- gentle even fill
 - neutral white balance
+- no scene mood, no color cast
 - no hotspots
 - no blown highlights
 
-If the user asks for a filmic or moodier sheet, keep the lighting consistent
-across the three panels even when the mood is more cinematic.
+The same neutral lighting is used for every character sheet regardless of what
+lighting the scene or character's world uses.
 
 ## 7. Composition
 
@@ -201,7 +218,7 @@ Use quality + negative constraints together:
 ```text
 Constraints:
 Quality: 4K, consistent character identity across all panels
-Negative: no extra panels, no side profile, no 3/4 view, no props, no text overlays, no watermarks, no distorted anatomy
+Negative: no extra panels, no side profile, no 3/4 view, no props, no held objects, no weapons, no text overlays, no watermarks, no distorted anatomy
 ```
 
 Common negatives:
@@ -209,7 +226,9 @@ Common negatives:
 - no profile panel
 - no 3/4 panel
 - no props in hands
+- no held objects, weapons, or carried items
 - no background variation
+- no scene lighting or color cast
 - no distorted hands
 - no extra fingers
 - no watermark
@@ -221,23 +240,23 @@ Task:
 Text-to-Image (T2I)
 
 Subject:
-Character reference sheet, single character [name / description]. Same person in all panels, consistent identity. Three-panel sheet only: one full-body back view, one full-body front view, and one face close-up panel.
+Character reference sheet, single character [name / description]. Same person in all panels, consistent identity. Three-panel sheet only: one full-body back view, one full-body front view, and one face close-up panel. Worn outfit elements only — hat, helmet, always-worn eyewear, jewelry — nothing held in the hands, no props, no weapons.
 
 Setting:
-Clean light gray studio background, consistent across all three panels. No props, no furniture, no background variation.
+Clean neutral gray studio background, consistent across all three panels. No props, no held objects, no furniture, no background variation.
 
 Style:
 Photorealistic, cinematic, professional character-sheet quality, consistent skin tone and wardrobe detail across all panels.
 
 Lighting:
-Soft studio key light at 45 degrees left, gentle fill from the right, even illumination, neutral white balance, no dramatic shadows.
+Soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, identical lighting across all panels.
 
 Composition:
 Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels.
 
 Constraints:
 Quality: 4K, rich skin texture, natural hair detail, consistent character identity across all panels
-Negative: no props in hands, no background variation, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
+Negative: no props in hands, no held objects, no weapons, no background variation, no scene lighting or color cast, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
 ```
 
 ## Worked example: Film-style pirate sheet
@@ -258,7 +277,7 @@ Style:
 Gritty cinematic 35mm film photograph, naturalistic editorial reference, fine film grain, organic matte skin texture, never plastic CGI skin.
 
 Lighting:
-Very soft, low, diffused natural light, like soft shade or thin overcast through a scrim, wrapping gently around the face with extremely smooth gradual falloff. Slightly underexposed, moody, low-key, no harsh shadows, no hotspots, no blown highlights, no hard edges of light.
+Very soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, no hotspots, no blown highlights, identical lighting across all three panels.
 
 Composition:
 Three panels side by side in a single horizontal row. Left panel: full-body back view. Center panel: full-body front view. Right panel: frontal close-up portrait from the chest up, face square to camera. Consistent identity, costume, scar, accessories, proportions, and lighting across all panels.
@@ -285,3 +304,6 @@ The user-provided sample image is stored beside this skill:
 
 Use it as a visual target for layout and panel balance, not as a literal
 identity reference unless the user explicitly asks for that specific character.
+Note: the sample was generated with a moodier, low-key film look that predates
+the current neutral-gray-background / neutral-lighting default; do not copy its
+lighting into new sheets.

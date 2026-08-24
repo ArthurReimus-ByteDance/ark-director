@@ -126,11 +126,17 @@ Seedance video prompts.
    word**: never summarize, shorten, or imply a locked descriptor; copy the
        exact canonical phrasing into each prompt that touches that element.
 
-    Objects a character holds, wears, or operates on camera — devices, weapons,
-    eyewear, tools — are canonical props too. Author a `prop_` sheet for each
-    one before storyboarding or video, and bind it as an `@Image N` reference.
-    A text-only prop renders as the wrong object: a pen-shaped device comes
-    back as a laser, eyewear as the wrong frame.
+    Objects a character holds, carries, aims, or operates on camera — devices,
+    weapons, tools, bags — are canonical props and **never appear in the
+    character sheet**. Author a dedicated `prop_` sheet for each one before
+    storyboarding or video, and bind it as an `@Image N` reference. Wearables
+    that are always part of the outfit in every scene — a hat, a helmet,
+    always-worn eyewear, jewelry — stay in the character sheet as part of the
+    look. But a **scene-variant wearable** (e.g. sunglasses the character wears
+    in some scenes and removes in others) must be **excluded from the character
+    sheet** and generated as a `prop_` sheet instead. A text-only prop renders
+    as the wrong object: a pen-shaped device comes back as a laser, eyewear as
+    the wrong frame.
 
 2. **Say what you want, not what you avoid.** The words you write are the words
    you summon — including the ones inside a "no". A prohibition still names and
