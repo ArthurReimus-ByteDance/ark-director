@@ -618,7 +618,7 @@ When a project contains multiple discrete sub-projects (a film series, a multi-a
 
 ## Workspace-level directories
 
-In addition to the `projects/` tree, the workspace root has three top-level directories for documentation and planning artifacts:
+In addition to the `projects/` tree, the workspace root has three top-level directories for documentation and planning artifacts. Like `projects/`, `docs/`, `plans/`, and `specs/` are **local-only working state — never commit them to git.** The remote tracks only a `.gitkeep` placeholder per directory; do not `git add` the files inside them.
 
 | Directory | Purpose | Naming convention |
 |---|---|---|
