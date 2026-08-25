@@ -1,6 +1,54 @@
 {
   "version": 1,
   "skills": {
+    "blender-animation-rigging": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-animation-rigging/SKILL.md",
+      "computedHash": "1224d950920afd433fd011559023e5bbaa8e039ff72064f5dce2abf5ef360cd1"
+    },
+    "blender-compositing-nodes": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-compositing-nodes/SKILL.md",
+      "computedHash": "7724a0216b3da0ed0eb76d4dfb89172ba7ca113390bab7cee8caacbe5b998d13"
+    },
+    "blender-geometry-nodes": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-geometry-nodes/SKILL.md",
+      "computedHash": "4e83fbea111589aee95162a603d925140c57216acebebec83685ed117fb1ce1c"
+    },
+    "blender-modeling-modifiers": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-modeling-modifiers/SKILL.md",
+      "computedHash": "a01024f22bf401033904169b78c3c992f6564c3feb3519e405739d7ecf214933"
+    },
+    "blender-physics-simulation": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-physics-simulation/SKILL.md",
+      "computedHash": "8faec66e86526f1652c48e0d194a0587990b0a882df5ccd537dcce4f8b84c1e6"
+    },
+    "blender-python-scripting": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-python-scripting/SKILL.md",
+      "computedHash": "29466ae92b000e6ec2a02f1fca8d01de9af539590175a47eaea5235c0f658ec4"
+    },
+    "blender-scene-rendering": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-scene-rendering/SKILL.md",
+      "computedHash": "54269077e38b123cc3b2c5bdb6d2c34861ec099dfc1c9da4b98c5043d40a0b35"
+    },
+    "blender-shader-nodes": {
+      "source": "ra100/blender-claude-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/blender-shader-nodes/SKILL.md",
+      "computedHash": "125a4e29a1271e4fea1fdfb5e81aa6f10a9d56b58304f7ab2e237fb83feb0c18"
+    },
     "ffmpeg": {
       "source": "digitalsamba/claude-code-video-toolkit",
       "sourceType": "github",

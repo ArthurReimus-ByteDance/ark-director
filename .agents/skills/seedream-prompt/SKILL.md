@@ -116,6 +116,21 @@ Examples:
 - "A futuristic cyberpunk city at night, neon reflections on wet asphalt, holographic billboards flickering."
 - "A minimalist Scandinavian living room, morning light through sheer curtains, white walls and oak floors."
 
+### 4b. Prop / product sheets (Seedance identity references)
+
+For any prop or product sheet that will be used as a Seedance `@Image` identity
+reference, isolate the subject on a **pure white seamless background** by
+default. This prevents the sheet's backdrop from leaking into the generated
+video. Apply the same rule to character and location identity references.
+
+- Setting: "Isolated product shot on a pure white seamless background." with at
+  most a soft, faint contact shadow directly beneath the object.
+- Constraints (negative): no colored backdrop, no gradient background, no props,
+  no hands, no reflections of other objects.
+- When the sheet will be used with a Seedance blockout or R2V reference, also
+  state in the video prompt "Use only the <subject> from @Image N — do not use
+  its background."
+
 ### 5. Style
 
 Define the artistic direction, medium, rendering quality, and aesthetic keywords.
