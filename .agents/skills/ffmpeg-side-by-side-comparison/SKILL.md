@@ -27,12 +27,16 @@ ffmpeg -y \
   -filter_complex \
     "[0:v]scale=640:360,setsar=1[a]; \
      [1:v]scale=640:360,setsar=1[b]; \
-     [a][b]hstack" \
-  -an -c:v libx264 -crf 23 -preset fast \
+     [a][b]hstack[v]; \
+     [1:a]anull[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -preset fast \
   compare.mp4
 ```
 
 Result: one 1280x360 frame with `before` on the left and `after` on the right.
+By default the output keeps the **AFTER clip's audio** (the last input) — you
+see the before, you hear the after. See [Audio](#audio) to mute, swap tracks,
+or mix.
 
 ## The two rules that make seams line up
 
@@ -83,8 +87,9 @@ ffmpeg -y \
      [1:v]scale=640:360,setsar=1[b]; \
      [2:v]scale=640:360,setsar=1[c]; \
      [3:v]scale=640:360,setsar=1[d]; \
-     [a][b][c][d]xstack=inputs=4:layout=0_0|w0_0|0_h0|w0_h0" \
-  -an -c:v libx264 -crf 23 -preset fast \
+     [a][b][c][d]xstack=inputs=4:layout=0_0|w0_0|0_h0|w0_h0[v]; \
+     [3:a]anull[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -preset fast \
   grid.mp4
 ```
 
@@ -109,8 +114,9 @@ ffmpeg -y \
   -filter_complex \
     "[0:v]scale=640:360,setsar=1,drawtext=text='BEFORE':x=10:y=10:fontsize=28:fontcolor=white:box=1:boxcolor=black@0.5:boxborderw=8[a]; \
      [1:v]scale=640:360,setsar=1,drawtext=text='AFTER':x=10:y=10:fontsize=28:fontcolor=white:box=1:boxcolor=black@0.5[b]; \
-     [a][b]hstack" \
-  -an -c:v libx264 -crf 23 -preset fast \
+     [a][b]hstack[v]; \
+     [1:a]anull[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -preset fast \
   compare_labeled.mp4
 ```
 
@@ -141,8 +147,9 @@ ffmpeg -y \
      [1:v]scale=640:360,setsar=1[b]; \
      [a][b]hstack[v]; \
      [v][2:v]overlay=10:10[vl]; \
-     [vl][3:v]overlay=650:10" \
-  -an -c:v libx264 -crf 23 -preset fast \
+     [vl][3:v]overlay=650:10[v]; \
+     [1:a]anull[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -preset fast \
   compare_labeled.mp4
 ```
 
@@ -166,28 +173,32 @@ For frame-rate mismatch, insert `fps=24` (or the target rate) after each
 
 ## Audio
 
-Comparison clips default to **no audio** (`-an`) — the visual split is the
-point, and two soundtracks on one canvas are confusing. When audio is needed:
+By default the comparison **keeps the AFTER clip's audio** — the final (last)
+input, so you hear the finished result while the before half is visual only.
+The core recipe already maps `[1:a]` (the after stream). To pick a different
+source, swap the index (`[0:a]` keeps the BEFORE soundtrack); to hear both
+combined, use `amix` (below); to mute entirely, drop the `[aud]` lines and the
+`-map "[aud]"`, and pass `-an`.
 
 ```bash
+# BEFORE + AFTER audio mixed together
 ffmpeg -y \
   -i before.mp4 -i after.mp4 \
   -filter_complex \
     "[0:v]scale=640:360,setsar=1[a]; \
      [1:v]scale=640:360,setsar=1[b]; \
      [a][b]hstack[v]; \
-     [0:a][1:a]amix=inputs=2:duration=shortest[a]" \
-  -map "[v]" -map "[a]" -c:v libx264 -crf 23 -c:a aac \
-  compare_with_audio.mp4
+     [0:a][1:a]amix=inputs=2:duration=shortest[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -c:a aac \
+  compare_mixed.mp4
 ```
 
 Notes:
-- `[0:a]` / `[1:a]` assume **both** sources carry an audio stream. If either is
-  silent (common for blockout or proxy takes), drop the `amix` line and keep
+- `[0:a]` / `[1:a]` assume the source carries an audio stream. If a clip is
+  silent (common for blockout or proxy takes), drop the audio mapping and pass
   `-an` — do not guess a stream that is not there.
 - `amix` **sums levels**, so two identical soundtracks come out roughly +6 dB
-  louder. That is why `-an` is the right default for review comparisons; mix
-  only when the combined sound is genuinely wanted.
+  louder. That is why the default is a single AFTER track rather than a mix.
 
 ## Quality / size knobs
 
@@ -200,20 +211,21 @@ Notes:
 ## Worked example (from the graybox→cinematic project)
 
 ```bash
-# BEFORE — graybox blockout; AFTER — cinematic R2V render
+# BEFORE — graybox blockout; AFTER — cinematic R2V render (audio retained)
 ffmpeg -y \
   -i s01_sh010_t04_v01.mp4 \
   -i s01_sh010_t10_v01.mp4 \
   -filter_complex \
     "[0:v]scale=640:360,setsar=1[a]; \
      [1:v]scale=640:360,setsar=1[b]; \
-     [a][b]hstack" \
-  -an -c:v libx264 -crf 23 -preset fast -t 30 \
+     [a][b]hstack[v]; \
+     [1:a]anull[aud]" \
+  -map "[v]" -map "[aud]" -c:v libx264 -crf 23 -preset fast -t 30 \
   s01_compare_before_after_v01.mp4
 ```
 
 Both sources were already 1280x720 / 30s, so `-t 30` just caps the length; the
-output is 1280x360, ~2.8 MB.
+output is 1280x360 with the AFTER clip's audio, ~2.8 MB.
 
 ## Self-check
 
@@ -224,8 +236,9 @@ output is 1280x360, ~2.8 MB.
 3. The target duration is explicit when lengths differ (`-t`, `-shortest`, or
    `tpad`); no silent truncation surprises.
 4. Frame rates are synced (`fps=` filter) when inputs differ.
-5. Audio is `-an` for review comparisons, or explicitly mixed and mapped when
-   required.
+5. Audio keeps the AFTER clip's track by default (`[1:a]`, the last input);
+   `-an` is used only when a source is silent or a silent review proxy is
+   wanted.
 6. Output codec is `libx264` (or requested), `crf` tuned to the deliverable.
 7. The output was decoded (`ffmpeg -v error -i out.mp4 -f null -`) and
    inspected for seam alignment before shipping.
