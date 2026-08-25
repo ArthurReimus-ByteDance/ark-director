@@ -742,6 +742,15 @@ Rules:
   when the user explicitly requests it.
 - **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
+- **Content-safety false positives on output (copyright).** Seedance can reject an
+  otherwise-innocuous prompt with `OutputVideoSensitiveContentDetected.PolicyViolation`
+  ("copyright restrictions") when the *generated output* resembles a film/photo
+  cliché — interrogation rooms, a figure arguing in the rain, well-known movie
+  setups. This is an output-level false positive, not a prompt error. Mitigate by
+  softening the trope wording (e.g. `arguing` → `talking into his phone`; a
+  `bare-bulb interrogation` room → a neutral desk scene), resubmitting once, and
+  recording the failed task in `task_ids.json` with a note. Never retry the
+  identical prompt unchanged.
 
 ## Verification
 - Every MCP tool needs: (a) a **smoke test** against the live Ark API using the fast/low-cost variant, and (b) mocked unit tests for input validation, the task-polling state machine, and error handling.

@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-shot
-description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. For Seedance 2.5 structured editing or extension, use seedance-prompt-25 instead.
+description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
 ---
 
 # Seedance VFX Shot Pipeline
@@ -11,12 +11,12 @@ This skill composes the `seedance-vfx-prompt` skill (prompt writing) with the
 manifested asset following the workspace's `projects/<project>/` directory
 conventions.
 
-> **Version note**: This pipeline targets Seedance 2.0 video-to-video VFX with
-> 4K face protection. For Seedance 2.5's structured editing (subject replacement,
-> background replacement, audio editing) and native forward/backward extension,
-> use the `seedance-prompt-25` skill. Note that 2.5 supports up to 1080p
-> output — the 4K face-protection path below is 2.0-only. For 2.0 T2V/R2V
-> prompts, use `seedance-prompt-20`.
+> **Version note**: This pipeline runs on **both** Seedance generations.
+> **Default to Seedance 2.5** (`dreamina-seedance-2-5-260628`,
+> `omni_reference_task_type=edit`) for full-duration edits — 2.5 preserves ~the
+> source length, while **2.0's `edit_video` caps output at ~5s** in practice.
+> Use 2.0 only for 4K output or Fast/Mini variants. For 2.0 T2V/R2V prompts,
+> use `seedance-prompt-20`.
 
 Use this skill when the user wants to:
 - **run a complete VFX shot** from source clip to saved output
@@ -173,6 +173,12 @@ Call `seedance_create_task` on the `mcp_modelark-seed` MCP server.
 ```
 
 Key parameters for VFX:
+
+**Seedance 2.5 (default for full-duration edits):** use `seedance_2_5_create_task`
+instead, with `"omni_reference_task_type": "edit"` (2.5 accepts
+`auto|reference|edit|extend`; `edit_video` is 2.0-only and will be rejected).
+Omit `ratio` and `duration` — they auto-lock to the source. 2.5 caps at 1080p.
+2.0 (`edit_video`) caps output at ~5s, so use 2.5 for any edit longer than ~5s.
 - **`videos[].role = "reference_video"`** — the source clip to edit. This is
   what makes it a video-to-video (VFX) task rather than text-to-video.
 - **`images[].role = "reference_image"`** — element references (character
@@ -244,6 +250,12 @@ chaining:
 ```
 projects/<project>/scenes/scene-NN/sNN_shNNN/sNN_shNNN_t01_v01_lastframe.png
 ```
+
+> **Delivery transcode (HEVC → H.264).** Seedance 2.5 edit outputs are usually
+> HEVC (`video_codec: hevc`). Lark/doc previews and many players need H.264. Keep
+> the HEVC master as the archival take and produce a browser-safe derivative:
+>
+> `ffmpeg -i <take>.mp4 -c:v libx264 -pix_fmt yuv420p -profile:v high -crf 20 -c:a aac -b:a 128k -movflags +faststart <take>_lark_h264.mp4`
 
 ## Step 6 — Write the shot.md manifest
 
@@ -393,6 +405,8 @@ If the task failed, report:
 | Error | Cause | Action |
 |---|---|---|
 | Content safety rejection | Source clip or prompt flagged by moderation | Review source clip content; simplify the `New world:` description; remove any borderline language |
+| `OutputVideoSensitiveContentDetected.PolicyViolation` ("copyright restrictions") | Output resembles a film/photo cliché (interrogation room, a figure arguing in the rain) | Soften trope wording (e.g. "arguing" → "talking into his phone"); resubmit once; record the failed task. Never retry the identical prompt |
+| `resource download failed` (`InvalidParameter` on the video reference) | Presigned reference URL expired or a transient fetch failure | Call `media_presign` with the recorded `object_key` for a fresh URL and resubmit |
 | Invalid reference format | Video URL unreachable, image not valid PNG/JPEG | Verify file paths; re-encode images as PNG; use `kind: "base64"` for local files |
 | Prompt too long | Exceeds 32,000 character limit (the MCP `seedance_create_task` video-generation tool accepts up to 32,000 characters) | Condense `New world:` and `Lighting:` sections; remove redundant detail |
 | Task timeout / expired | `execution_expires_after` too short | Resubmit with `execution_expires_after: 7200` (2 hours) |

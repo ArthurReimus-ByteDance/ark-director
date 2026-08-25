@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-prompt
-description: Write structured or compact Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar (or the compact @source / @creature shorthand), the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers, timed camera moves synced to dialogue (crash zoom, smooth push-in, reveal pull-back, lip-sync), diegetic audio, 4K face protection, photoreal creature integration with species behavior and texture-reference fallback, prepended-intro duration budgeting, source-clip inspection, and iteration discipline. For Seedance 2.5 structured editing (subject replacement, background replacement, audio editing) or native extension, use seedance-prompt-25 instead. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements or creatures, rebuild environments on moving camera, sync camera moves to spoken lines, or apply any footage-driven visual effect with Seedance.
+description: Write structured or compact Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar (or the compact @source / @creature shorthand), the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers, timed camera moves synced to dialogue (crash zoom, smooth push-in, reveal pull-back, lip-sync), diegetic audio, 4K face protection, photoreal creature integration with species behavior and texture-reference fallback, prepended-intro duration budgeting, source-clip inspection, and iteration discipline. Also covers Seedance 2.5 structured editing ([Edit Goal] blocks with omni_reference_task_type=edit) and weather/subject-state wet↔dry changes. Invoke when the user wants to edit existing footage with VFX — replace backgrounds, add elements or creatures, rebuild environments on moving camera, sync camera moves to spoken lines, or apply any footage-driven visual effect with Seedance.
 ---
 
 # Seedance VFX Prompt
@@ -21,11 +21,12 @@ Do **not** use this skill for:
 - image-to-video from a still frame (use `seedance-prompt-25` for 2.5, `seedance-prompt-20` for 2.0)
 - character sheet or location still generation (use Seedream skills)
 
-> **Version note**: This skill targets Seedance 2.0 video-to-video VFX. For
-> Seedance 2.5's structured editing capabilities (subject replacement with
-> Timeline Inheritance, background replacement, audio editing), use the
-> `seedance-prompt-25` skill which covers 2.5's enhanced editing templates.
-> For 2.0 T2V/R2V prompts, use `seedance-prompt-20`.
+> **Version note**: This skill covers **both** Seedance generations. The core
+> methodology (sections 1–11) is written for Seedance 2.0. For Seedance 2.5
+> video-to-video editing — the preferred path for full-duration edits — see
+> [Seedance 2.5 editing](#seedance-25-editing) below; the `seedance-prompt-25`
+> skill remains the authority for 2.5 T2V/R2V and native extension. For 2.0
+> T2V/R2V prompts, use `seedance-prompt-20`.
 
 > **2.5 resolution guard**: Seedance 2.5 supports 480p/720p/1080p output. The
 > 4K face-protection methodology below is 2.0-only. For face-critical structured
@@ -841,6 +842,89 @@ allowed, flag it and say what to prioritize.
 > audios and 30s generation duration. If your request exceeds the 2.0 limits
 > above, route to `seedance-prompt-25` and use the 2.5 model
 > (`dreamina-seedance-2-5-260628`) with `seedance_2_5_create_task`.
+
+## Seedance 2.5 editing
+
+The methodology above (sections 1–11) targets Seedance 2.0. For **Seedance 2.5**
+video-to-video editing, combine this skill's VFX discipline with the
+`seedance-prompt-25` structured-editing pattern. Field-tested notes:
+
+### Model matrix
+
+| Need | Model | `omni_reference_task_type` | Notes |
+|---|---|---|---|
+| Full-duration edit (match source length) | Seedance 2.5 (`dreamina-seedance-2-5-260628`) | `edit` | Preferred. Duration auto-locks to ~source length (up to 30s). |
+| 4K output / Fast / Mini | Seedance 2.0 (`dreamina-seedance-2-0-260128`) | `edit_video` | 2.0 edit **caps output at ~5s** in practice regardless of source length — do not use for edits longer than ~5s. |
+| Video extension | 2.5 | `extend` | Native forward/backward extension. |
+
+> 2.5 accepts `auto | reference | edit | extend`. It **rejects `edit_video`**
+> (that value is 2.0-only) with `InvalidParameter`. 2.0 uses `edit_video`.
+
+### Canonical 2.5 edit structure
+
+```text
+[Edit Goal]
+Edit @Video 1. <one-sentence change: replace / add / relight / weather>.
+
+[Source Video Role]
+@Video 1 is the sole editing master. It defines <subject, scene, actions,
+camera movement, occlusion, event order>.
+
+[Target Material Role]          (only when a reference defines the target)
+@Image 1 defines only <target>'s <appearance/structure/material>. Do not use
+<irrelevant background/people/composition>.
+
+[Edit Scope]
+Modify only <object / region / time range / audio category>. Exactly one
+<subject> remains in frame — never a second or duplicated copy. Do not modify
+<content to preserve>.
+
+[Content to Preserve]
+Keep <identity, motion, timing, camera, lighting> from @Video 1 unchanged.
+```
+
+Carry the VFX discipline over: name the change with a timestamp when localized,
+embed lighting in the new world, keep audio diegetic, add face protection, and
+ground the preserved subject (no cut-out edge, no halo).
+
+### Standard edit guardrails (field-tested)
+
+Include these lines in every 2.5 edit that preserves a subject:
+
+- **Quantity**: `Exactly one <subject> in frame — never a second or duplicated copy.`
+- **Non-reaction** (when the subject must not react): `The <subject> does not react to the <change> — performance, gaze, and timing stay exactly as in @Video 1.`
+- **Grounding**: `The <subject> stays naturally grounded in the scene — no cut-out edge, no halo; rim light matches the key direction.`
+- **Face protection** (any visible face): `Real human skin with pores and catchlights — never waxy, smoothed, or warped.`
+
+### Weather / subject-state change (wet ↔ dry)
+
+To change only the weather while keeping lighting and camera fixed (and flip the
+subject's wet/dry state):
+
+```text
+[Edit Goal] Change the weather from <A> to <B> while keeping <subject>, the camera
+movement, and the lighting direction the same.
+[Edit Scope] Change only the weather — <rain/sun…> — and <soak | dry> the subject's
+hair and clothing. Do not modify <face, body, gestures, timing, camera, key light>.
+Lighting: Keep the same key light direction from @Video 1; <overcast softens /
+sun brightens> slightly. No other lighting change.
+```
+
+Name the state change on the body: dry→wet (`hair flattened, darker, clinging,
+water running down the face; fabric darkens and clings; rain beads`) or wet→dry
+(`hair lightens and fluffs, lifts in the breeze; fabric dries loose`). That
+visible state change is the acceptance test for the edit.
+
+### Content-safety note (copyright false positives on output)
+
+Seedance can reject an otherwise-innocuous edit with
+`OutputVideoSensitiveContentDetected.PolicyViolation` ("copyright restrictions")
+when the *generated output* resembles a film/photo cliché — interrogation rooms,
+a figure arguing in the rain, well-known movie setups. This is an output-level
+false positive, not a prompt error. Mitigate by softening the trope wording
+(e.g. `arguing` → `talking into his phone`; `bare-bulb interrogation` → a neutral
+desk scene), resubmitting once, and recording the failed task. Never retry the
+identical prompt unchanged.
 
 ## VFX prompt checklist
 
