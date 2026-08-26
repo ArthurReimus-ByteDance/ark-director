@@ -915,6 +915,61 @@ water running down the face; fabric darkens and clings; rain beads`) or wet→dr
 (`hair lightens and fluffs, lifts in the breeze; fabric dries loose`). That
 visible state change is the acceptance test for the edit.
 
+### Language swap / audio edit (re-lip-sync)
+
+Change only the spoken language and the lip movement, keeping the character,
+environment, framing, lighting, and timing identical. Field-tested template:
+
+```text
+[Edit Goal]
+Edit @Video 1. Change the presenter's spoken language from <source> to natural
+<target>, keeping the dialogue content and speaking times, and re-sync the lip
+movement to the new <target> words.
+
+[Source Video Role]
+@Video 1 is the sole editing master. It defines the presenter, his appearance,
+the background, the framing, the lighting, and the event order.
+
+[Edit Scope]
+Change only the spoken language and the lip movement to match it. Do not modify
+the presenter's appearance, the background, the lighting, the camera framing, or
+the timing. Exactly one presenter remains in frame — never a second or
+duplicated copy.
+
+[Content to Preserve]
+Keep the presenter's face, appearance, the background, the lighting, the camera
+framing, and the speaking times from @Video 1. Real human skin with pores and
+catchlights — never waxy, smoothed, or warped. The presenter's facial expression,
+gaze, and gestures remain exactly as in @Video 1; only the mouth and lips
+re-animate to the new words.
+```
+
+Contract and notes:
+
+- **Same content.** The target `{}` line is the source line translated — no
+  paraphrasing, no added or omitted words. State it with language reinforcement
+  and delivery style: `now in natural <regional variety>, with the same
+  <delivery> as @Video 1: {<line>}`.
+- **Source-side reinforcement.** The BEFORE T2V clip needs a `Dialogue language:`
+  line (`natural, conversational American English` / `Mandarin Chinese` /
+  `Japanese`) plus its `{}` line. English, Chinese, and Japanese are all
+  natively supported by Seedance 2.5.
+- **CJK punctuation.** In Japanese dialogue use `……` (ideographic ellipsis) or a
+  comma, not the em dash `——`.
+- **Visuals must not change.** If the AFTER drifts in face, background, or
+  framing, tighten the `[Edit Scope]` / `[Content to Preserve]` locks rather
+  than piling on negative constraints.
+
+### Routing vs `audio-dubbing`
+
+Two different techniques both change language — pick by whether the lips are
+visible:
+
+| Technique | Skill | Result |
+|---|---|---|
+| Re-voice + **re-render lips** | `seedance-vfx-prompt` (2.5 audio edit, this section) | Video re-rendered; mouth re-animated to the new language. Use when the mouth is visible and lip-sync matters. |
+| Voice-clone + **overlay audio** | `audio-dubbing` (Seed Audio 1.0 TA2A) | Video frames untouched; cloned audio laid on top. Use when lips are off-screen or not the focus. |
+
 ### Content-safety note (copyright false positives on output)
 
 Seedance can reject an otherwise-innocuous edit with

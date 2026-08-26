@@ -523,6 +523,10 @@ the dialogue content and speaking times. Keep all other character voices, backgr
 ambience, and visuals from @Video 1.
 ```
 
+For the full language-swap pattern (English ⇄ Chinese/Japanese, re-lip-sync with
+visuals locked), see the "Language swap / audio edit (re-lip-sync)" subsection
+of `seedance-vfx-prompt`.
+
 ## Video extension
 
 Video extension creates content beyond the boundary of a source video.

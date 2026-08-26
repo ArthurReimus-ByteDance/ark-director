@@ -22,6 +22,7 @@ Built on BytePlus Seed Audio 1.0 TA2A (Text + Audio-to-Audio) with cross-lingual
 - User just wants a single TTS voice reading text (use `seed-audio-prompt` skill)
 - User wants a full soundscape with music + SFX (use `seed-audio-commercial` or `seed-audio-prompt`)
 - User wants to edit video visuals (use `seedance-vfx-shot` or `seedance-prompt-25`)
+- User wants the video's **lip movement to re-sync** to the new language (this skill overlays cloned audio on unchanged frames; for re-rendered lip-sync use the Seedance 2.5 audio edit in `seedance-vfx-prompt`)
 - User wants to transcribe/translate without audio output (use Seed 2.1 understand + translation)
 
 ## Core concepts
