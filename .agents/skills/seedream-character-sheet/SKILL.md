@@ -112,11 +112,20 @@ Always include:
 - hair and headwear
 - costume
 - key accessories
+- **a relaxed neutral expression** — the sheet is an identity reference, so the
+  face must stay readable and emotionless; the model otherwise injects arbitrary
+  mood (smiles, frowns, glare) that bleeds into every downstream use
 - explicit statement that it is the **same person in all panels**
 
 Signature accessories the character always wears — eyewear, a hat, a helmet,
 jewelry, footwear — belong in the descriptor word for word **as part of the
 outfit**, so identity and costume stay consistent across generations.
+
+Use this canonical neutral-expression phrase verbatim in every character sheet:
+
+```text
+Relaxed neutral expression in all panels: mouth relaxed and closed, eyes looking straight into camera, no smile, no frown, no raised brows, no emotion.
+```
 
 **Never put held props in the character sheet.** Anything the character holds,
 carries, aims, or operates on camera (devices, weapons, tools, bags) is a
@@ -193,7 +202,7 @@ Explicitly enforce the three-panel structure.
 
 ```text
 Composition:
-Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels.
+Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels, relaxed neutral expression in every panel.
 ```
 
 Core rules:
@@ -202,6 +211,7 @@ Core rules:
 - front full-body second
 - frontal close-up third
 - same character identity across all panels
+- relaxed neutral expression across all panels, face square to camera in the close-up
 - readable costume silhouette in the body panels
 - close-up panel is the face authority
 
@@ -229,6 +239,7 @@ Common negatives:
 - no held objects, weapons, or carried items
 - no background variation
 - no scene lighting or color cast
+- no exaggerated expressions, no smiling, no frowning, no strong emotions
 - no distorted hands
 - no extra fingers
 - no watermark
@@ -240,7 +251,7 @@ Task:
 Text-to-Image (T2I)
 
 Subject:
-Character reference sheet, single character [name / description]. Same person in all panels, consistent identity. Three-panel sheet only: one full-body back view, one full-body front view, and one face close-up panel. Worn outfit elements only — hat, helmet, always-worn eyewear, jewelry — nothing held in the hands, no props, no weapons.
+Character reference sheet, single character [name / description]. Same person in all panels, consistent identity. Relaxed neutral expression in all panels: mouth relaxed and closed, eyes looking straight into camera, no smile, no frown, no raised brows, no emotion. Three-panel sheet only: one full-body back view, one full-body front view, and one face close-up panel. Worn outfit elements only — hat, helmet, always-worn eyewear, jewelry — nothing held in the hands, no props, no weapons.
 
 Setting:
 Clean neutral gray studio background, consistent across all three panels. No props, no held objects, no furniture, no background variation.
@@ -252,11 +263,11 @@ Lighting:
 Soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, identical lighting across all panels.
 
 Composition:
-Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels.
+Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels, relaxed neutral expression in every panel.
 
 Constraints:
 Quality: 4K, rich skin texture, natural hair detail, consistent character identity across all panels
-Negative: no props in hands, no held objects, no weapons, no background variation, no scene lighting or color cast, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
+Negative: no props in hands, no held objects, no weapons, no background variation, no scene lighting or color cast, no exaggerated expressions, no smiling, no frowning, no strong emotions, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
 ```
 
 ## Worked example: Film-style pirate sheet
@@ -268,7 +279,7 @@ Task:
 Text-to-Image (T2I)
 
 Subject:
-3-view character reference sheet for a film character. The same man in all three views: youthful attractive man in his early 30s, warm olive-brown skin, dark thick curly hair, thin mustache with a small soul-patch under the lip, faint stubble along the jaw, two small silver hoop earrings on the left ear, thin silver chain necklace, subtly asymmetrical face, a small subtle healed scar near the right eye. Age-of-sail pirate costume: faded mustard-yellow durag tied at the back with the tails hanging down, small shark tooth pendant attached to the durag above the left temple, open off-white linen shirt, worn dark leather vest, wide sash belt, baggy dark breeches, scuffed leather boots, weathered and dirty fabrics. Three panels only: full-body back view, full-body front view, and frontal face close-up.
+3-view character reference sheet for a film character. The same man in all three views: youthful attractive man in his early 30s, warm olive-brown skin, dark thick curly hair, thin mustache with a small soul-patch under the lip, faint stubble along the jaw, two small silver hoop earrings on the left ear, thin silver chain necklace, subtly asymmetrical face, a small subtle healed scar near the right eye. Age-of-sail pirate costume: faded mustard-yellow durag tied at the back with the tails hanging down, small shark tooth pendant attached to the durag above the left temple, open off-white linen shirt, worn dark leather vest, wide sash belt, baggy dark breeches, scuffed leather boots, weathered and dirty fabrics. Relaxed neutral expression in all panels: mouth relaxed and closed, eyes looking straight into camera, no smile, no frown, no raised brows, no emotion. Three panels only: full-body back view, full-body front view, and frontal face close-up.
 
 Setting:
 Neutral medium-gray seamless studio backdrop, consistent across all three panels, with thin subtle vertical divider lines separating the panels.
@@ -280,11 +291,11 @@ Lighting:
 Very soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, no hotspots, no blown highlights, identical lighting across all three panels.
 
 Composition:
-Three panels side by side in a single horizontal row. Left panel: full-body back view. Center panel: full-body front view. Right panel: frontal close-up portrait from the chest up, face square to camera. Consistent identity, costume, scar, accessories, proportions, and lighting across all panels.
+Three panels side by side in a single horizontal row. Left panel: full-body back view. Center panel: full-body front view. Right panel: frontal close-up portrait from the chest up, face square to camera, relaxed neutral expression. Consistent identity, costume, scar, accessories, proportions, and lighting across all panels.
 
 Constraints:
 Quality: 16:9 horizontal sheet, film-photo finish, consistent identity across all panels
-Negative: no extra panels, no 3/4 view, no profile view, no props, no missing limbs, no prosthesis, no glossy skin, no watermarks, no text overlays
+Negative: no extra panels, no 3/4 view, no profile view, no props, no missing limbs, no prosthesis, no glossy skin, no exaggerated expressions, no smiling, no frowning, no strong emotions, no watermarks, no text overlays
 ```
 
 ## Workflow pairing
