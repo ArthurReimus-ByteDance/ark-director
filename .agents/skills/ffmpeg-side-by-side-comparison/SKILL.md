@@ -9,7 +9,8 @@ description: >
   side-by-side demo, or asks to put clip X and clip Y next to each other —
   even if they never say "side-by-side". For chronological assembly with
   crossfades, use `ffmpeg-scene-transitions`; this skill places clips
-  simultaneously, not sequentially. Complements the `ffmpeg` skill.
+  simultaneously (or staggered one-at-a-time with a frozen second half).
+  Complements the `ffmpeg` skill.
 ---
 
 # FFmpeg Side-by-Side Comparison
@@ -199,6 +200,47 @@ Notes:
   `-an` — do not guess a stream that is not there.
 - `amix` **sums levels**, so two identical soundtracks come out roughly +6 dB
   louder. That is why the default is a single AFTER track rather than a mix.
+
+## Staggered side-by-side (one plays at a time)
+
+For before/after where the viewer should watch the halves **sequentially**
+instead of simultaneously — the BEFORE plays first while the AFTER half stays
+frozen, then the AFTER plays while the BEFORE half holds its last frame —
+clone the frozen half with `tpad`:
+
+```bash
+D=6  # seconds per half
+ffmpeg -y \
+  -t "$D" -i before.mp4 \
+  -t "$D" -i after.mp4 \
+  -filter_complex \
+    "[0:v]scale=1280:720:flags=lanczos,setsar=1,fps=24,tpad=stop_mode=clone:stop_duration=$D[L]; \
+     [1:v]scale=1280:720:flags=lanczos,setsar=1,fps=24,tpad=start_mode=clone:start_duration=$D[R]; \
+     [L][R]hstack[v]; \
+     [0:a]aresample=48000[a0]; \
+     [1:a]aresample=48000[a1]; \
+     [a0][a1]concat=n=2:v=0:a=1[a]" \
+  -map "[v]" -map "[a]" -c:v libx264 -crf 20 -c:a aac -b:a 128k -movflags +faststart \
+  staggered.mp4
+```
+
+How it works:
+
+- `tpad=stop_mode=clone:stop_duration=$D` on the **left** (BEFORE) clones its
+  last frame for `D` more seconds after it ends, so it holds frozen while the
+  right half plays.
+- `tpad=start_mode=clone:start_duration=$D` on the **right** (AFTER) clones its
+  first frame for `D` seconds up front, so it stays frozen while the left half
+  plays.
+- Audio follows the same order: `concat` the BEFORE track then the AFTER track
+  (both trimmed to `D` by `-t`), so you hear the original first, then the edit.
+- This is the right format for **language swaps / re-lip-sync** demos, where
+  the halves are visually identical and the story is "watch the original, then
+  the edited version" — with the other half visibly paused.
+
+Trim both inputs to the same `D` with `-t` so `tpad` produces equal-length
+halves; otherwise `hstack` truncates to the shorter side and audio timing
+drifts.
 
 ## Quality / size knobs
 
