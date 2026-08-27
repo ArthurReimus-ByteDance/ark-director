@@ -24,6 +24,7 @@ original sheet remains available for review, rollback, or alternate use.
 This skill is designed to partner with:
 - `seedream-character-sheet` for generating the original three-panel sheet
 - `seedream-edit` and the `seedream_edit_image` MCP tool for the actual cleanup
+- `modelark-mcp` (`seed_understand`) for verifying the cleanup result
 
 ## When to Invoke
 
@@ -108,7 +109,8 @@ When using `seedream_edit_image`:
 
 ## Acceptance Check
 
-The cleanup is successful when:
+Confirm the points below with `seed_understand` (see Verification). Do not
+trust a visual glance at the sheet. The cleanup is successful when:
 - the close-up panel is the only readable face on the sheet
 - the front full-body panel shows no head at all — the figure is headless and
   the studio background fills the space where the head was
@@ -118,6 +120,40 @@ The cleanup is successful when:
 - no blurred face, featureless head, or new facial detail appears in the body
   panels
 
+## Verification (mandatory)
+
+Do not accept the cleanup until you have verified it with `seed_understand`
+(Seed 2.1 multimodal understanding). This is the only reliable way to confirm
+that the correct panel was removed and the close-up face survived the edit — a
+side-by-side glance is not enough.
+
+After producing the cleaned sheet, call `seed_understand` with the cleaned
+image and a prompt that forces a per-panel answer. Ask for a structured,
+panel-by-panel inventory of faces and require it to:
+
+- confirm the full-body panel is headless: no head, no face, no hair, and no
+  headwear in that panel;
+- confirm the close-up panel still shows exactly one intact, readable face;
+- confirm no new face appeared in any other panel.
+
+If `seed_understand` reports that the close-up panel lost its face, or that a
+face remains in a full-body panel, the edit targeted the wrong region. Re-run
+the edit with a corrected bounding box and verify again. Do not hand the sheet
+to Seedance until the verification passes.
+
+### Example verification prompt
+
+```text
+Look at this character sheet carefully, panel by panel. In every full-body
+panel, is the character headless — no head, face, hair, or headwear visible?
+In the close-up panel, does the face remain intact and unchanged? Answer each
+panel explicitly: list the panels left to right, state "headless" or "face
+present" for each, and name by position which panel (if any) still has a face.
+```
+
+Re-run this verification after every re-edit so a second-face sheet never
+reaches Seedance.
+
 ## Workflow Pairing
 
 Recommended sequence:
@@ -125,9 +161,11 @@ Recommended sequence:
 2. Inspect the full-body panels for duplicate readable faces.
 3. If a second face is visible, invoke this skill.
 4. Use `seedream-edit` with `seedream_edit_image` to remove the extra face.
-5. Save the cleaned sheet as a **new version/file**, not as an overwrite of the
+5. Verify the result with `seed_understand` — full-body panel headless,
+   close-up face intact. Re-edit with a corrected bbox if verification fails.
+6. Save the cleaned sheet as a **new version/file**, not as an overwrite of the
    source image.
-6. Use the cleaned sheet as the version that Seedance should trust.
+7. Use the cleaned sheet as the version that Seedance should trust.
 
 ## Example From The User
 
