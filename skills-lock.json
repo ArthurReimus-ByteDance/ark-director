@@ -265,10 +265,10 @@
       "skillPath": ".agents/skills/seedance-vfx-prompt/SKILL.md",
       "computedHash": "e9de0986cba8bb6f3aa39ad9047fa8d8c631344bdcd715e2c3323b8b59ca4a35"
     },
-    "seedance-vfx-shot": {
+    "seedance-vfx-pipeline": {
       "source": "local",
       "sourceType": "local",
-      "skillPath": ".agents/skills/seedance-vfx-shot/SKILL.md",
+      "skillPath": ".agents/skills/seedance-vfx-pipeline/SKILL.md",
       "computedHash": "ab7415150058b278cac417f3d69df6ddde2c6e4afdaef4c958956395982c81ed"
     },
     "seedream-character-sheet": {

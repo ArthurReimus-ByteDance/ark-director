@@ -60,7 +60,7 @@ between modalities.
 | Filipino or Taglish video dialogue | `seedance-prompt-25-filipino` with `seedance-prompt-25` |
 | Seedance 2.0 video prompt | `seedance-prompt-20` |
 | Footage-driven VFX prompt | `seedance-vfx-prompt` |
-| End-to-end Seedance 2.0 VFX shot | `seedance-vfx-shot` |
+| End-to-end Seedance 2.0 VFX shot | `seedance-vfx-pipeline` |
 | Model submission, polling, or artifact access | `modelark-mcp` |
 | Assembly, media transforms, captions, render | appropriate Remotion, FFmpeg, or Mediabunny skill |
 

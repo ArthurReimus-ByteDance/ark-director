@@ -34,7 +34,7 @@ Do **not** use this skill for:
 > stay on 2.0.
 
 This skill is designed to partner with:
-- `seedance-vfx-shot` for the end-to-end submission, poll, and save pipeline
+- `seedance-vfx-pipeline` for the end-to-end submission, poll, and save pipeline
 - `seedance-prompt-20` for Seedance 2.0 text-to-video and image-to-video generation
 - `seedance-prompt-25` for Seedance 2.5 text-to-video, R2V, and structured editing
 - `seedream-*` skills for generating reference images used in VFX prompts

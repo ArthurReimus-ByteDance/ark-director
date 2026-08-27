@@ -1,9 +1,9 @@
 ---
-name: seedance-vfx-shot
+name: seedance-vfx-pipeline
 description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
 ---
 
-# Seedance VFX Shot Pipeline
+# Seedance VFX Pipeline
 
 End-to-end pipeline for producing a Seedance VFX shot from a source clip
 (default Seedance 2.5; use 2.0 only for 4K output or Fast/Mini variants).

@@ -172,7 +172,7 @@ The workspace ships with **54 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **seedance-vfx-prompt** | Writes structured or compact Seedance 2.0 video-to-video VFX prompts using the `@Video N` / `@Image N` reference grammar. Covers the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting, layered space, timing triggers, camera moves synced to dialogue, diegetic audio, 4K face protection, photoreal creature integration, and source-clip inspection. Also covers Seedance 2.5 structured editing. |
-| **seedance-vfx-shot** | End-to-end pipeline for Seedance VFX shot production. Composes `seedance-vfx-prompt` with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Supports both 2.0 and 2.5; defaults to 2.5 for full-duration edits. |
+| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance VFX shot production. Composes `seedance-vfx-prompt` with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Supports both 2.0 and 2.5; defaults to 2.5 for full-duration edits. |
 
 ### Seedream — Image Prompting
 

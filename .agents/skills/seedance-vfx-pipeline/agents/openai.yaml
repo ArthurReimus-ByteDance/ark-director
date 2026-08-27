@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Vfx Pipeline"
+  short_description: "Help with Seedance Vfx Pipeline tasks"
+  default_prompt: "Use $seedance-vfx-pipeline to handle this seedance vfx pipeline task."
