@@ -68,7 +68,7 @@ gracefully degrades to whatever is configured.
 - `seed_media_get_artifact`
 - `seed-health://status` resource
 
-### Requires `BYTEPLUS_SEED_SPEECH_API_KEY`
+### Requires `BYTEPLUS_SEED_AUDIO_API_KEY`
 
 - `seed_audio_generate`
 - `seed_audio_generate_variations`
@@ -117,7 +117,7 @@ Copy `.env.example` to `.env` and configure at minimum:
 
 ```bash
 BYTEPLUS_MODELARK_API_KEY=your-modelark-key   # required for Seedream + Seedance
-BYTEPLUS_SEED_SPEECH_API_KEY=your-speech-key  # required for Seed Audio + Speech-to-Text
+BYTEPLUS_SEED_AUDIO_API_KEY=your-speech-key  # required for Seed Audio + Speech-to-Text
 BYTEPLUS_VOD_MEDIAKIT_API_KEY=your-mediakit-key # required for VOD enhancement, transcoding, and audio separation
 ```
 
@@ -301,7 +301,7 @@ treating the input as invalid.
 
 ### Seed Audio Tools
 
-Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:audio:generate`.
+Requires `BYTEPLUS_SEED_AUDIO_API_KEY`. Auth scope: `seed:audio:generate`.
 
 #### `seed_audio_generate`
 
@@ -596,7 +596,7 @@ polling.
 | `resolution` | `"480p"` \| `"720p"` \| `"1080p"` \| `"4k"` | No | |
 | `ratio` | `str` | No | Aspect ratio. For `extend_video`, stripped (auto-locks to source) to prevent `InvalidParameter.TaskTypeConstraint`. For `edit_video`, auto-derived from input video. For first/last-frame, locks to first image. |
 | `duration` | `int` | No | -1 (auto) to 15 seconds. Ignored for edit tasks (auto-derived from input video) |
-| `omni_reference_task_type` | `str` | No | Task type hint (e.g. `edit_video`, `extend_video`). Default: `auto` |
+| `omni_reference_task_type` | `str` | No | Task type hint (e.g. `edit_video`, `extend_video`). Default: `auto`. Note: 2.0 `edit_video` output caps at ~5s in practice. |
 | `generate_audio` | `bool` | No | Generate audio track |
 | `watermark` | `bool` | No | Provider watermark |
 | `return_last_frame` | `bool` | No | Include last frame image in output |
@@ -763,9 +763,9 @@ Create an asynchronous Seedance 2.5 video generation task.
 | `audios` | `list[SeedanceAudioInput]` | No | Up to 10 audios with role: `reference_audio`. Audio-only input is supported (unique to 2.5). |
 | `model` | `str` | No | Default: `dreamina-seedance-2-5-260628`. No Fast/Mini variants. |
 | `resolution` | `"480p"` \| `"720p"` \| `"1080p"` | No | 2.5 supports 480p, 720p, and 1080p. 4k is not supported. |
-| `ratio` | `str` | No | Aspect ratio (e.g. `16:9`, `9:16`). For `extend_video`, stripped (auto-locks to source) to prevent `InvalidParameter.TaskTypeConstraint`. For `edit_video`, auto-derived from input video. For first/last-frame, locks to first image. |
+| `ratio` | `str` | No | Aspect ratio (e.g. `16:9`, `9:16`). For `extend_video`, stripped (auto-locks to source) to prevent `InvalidParameter.TaskTypeConstraint`. For `edit`, auto-derived from input video. For first/last-frame, locks to first image. |
 | `duration` | `int` | No | -1 (auto) to 30 seconds. Ignored for edit tasks (auto-derived from input video). |
-| `omni_reference_task_type` | `str` | No | Task type hint (e.g. `edit_video`, `extend_video`). Default: `auto`. |
+| `omni_reference_task_type` | `str` | No | Task type hint. 2.5 values: `auto | reference | edit | extend` — `edit_video` is 2.0-only and is rejected. Default: `auto`. |
 | `generate_audio` | `bool` | No | Whether to generate an audio track. |
 | `watermark` | `bool` | No | Apply AIGC watermark. |
 | `return_last_frame` | `bool` | No | Return the last frame as a separate image. |
@@ -913,7 +913,7 @@ where speed matters more than reasoning depth.
 
 ### Speech-to-Text
 
-Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:asr:transcribe`.
+Requires `BYTEPLUS_SEED_AUDIO_API_KEY`. Auth scope: `seed:asr:transcribe`.
 
 #### `speech_to_text`
 
@@ -1353,7 +1353,7 @@ Set to `0` (default) for record-only mode with no enforcement.
 ### Provider Credentials
 
 - `BYTEPLUS_MODELARK_API_KEY` — enables Seedream and Seedance
-- `BYTEPLUS_SEED_SPEECH_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR)
+- `BYTEPLUS_SEED_AUDIO_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR) (canonical; older tooling may also accept `BYTEPLUS_SEED_SPEECH_API_KEY` as an alias)
 - `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement, video transcoding, and audio separation
 - `BYTEPLUS_MODELARK_BASE_URL` — override ModelArk data-plane host
 - `BYTEPLUS_SEED_AUDIO_BASE_URL` — override Seed Audio host

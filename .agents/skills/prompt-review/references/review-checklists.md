@@ -10,6 +10,7 @@ sub-agent along with the prompt text.
 - [Seedance 2.5](#seedance-25)
 - [Seedance 2.0](#seedance-20)
 - [Seedance VFX (video-to-video)](#seedance-vfx-video-to-video)
+- [Seedance 2.5 edit (video-to-video)](#seedance-25-edit-video-to-video)
 - [Seedance Filipino dialogue](#seedance-filipino-dialogue)
 - [Seed Audio](#seed-audio)
 - [Seedream image generation](#seedream-image-generation)
@@ -187,7 +188,7 @@ Source skill: `seedance-prompt-25`
 31. **Extension task.** Aspect ratio is not set (locked to input). Duration can be
     set. Boundary image, motion trend, and audio continuity are checked.
 
-### Preflight review (14-point)
+### Preflight review (15-point)
 
 32. **Subject & action** clearly stated.
 33. **Reference roles**: every reference states what to use and what not to use.
@@ -211,6 +212,66 @@ Source skill: `seedance-prompt-25`
     and audio defined.
 45. **Seamless transitions**: two videos' roles, trigger action, transition process,
     and arrival state defined.
+
+46. **Speech fits duration.** For dialogue-driven shots, estimate speech length
+    ≈ spoken words / 2.2 (conversational) to seconds. If the `{}` script reads
+    far shorter than the API `duration`, the prompt must explicitly direct the
+    gap (pauses, hesitations, action beats); otherwise right-size the duration.
+
+---
+
+## Seedance 2.5 edit (video-to-video)
+
+Source skills: `seedance-prompt-25` (editing) + `seedance-vfx-prompt` (2.5 section).
+
+Apply "Universal — all prompts" first, then this section. Mark N/A any item
+whose feature is absent (no references → skip material mapping).
+
+### Editing task
+
+1. `[Edit Goal] Edit @Video 1 …` present and one-sentence; submit with
+   `omni_reference_task_type="edit"` (2.5 values: `auto | reference | edit |
+   extend` — `edit_video` is 2.0-only and is rejected).
+2. `[Source Video Role]` declares `@Video 1` as the sole editing master and
+   lists what it defines (subjects, scene, actions, camera, event order).
+3. `[Target Material Role]` present iff references are used: each `@Image N`
+   mapped to one target; "Do not use its background/people" present;
+   single-person sheets directed to use the close-up panel only.
+4. `[Edit Scope]` states what changes and, for what must not change, a positive
+   "exactly one <subject> — never a second or duplicated copy" guard.
+5. `[Content to Preserve]` lists identity/motion/timing/camera/lighting to keep.
+
+### Preservation locks (only where MUST PRESERVE says so)
+
+6. Quantity: "Exactly one <subject> in frame — never a second or duplicated copy."
+7. Non-reaction (when the subject must not react): "…facial expression, gaze,
+   and gestures remain exactly as in @Video 1; only <the changed thing>
+   re-animates."
+8. Grounding: "…naturally grounded — no cut-out edge, no halo; rim light
+   matches the key direction."
+9. Face protection (any preserved face): "real human skin with pores and
+   catchlights — never waxy, smoothed, or warped."
+
+### Audio / lip-sync
+
+10. New dialogue in `{}` with language + regional variety + delivery style +
+    speaker; lips directed to the NEW words. CJK punctuation: `……` not `——`.
+11. Same-content contract (language swap): target `{}` line is the source line
+    translated, no paraphrase/omission.
+12. Diegetic audio only; SFX in `<>`, music in `()`; no non-diegetic score.
+
+### Camera (only when the edit intentionally re-stages the camera)
+
+13. ≤ 2 camera moves in one take; each move numeric-anchored ("At about 0:02…")
+    plus a semantic cue; uncommon terms expanded (orbit: direction + parallax).
+    See also general Seedance 2.5 item 24 ("One camera movement per clip") —
+    two moves apply only when re-staging is intentional.
+14. Camera-move items are N/A when the edit must preserve the source camera.
+
+### Change contract
+
+15. Flag only breakage of MUST PRESERVE or a quality defect in the change
+    description — never an item the user explicitly asked to change.
 
 ---
 

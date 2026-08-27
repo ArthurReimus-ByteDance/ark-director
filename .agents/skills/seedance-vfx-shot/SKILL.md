@@ -52,6 +52,25 @@ flowchart TD
     REPORT[8. Report cost, latency, paths, last-frame]
 ```
 
+## Before/after demo recipe (turnkey)
+
+The workspace's recurring pattern for a text-only before/after VFX demo:
+
+1. BEFORE — Seedance 2.5 T2V, `720p`, `16:9`, natural duration (4–30s), no
+   references. Save + manifest.
+2. `media_upload` the BEFORE clip; record its `object_key` in the project
+   `ref_cache.json`. Presign on demand; never re-upload.
+3. AFTER — `seedance_2_5_create_task`, `omni_reference_task_type=edit`, `1080p`,
+   `@Video 1` = the BEFORE URL; `duration` and `ratio` auto-lock. Write the
+   prompt with `seedance-vfx-prompt` (2.5 editing section).
+4. Transcode the AFTER (usually HEVC) to H.264 for review/Lark — see the
+   "Delivery transcode" recipe in Step 5. Keep the HEVC master.
+5. Comparison — if the halves differ mainly in audio (language swap / dialogue
+   rewrite), use the staggered one-at-a-time split from
+   `ffmpeg-side-by-side-comparison`; otherwise a simultaneous `hstack`.
+6. Manifests — Steps 6–7 of this skill; then set `review`, and only explicit
+   user approval sets `approved`.
+
 ## Inputs
 
 | Input | Required | Description |

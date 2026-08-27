@@ -129,6 +129,11 @@ issues and suggest fixes.
 ## Prompt type
 <e.g., Seedance 2.5 video prompt>
 
+## Change contract (may change / must preserve)
+
+- MAY CHANGE: <list from the user's request, e.g. "spoken language + lip sync">
+- MUST PRESERVE: <list, e.g. "character identity, environment, timing, camera">
+
 ## Prompts to review
 
 ### Prompt 1: <filename or identifier>
@@ -194,9 +199,19 @@ OR
 - Do not rewrite the prompt. Only identify issues and suggest fixes.
 - Be precise and honest. Do not invent problems that don't exist.
 - If the prompt passes all items, say so clearly.
+- An item listed under MAY CHANGE is a deliberate instruction — do NOT flag it
+  as "modifying the subject" or "not preserving the source". Only flag:
+  (a) a breakage of something under MUST PRESERVE, or (b) a real quality defect
+  in how the changed thing is described (missing guards, missing numeric
+  anchors, missing language reinforcement, ambiguity).
 ```
 
 ### Step 5 — Receive and triage findings
+
+If a sub-agent returns an empty, truncated, or content-free result (or findings
+without explicit PASS/FAIL per prompt), retry the same batch once (max 1 retry).
+If the retry is still unusable, run the review inline against the same
+checklists — never treat an empty sub-agent result as "passed".
 
 When the sub-agent returns findings:
 

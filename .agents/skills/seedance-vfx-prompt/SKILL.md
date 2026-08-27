@@ -960,6 +960,24 @@ Contract and notes:
   framing, tighten the `[Edit Scope]` / `[Content to Preserve]` locks rather
   than piling on negative constraints.
 
+### Combining dialogue rewrite + emotion + camera (director's retake)
+
+A superset of the mouth-only swap: when the user also wants the performance and
+the camera re-staged, the edit intentionally changes three things and preserves
+only identity, environment, and runtime:
+
+- `[Edit Goal]` rewrites the dialogue and changes the delivery/emotion and the
+  camera movement; `[Content to Preserve]` locks the face/clothes/room/lighting
+  (face protection + grounding) and `[Edit Scope]` carries the "exactly one
+  <subject>" guard.
+- New script in `{}` with delivery style; lips sync the NEW words; emotion is
+  externalised as posture/gesture/jaw/eyes, not bare labels.
+- Camera: ≤ 2 moves in one take, each dual-anchored (semantic + "At about
+  0:NN"), orbit expanded with direction and foreground/background parallax.
+
+Keep the camera block to two moves — three or more reads as unstable in one
+continuous take.
+
 ### Routing vs `audio-dubbing`
 
 Two different techniques both change language — pick by whether the lips are
