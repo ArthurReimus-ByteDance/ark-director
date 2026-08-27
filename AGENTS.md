@@ -114,7 +114,7 @@ boundaries.
 
 ## Directing principles
 
-Three rules govern every prompt this workspace writes. They are non-negotiable
+Four rules govern every prompt this workspace writes. They are non-negotiable
 and apply to every modality — Seedream image prompts, Seed Audio prompts, and
 Seedance video prompts.
 
@@ -138,8 +138,47 @@ Seedance video prompts.
     as the wrong object: a pen-shaped device comes back as a laser, eyewear as
     the wrong frame.
 
-2. **Say what you want, not what you avoid.** The words you write are the words
-   you summon — including the ones inside a "no". A prohibition still names and
+    **Element identification checklist.** Before writing any prompt, walk
+    every beat of every scene/shot and identify every visible element using
+    this checklist. An element is anything the model must render consistently
+    but cannot infer from text alone — it needs a generated reference image.
+
+    | Category | What to look for | Element type |
+    |---|---|---|
+    | On-camera characters | Every person visible on screen — including background characters, people visible *through* a phone/laptop screen during a video call, and any character with dialogue (even off-screen VO needs a voice lock) | `char_` sheet |
+    | Locations / settings | Every distinct physical space — including transitional spaces (a character walking *between* two locations), outdoor exteriors, and screen-within-screen locations (the room visible behind someone on a video call) | `loc_` sheet |
+    | Props (held/operated) | Every object a character holds, carries, aims, or operates — devices, packaging, boxes, tools, food, drink, documents | `prop_` sheet |
+    | Screen / UI surfaces | Every phone screen, laptop screen, tablet, monitor, signage, document, or text-heavy surface that shows specific content (an app, a website, a speed test, a map, a chat thread) | `screen_` ref |
+    | Brand / title cards | End cards, lower thirds, logo plates, brand overlays — anything with specific typography or logo placement that Seedance cannot render accurately | `card_` image |
+    | Audio assets | Music beds, ambient beds, SFX libraries, and any audio that recurs across scenes or needs to outlive a single video generation | `library/` assets |
+    | Costume variants | If a character wears a different outfit in different scenes, each outfit variant is a separate concern — either a separate prop sheet for scene-variant wearables, or a note in the character manifest |
+
+    If an element appears in only one shot, generate it as a scene-level
+    keyframe rather than a reusable Element. But if it appears in two or more
+    shots, or if its visual accuracy is critical to the story (e.g. a product
+    shot, a screen the camera lingers on), it must be a locked Element.
+
+    **Prop threshold test.** Before generating a `prop_` sheet, apply this
+    test — a prop needs a locked Element only if it meets **at least one** of
+    these criteria:
+
+    | Criterion | Example | Needs Element? |
+    |---|---|---|
+    | Branded product with logo or specific design | GFiber modem, smartphone with app UI | Yes — branding must be consistent |
+    | Object the camera lingers on or that drives the plot | A key, a letter, a device screen | Yes — accuracy is story-critical |
+    | Object that recurs across 2+ shots or scenes | Same phone in multiple ads | Yes — consistency required |
+    | Generic, unbranded, briefly visible background object | A coffee cup, a birthday cake, a tablet in a montage | No — describe in prompt text |
+    | Object held for only 1-2 seconds in a single shot | A pen, a glass of water, a newspaper | No — text is sufficient |
+
+    Generating a `prop_` sheet for a generic, briefly-visible object wastes
+    credits and adds reference noise. When in doubt, describe the object in
+    the Seedance prompt text and skip the Element. The model renders generic
+    objects (food, furniture, everyday items) well enough from text alone —
+    it only needs image references for branded, recurring, or story-critical
+    objects.
+
+2. **Say what you want, not what you avoid.** The words you write are the words you
+   summon — including the ones inside a "no". A prohibition still names and
    summons the thing it forbids. Instead of listing what to avoid, write the
    positive, specific instruction that produces the intended result.
 
@@ -148,6 +187,17 @@ Seedance video prompts.
    part the model can't invent for you yet: action beats, character intent,
    staging, and blocking are your contribution. If a prompt reads like a static
    description with no event or intent, it is not yet a shot.
+
+4. **Screens and text first.** When a shot shows a phone app screen, computer
+   or TV monitor, tablet or wearable UI, signage, document, chat thread, or any
+   text-heavy or UI-heavy surface, generate that screen content with Seedream
+   **before** submitting the Seedance video task. Lock the exact layout, copy,
+   and typography as an image — a `prop_` sheet for a reusable device screen, or
+   a scene-level keyframe for a one-off screen — approve it, then pass it as a
+   `reference_image` to Seedance and bind it with `@Image N` in the prompt.
+   Never leave screen text to the video model: video models hallucinate and warp
+   text and UI, while Seedream locks them pixel-for-pixel. Record the screen
+   asset path and binding in `shot.md` like any other reference.
 
 ### Prompt review gate
 

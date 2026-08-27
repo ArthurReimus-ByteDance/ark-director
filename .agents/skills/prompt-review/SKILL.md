@@ -60,6 +60,8 @@ Match each prompt to its reviewing skill by file naming convention and content:
 | Seedream character sheet | `prompt_char_*` | `seedream-character-sheet` |
 | Seedream location asset | `prompt_loc_*` | `seedream-location-asset` |
 | Seedream prop sheet | `prompt_prop_*` | `seedream-prompt` (general image rules apply) |
+| Seedream screen UI reference | `prompt_screen_*` | `seedream-prompt` (general image rules apply) |
+| Seedream brand/title card | `prompt_card_*` | `seedream-prompt` (general image rules apply) |
 | Seedream storyboard | `prompt_sNN_kf*` (multi-panel) | `seedream-storyboard` |
 
 When a prompt could match multiple types (e.g., a Seedance 2.5 prompt with Filipino
@@ -292,6 +294,70 @@ Also check all prompts against the workspace-level conventions in AGENTS.md:
 - Prompt snapshots must be saved beside the media asset, not duplicated elsewhere.
 - Generation parameters (duration, resolution, ratio) belong in the API, not the
   prompt text (except where a skill explicitly includes them in the prompt structure).
+
+## Element completeness review
+
+In addition to checking prompt quality, the sub-agent **must** review the
+complete set of prompts for a scene or project against the **Element
+identification checklist** in AGENTS.md. This is a separate pass from the
+per-prompt quality review — it checks whether the plan or prompt set is
+*missing* elements that should exist, not whether existing prompts are
+well-written.
+
+### How to run the element completeness pass
+
+When the sub-agent receives a set of prompts for review, it also receives:
+
+1. The beat structure / scene description for each shot.
+2. The full Elements table from the project's `project.md` or plan (if
+   available).
+
+The sub-agent walks every beat of every scene/shot and checks whether every
+visible element has a corresponding Element defined and referenced:
+
+| Check | What to look for |
+|---|---|
+| On-camera characters | Does every person who appears on screen — including people visible *through* a phone/laptop screen during a video call, and any character with dialogue — have a `char_` sheet or reference? |
+| Locations / settings | Does every distinct physical space — including transitional spaces and screen-within-screen locations — have a `loc_` sheet? |
+| Props (held/operated) | Does every object a character holds, carries, aims, or operates have a `prop_` sheet? Is product packaging a separate prop from the product itself? |
+| Screen / UI surfaces | Does every phone screen, laptop screen, tablet, monitor, signage, or text-heavy surface that shows specific content have a `screen_` reference? |
+| Brand / title cards | Does every ad/scene that needs a brand end card, lower third, or logo plate have a `card_` image defined? |
+| Audio assets | Does every scene that needs a music bed, ambient bed, or recurring SFX have a `library/` asset defined? |
+| Costume variants | If a character wears a different outfit in different scenes, is the variant noted or generated as a separate prop sheet? |
+
+### Reporting element findings
+
+The sub-agent reports element completeness findings in a separate section:
+
+```text
+### Element Completeness Review
+
+#### Missing elements
+1. [CRITICAL] <Element description> — appears in <ad/scene> beat <timestamp>
+   but no Element is defined. The model will hallucinate this element.
+   Suggested action: Generate a <char_/loc_/prop_/screen_/card_> reference.
+
+2. [MAJOR] <Element description> — referenced in <ad/scene> but not in the
+   Elements table. May need a dedicated sheet.
+
+#### Element coverage
+- Characters: <count> defined, <count> referenced, <list any gaps>
+- Locations: <count> defined, <count> referenced, <list any gaps>
+- Props: <count> defined, <count> referenced, <list any gaps>
+- Screen UIs: <count> defined, <count> referenced, <list any gaps>
+- Title cards: <count> defined, <count> referenced, <list any gaps>
+- Audio assets: <count> defined, <count> referenced, <list any gaps>
+```
+
+### Severity for element findings
+
+- **CRITICAL:** A visible element with no reference will cause identity drift,
+  product inaccuracy, or garbled text/UI. Must generate before video
+  submission.
+- **MAJOR:** A missing element will degrade quality (e.g. undefined background
+  character, missing music bed) but won't break the generation.
+- **MINOR:** An element could enhance the production but isn't strictly
+  required (e.g. ambient SFX library for a quiet scene).
 
 ## Reference file
 

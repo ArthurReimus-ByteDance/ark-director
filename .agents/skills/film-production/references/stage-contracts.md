@@ -32,10 +32,18 @@ Entry: breakdown identifies recurring characters, locations, or props.
 
 Required output: one flat `elements/<element-id>/` folder per reusable element,
 manifest, reference files, prompt snapshots, hashes, variants, and lifecycle
-states.
+states. **Before locking the element list**, walk every beat of every
+scene/shot against the Element identification checklist in AGENTS.md — verify
+that every visible character (including screen-within-screen), every location
+(including transitional spaces), every prop (including product packaging
+distinct from the product), every screen/UI surface, every brand/title card,
+and every recurring audio asset has been identified and assigned an Element
+type. Missing elements discovered at this stage are cheaper to generate now
+than after video tasks are submitted.
 
 Exit: every visible recurring element has an approved selected variant, or the
-dependent scene is explicitly marked unresolved.
+dependent scene is explicitly marked unresolved. The element list has been
+cross-checked against the Element identification checklist and no gaps remain.
 
 ## 4. Storyboard and visual plan
 

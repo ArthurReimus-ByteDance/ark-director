@@ -131,6 +131,22 @@ video. Apply the same rule to character and location identity references.
   state in the video prompt "Use only the <subject> from @Image N — do not use
   its background."
 
+**Prop threshold test — before generating a prop sheet, verify it is needed.**
+Not every held or visible object requires a `prop_` sheet. A prop needs a
+locked Element only if it meets **at least one** of these criteria:
+
+| Criterion | Example | Needs Element? |
+|---|---|---|
+| Branded product with logo or specific design | GFiber modem, smartphone with app UI | Yes |
+| Object the camera lingers on or that drives the plot | A key, a device screen the camera shows | Yes |
+| Object that recurs across 2+ shots or scenes | Same phone in multiple ads | Yes |
+| Generic, unbranded, briefly visible background object | A coffee cup, a birthday cake, a tablet in a montage | No — describe in prompt text |
+| Object held for only 1-2 seconds in a single shot | A pen, a glass of water | No — text is sufficient |
+
+Generating a `prop_` sheet for a generic, briefly-visible object wastes credits
+and adds reference noise to the Seedance prompt. When in doubt, describe the
+object in the Seedance prompt text and skip the Element.
+
 ### 5. Style
 
 Define the artistic direction, medium, rendering quality, and aesthetic keywords.
