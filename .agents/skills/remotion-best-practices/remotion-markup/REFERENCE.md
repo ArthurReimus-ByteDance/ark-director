@@ -146,7 +146,7 @@ See [text-highlights.md](text-highlights.md) for text highlights (highlight mark
 
 ## Voiceover
 
-See [voiceover.md](voiceover.md) for adding AI-generated voiceover to Remotion compositions using ElevenLabs TTS.
+See [voiceover.md](voiceover.md) for adding AI-generated voiceover to Remotion compositions (via Seed Audio in this workspace).
 
 ## Trimming
 

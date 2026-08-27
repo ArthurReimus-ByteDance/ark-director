@@ -121,7 +121,9 @@ Examples:
 For any prop or product sheet that will be used as a Seedance `@Image` identity
 reference, isolate the subject on a **pure white seamless background** by
 default. This prevents the sheet's backdrop from leaking into the generated
-video. Apply the same rule to character and location identity references.
+video. Character sheets use a **neutral gray** studio background (see
+`seedream-character-sheet`); location assets have no background mandate (see
+`seedream-location-asset`).
 
 - Setting: "Isolated product shot on a pure white seamless background." with at
   most a soft, faint contact shadow directly beneath the object.
@@ -638,7 +640,7 @@ Negative: no plastic skin, no over-smoothing, no waxy textures, no watermarks, n
 | Model | Model ID |
 |---|---|
 | Seedream 5.0 Pro | `dola-seedream-5-0-pro-260628` |
-| Seedream 5.0 Lite | `seedream-5-0-260128` (alias: `seedream-5-0-lite-260128`) |
+| Seedream 5.0 Lite | `seedream-5-0-260128` (alias: `seedream-5-0-lite-260128`; override via `SEEDREAM_MODEL_BINDINGS`) |
 
 ### Pricing (Seedream 5.0 Pro)
 | Tier | Price |

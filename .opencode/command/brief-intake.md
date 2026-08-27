@@ -1,5 +1,6 @@
 ---
 description: Run brief intake to propose genre-aware directorial defaults for a new project.
+agent: build
 ---
 
 Load and follow the `brief-intake` skill (`.agents/skills/brief-intake/SKILL.md`).

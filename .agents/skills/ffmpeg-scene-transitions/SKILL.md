@@ -3,11 +3,12 @@ name: ffmpeg-scene-transitions
 description: >
   Assemble multiple video clips into one film with crossfade scene transitions and
   correct audio/video sync using FFmpeg. Use whenever the user wants to combine
-  scenes into a single video, stitch clips with dissolves, crossfade between shots,
-  add fade in/out, join AI-generated video scenes into one file, or fix audio/video
+  multiple scenes into a single video, stitch clips with dissolves, crossfade
+  between shots, join AI-generated video scenes into one file, or fix audio/video
   drift in an assembled film. Also trigger on phrases like "assemble the scenes",
-  "combine the clips into one video", "add transitions between scenes", "the audio
-  is out of sync after combining", or "crossfade the takes together".
+  "combine multiple clips into one video", "add transitions between scenes", "the
+  audio is out of sync after combining", or "crossfade the takes together".
+  Single-clip fade in/out belongs to the base `ffmpeg` skill, not this one.
 ---
 
 # FFmpeg Scene Transitions

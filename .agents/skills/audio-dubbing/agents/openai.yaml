@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audio Dubbing"
+  short_description: "Help with Audio Dubbing tasks"
+  default_prompt: "Use $audio-dubbing to handle this audio dubbing task."

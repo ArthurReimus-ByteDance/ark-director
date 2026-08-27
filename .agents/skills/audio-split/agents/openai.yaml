@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audio Split"
+  short_description: "Help with Audio Split tasks"
+  default_prompt: "Use $audio-split to handle this audio split task."

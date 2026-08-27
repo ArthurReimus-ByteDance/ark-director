@@ -413,7 +413,7 @@ Maya (young adult female, soft voice) answers softly, forcing herself to stay co
 
 ### Model identity
 - Model ID: `seed-audio-1.0`
-- Endpoint: `POST https://voice.ap-southeast-1.bytepluses.com/api/v3/tts/create`
+- Endpoint: `POST <base>/api/v3/tts/create`, where `<base>` is resolved from env (`BYTEPLUS_SEED_AUDIO_BASE_URL`); the example below is for orientation only and must not be hard-coded.
 - Auth: `X-Api-Key` header (required). Optional: `X-Api-Request-Id` (client-generated UUID for tracing).
 - Output: non-streaming HTTP only.
 
@@ -451,7 +451,7 @@ Maya (young adult female, soft voice) answers softly, forcing herself to stay co
 | Parameter | Range / Values |
 |---|---|
 | `format` | wav / mp3 / pcm / ogg_opus |
-| `sample_rate` | one of [8000, 16000, 24000, 32000, 44100, 48000]; default 40000 (wav/pcm), 44100 (mp3) |
+| `sample_rate` | one of [8000, 16000, 24000, 32000, 44100, 48000]; default follows the provider setting |
 | `speech_rate` | -50 to 100 (-50 = 0.5x, 0 = default, 100 = 2.0x) |
 | `loudness_rate` | -50 to 100 (-50 = 0.5x, 0 = default, 100 = 2.0x) |
 | `pitch_rate` | -12 to 12 semitones (0 = default) |
@@ -461,6 +461,10 @@ Maya (young adult female, soft voice) answers softly, forcing herself to stay co
 |---|---|---|
 | `aigc_watermark` | bool | Explicit rhythm marker appended to end of audio. Default `false`. |
 | `aigc_metadata` | object | Implicit header metadata. Sub-fields: `enable` (bool), `content_producer`, `produce_id`, `content_propagator`, `propagate_id`. Default disabled. |
+
+Note: the MCP tool `seed_audio_generate` exposes these as `watermark.enable` and
+`watermark.metadata`; the `aigc_watermark` / `aigc_metadata` names above are the
+raw REST API fields.
 
 ### Pricing
 - **0.15 USD per minute** of generated audio (0.0025 USD/second), billed per second based on `original_duration`.

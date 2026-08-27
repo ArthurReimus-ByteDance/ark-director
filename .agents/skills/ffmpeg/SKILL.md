@@ -5,7 +5,13 @@ description: Video and audio processing with FFmpeg. Use for format conversion, 
 
 # FFmpeg for Video Production
 
-FFmpeg is the essential tool for video/audio processing. This skill covers common operations for Remotion video projects.
+FFmpeg is the essential tool for video/audio processing. This skill covers single-clip operations and format conversion for video projects (Seedance/Seedream assembly and Remotion alike).
+
+## Routing
+
+- Multi-clip **chronological** assembly / crossfade → `ffmpeg-scene-transitions`
+- Simultaneous A/B or grid comparison → `ffmpeg-side-by-side-comparison`
+- Single-clip operations (trim, resize, convert, fade in/out) → this skill
 
 ## Quick Reference
 
@@ -518,4 +524,4 @@ If this skill is missing information or could be improved:
   1. Update this skill with improvements
   2. Create a PR to github.com/digitalsamba/claude-code-video-toolkit
 
-Just say "improve this skill" and I'll guide you through updating `.claude/skills/ffmpeg/SKILL.md`.
+Just say "improve this skill" and I'll guide you through updating `.agents/skills/ffmpeg/SKILL.md`.

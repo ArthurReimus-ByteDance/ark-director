@@ -1,0 +1,4 @@
+interface:
+  display_name: "FFmpeg Scene Transitions"
+  short_description: "Help with FFmpeg Scene Transitions tasks"
+  default_prompt: "Use $ffmpeg-scene-transitions to handle this ffmpeg scene transitions task."

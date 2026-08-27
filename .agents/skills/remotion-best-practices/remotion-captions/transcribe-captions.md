@@ -1,69 +1,29 @@
 ---
 name: transcribe-captions
-description: Transcribing audio to generate captions in Remotion
+description: Transcribing audio to generate captions in Remotion (via speech_to_text in this workspace)
 metadata:
-  tags: captions, transcribe, whisper, audio, speech-to-text
+  tags: captions, transcribe, speech-to-text, audio
 ---
 
 # Transcribing audio
 
-To transcribe audio to generate captions in Remotion, you can use the [`transcribe()`](https://www.remotion.dev/docs/install-whisper-cpp/transcribe) function from the [`@remotion/install-whisper-cpp`](https://www.remotion.dev/docs/install-whisper-cpp) package.
-
-## Prerequisites
-
-First, the @remotion/install-whisper-cpp package needs to be installed.
-If it is not installed, use the following command:
-
-```bash
-npx remotion add @remotion/install-whisper-cpp
-```
+In this workspace, transcribe audio with the `speech_to_text` MCP tool. Do not
+install `@remotion/install-whisper-cpp` or a local Whisper model — that bypasses
+the workspace's canonical transcription pipeline. (A standalone Remotion project
+outside this workspace may still use `@remotion/install-whisper-cpp`.)
 
 ## Transcribing
 
-Make a Node.js script to download Whisper.cpp and a model, and transcribe the audio.
+1. Call `speech_to_text` on the audio clip.
+2. Convert the returned word- or sentence-level timestamps into Remotion
+   caption segments and write them to `public/`:
 
-```ts
-import path from "path";
-import {
-  downloadWhisperModel,
-  installWhisperCpp,
-  transcribe,
-  toCaptions,
-} from "@remotion/install-whisper-cpp";
-import fs from "fs";
-
-const to = path.join(process.cwd(), "whisper.cpp");
-
-await installWhisperCpp({
-  to,
-  version: "1.5.5",
-});
-
-await downloadWhisperModel({
-  model: "medium.en",
-  folder: to,
-});
-
-// Convert the audio to a 16KHz wav file first if needed:
-// import {execSync} from 'child_process';
-// execSync('ffmpeg -i /path/to/audio.mp4 -ar 16000 /path/to/audio.wav -y');
-
-const whisperCppOutput = await transcribe({
-  model: "medium.en",
-  whisperPath: to,
-  whisperCppVersion: "1.5.5",
-  inputPath: "/path/to/audio123.wav",
-  tokenLevelTimestamps: true,
-});
-
-// Optional: Apply our recommended postprocessing
-const { captions } = toCaptions({
-  whisperCppOutput,
-});
-
-// Write it to the public/ folder so it can be fetched from Remotion
-fs.writeFileSync("captions123.json", JSON.stringify(captions, null, 2));
+```json
+[{"text": "Hello world", "startMs": 0, "endMs": 1260}]
 ```
+
+3. Feed the JSON into [Displaying captions](display-captions.md) to render the
+   captions in the composition.
 
 Transcribe each clip individually and create multiple JSON files.
 

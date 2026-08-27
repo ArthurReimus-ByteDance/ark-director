@@ -569,7 +569,7 @@ flowchart TD
   SEEDAUDIO -->|verify: stress, glottal stops,<br/>intonation, duration| QA{Audio QA pass?}
   QA -->|no: mispronounced stress,<br/>wrong intonation, missing glottal stops| ADJ[Revise prompt with<br/>stronger annotation, regenerate]
   ADJ --> SEEDAUDIO
-  QA -->|yes| SAVE[Save to<br/>assets/audio/dialogue/]
+  QA -->|yes| SAVE[Save to<br/>shot folder (dlg_ ... .wav)]
   SAVE --> REF[Pass as reference_audio<br/>to seedance_2_5_create_task]
   SCENE -->|visual prompt +<br/>dialogue text in braces| SEED[Seedance video generation]
   REF --> SEED
@@ -647,7 +647,9 @@ and regenerate.
 
 ### Step 3: Save and pass to Seedance
 
-Save the verified audio to `assets/audio/dialogue/<scene>/<shot>/` following
+Save the verified audio to the shot folder
+`projects/<project>/scenes/scene-NN/sNN_shNNN/` as
+`dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.wav` following
 the project's naming conventions. Then pass it as `reference_audio` in the
 Seedance task:
 
@@ -1025,7 +1027,7 @@ Teacher Mae asks: {Naiintindihan ba ninyo?}
 | Preferred pipeline | Audio-first (Seed Audio → Seedance reference_audio) |
 | Fallback for remaining difficult words | In-prompt phonetic annotation |
 | Seedance 2.5 model ID | `dreamina-seedance-2-5-260628` |
-| MCP tools | `seedance_2_5_create_task`, `seedance_2_5_get_task` |
+| MCP tools | `seedance_2_5_create_task` (submit), `seedance_get_task` (shared poll) |
 
 ### Fallback to Seedance 2.0
 
@@ -1074,7 +1076,7 @@ or for Fast/Mini speed variants, use the `seedance-prompt-20` skill with model
 3. Set dialogue language: "Manila Tagalog" or "Taglish"
 4. Generate audio
 5. Verify: stress, glottal stops, intonation, duration, Taglish phonology
-6. Save to `assets/audio/dialogue/<scene>/<shot>/`
+6. Save to `projects/<project>/scenes/scene-NN/sNN_shNNN/dlg_..._tNN_vNN.wav`
 7. Pass as `reference_audio` to `seedance_2_5_create_task` (`@Audio N`)
 8. Write same dialogue text in `{curly braces}` in Seedance prompt
 9. Align shot timestamps to actual audio timing

@@ -393,7 +393,7 @@ Dialogue language: authentic Los Angeles English. The young man says in natural 
 
 ### Unsupported languages and pronunciation guidance
 
-Seedance 2.5 natively supports 10+ languages: Chinese, English, Spanish,
+Seedance 2.5 natively supports these languages: Chinese, English, Spanish,
 Indonesian, Malay, Thai, Arabic, Portuguese, Vietnamese, Japanese, and Korean.
 **Languages outside this list** — such as Tagalog/Filipino, Hindi, Bengali, or
 Swahili — may require additional pronunciation and intonation annotation in
@@ -1067,7 +1067,7 @@ content, camera movements, cuts, and event order from @Video 1 unchanged.
 | Seedance 2.0 Fast (legacy) | `dreamina-seedance-2-0-fast-260128` |
 | Seedance 2.0 Mini (legacy) | `dreamina-seedance-2-0-mini-260615` |
 
-**MCP tools:** `seedance_2_5_create_task` (submit), `seedance_2_5_get_task` (poll), `seedance_list_tasks` / `seedance_cancel_or_delete_task` (shared with 2.0).
+**MCP tools:** `seedance_2_5_create_task` (submit), `seedance_get_task` (shared 2.0/2.5 poll), `seedance_list_tasks` / `seedance_cancel_or_delete_task` (shared with 2.0).
 
 > The model ID `dreamina-seedance-2-5-260628` is live on BytePlus ModelArk. Confirm the current ID on the [Model list](https://docs.byteplus.com/en/docs/ModelArk/1330310) before making API calls.
 

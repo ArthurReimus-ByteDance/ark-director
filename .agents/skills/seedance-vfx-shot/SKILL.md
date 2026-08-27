@@ -5,7 +5,8 @@ description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot produc
 
 # Seedance VFX Shot Pipeline
 
-End-to-end pipeline for producing a Seedance 2.0 VFX shot from a source clip.
+End-to-end pipeline for producing a Seedance VFX shot from a source clip
+(default Seedance 2.5; use 2.0 only for 4K output or Fast/Mini variants).
 This skill composes the `seedance-vfx-prompt` skill (prompt writing) with the
 `modelark-mcp` tools (task submission, polling, download) to produce a saved,
 manifested asset following the workspace's `projects/<project>/` directory
@@ -31,7 +32,7 @@ Do **not** use this skill when the user only wants to:
 ## Prerequisites
 
 - `ARK_API_KEY` (or `BYTEPLUS_MODELARK_API_KEY`) set in environment or `.env`
-- `mcp_modelark-seed` MCP server running and healthy
+- `modelark-seed` MCP server running and healthy
 - Source video clip accessible as a local file path or URL
 - Project directory exists under `projects/<project-name>/`
 
@@ -81,8 +82,8 @@ The workspace's recurring pattern for a text-only before/after VFX demo:
 | `scene` | Yes | Scene ID (e.g. `scene-01`) |
 | `shot` | Yes | Shot ID (e.g. `s01_sh010`) |
 | `element_refs` | No | List of element reference paths (characters, locations, props) |
-| `resolution` | No | Default `4k` for face/detail shots; `1080p` for landscape-only |
-| `duration` | No | Default: match source clip duration (max 15s) |
+| `resolution` | No | Default `1080p` (2.5 default); `4k` only on the 2.0 path |
+| `duration` | No | Default: match source clip duration (max 30s for 2.5; 15s for 2.0) |
 | `ratio` | No | Default `16:9` |
 | `return_last_frame` | No | Default `true` (enables shot chaining) |
 | `safety_identifier` | No | Default `<project>-<scene>-<shot>` |
@@ -150,13 +151,13 @@ For Seedance 2.5, single-pass duration extends to 30s, and native forward/backwa
 
 ## Step 3 — Submit via MCP
 
-Call `seedance_create_task` on the `mcp_modelark-seed` MCP server.
+Call `seedance_create_task` on the `modelark-seed` MCP server.
 
 **MCP request structure:**
 
 ```json
 {
-  "server_name": "mcp_modelark-seed",
+  "server_name": "modelark-seed",
   "tool_name": "seedance_create_task",
   "args": {
     "input": {
@@ -176,8 +177,8 @@ Call `seedance_create_task` on the `mcp_modelark-seed` MCP server.
           "role": "reference_image"
         }
       ],
-      "model": "{{model_id}}",  # default: dreamina-seedance-2-0-260128 (2.0); use dreamina-seedance-2-5-260628 for 2.5 (note: 2.5 caps at 1080p)
-      "resolution": "4k",
+      "model": "{{model_id}}",  # default: dreamina-seedance-2-5-260628 (2.5); use dreamina-seedance-2-0-260128 for 4K/Fast/Mini
+      "resolution": "1080p",
       "ratio": "16:9",
       "duration": 5,
       "generate_audio": true,
@@ -223,7 +224,7 @@ creation:
 
 ```json
 {
-  "server_name": "mcp_modelark-seed",
+  "server_name": "modelark-seed",
   "tool_name": "seedance_get_task",
   "args": {
     "task_id": "<task_id from Step 3>",
@@ -292,7 +293,7 @@ projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md
 project: <project>
 scene: <scene>
 shot: <shot>
-model: dreamina-seedance-2-0-260128  # 2.0 default; use dreamina-seedance-2-5-260628 for 2.5 (1080p max)
+model: dreamina-seedance-2-5-260628  # 2.5 default; use dreamina-seedance-2-0-260128 for 4K/Fast/Mini
 mode: V2V
 vfx_level: <1 | 2 | 3>
 references:
@@ -303,7 +304,7 @@ prompt_file: scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md
 prompt_sha256: <sha256 of exact submitted prompt>
 seed: null
 params:
-  resolution: 4k
+  resolution: 1080p
   ratio: "16:9"
   duration: 5
   audio: true
@@ -375,12 +376,12 @@ Full prompt text saved at:
 To re-create this take from this manifest alone:
 
 1. Encode the source video and element reference images.
-2. Call `seedance_create_task` on `mcp_modelark-seed` with the prompt from
+2. Call `seedance_create_task` on `modelark-seed` with the prompt from
    `prompt_sNN_shNNN_t01_v01.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (1080p max)`,
    `resolution=4k`, `ratio=16:9`, `duration=<N>`, `generate_audio=true`,
    `return_last_frame=true`.
 3. Poll with `seedance_get_task` until `status=succeeded`.
-4. Download via `runtime.artifact_store.get(artifact_id)`.
+4. Download via `seed_media_get_artifact` (or presign with `media_presign`).
 5. Expect ~<N>s of 4K `video/mp4` with AAC audio, cost ~$<cost>/take.
 ```
 

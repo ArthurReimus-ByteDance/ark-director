@@ -63,9 +63,21 @@ Match each prompt to its reviewing skill by file naming convention and content:
 | Seedream screen UI reference | `prompt_screen_*` | `seedream-prompt` (general image rules apply) |
 | Seedream brand/title card | `prompt_card_*` | `seedream-prompt` (general image rules apply) |
 | Seedream storyboard | `prompt_sNN_kf*` (multi-panel) | `seedream-storyboard` |
+| Seedance music video | `prompt_sNN_shNNN_tNN_vNN.md` (song-driven) | `seedance-music-video` |
+| UGC hooks (intermediate) | Hook variant output blocks | `ugc-hook-lab` |
+| UGC scripts (intermediate) | Per-beat script structure blocks | `ugc-script-architect` |
+| UGC compliance audit | Compliance audit output | `ugc-compliance-gate` |
+| UGC brief (intermediate) | Campaign brief output | `ugc-creative-brief` |
+| UGC platform (intermediate) | Platform adaptation output | `ugc-platform-optimizer` |
+| UGC testing (intermediate) | Testing strategy output | `ugc-testing-strategist` |
 
 When a prompt could match multiple types (e.g., a Seedance 2.5 prompt with Filipino
 dialogue), stack the checklists — the sub-agent checks against all applicable skills.
+
+UGC intermediate outputs (hooks, scripts) are reviewed at **Stage 1** (before
+composition into a final Seedance prompt). The final composed Seedance prompt is
+reviewed at **Stage 2** against the Seedance 2.5 + Universal checklists. UGC
+compliance audit runs **before Stage 1** — if it returns CRITICAL, stop the pipeline.
 
 ## Workflow
 
@@ -104,8 +116,9 @@ Delegate the review to a sub-agent. The sub-agent receives:
 Use whichever mechanism the current host provides:
 
 - **OpenCode CLI (non-interactive):**
-  `opencode run -m byteplus/glm-5-2-260617 "<worker prompt>"`
+  `opencode run -m <review-model> "<worker prompt>"`
   Pass the prompt text and checklist inline. Capture stdout for findings.
+  (`<review-model>` is the host's configured sub-agent model, not a hard-coded ID.)
 
 - **Host Task / sub-agent tool:**
   Delegate each review batch as a separate task with the prompt text and checklist
@@ -286,8 +299,10 @@ This is efficient because:
 
 ## Universal directing principles
 
-These three rules apply to every prompt regardless of model or skill. The sub-agent
-must check all prompts against these in addition to the type-specific checklist:
+The canonical universal checklist lives in
+`references/review-checklists.md` (§Universal, 10 items). The sub-agent must
+check all prompts against that full list plus the type-specific checklist. The
+three core rules below summarize the workspace's non-negotiable principles:
 
 1. **Assets first.** Not one shot until every character, location, and prop is named,
    versioned, and locked. The model has no memory — describe everything, every time.

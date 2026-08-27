@@ -34,8 +34,7 @@ and the genre lock visible in the prompt, not just the scene content.
   lyric timeline technique (section 3b), native audio re-performance behavior
   (section 3a), hybrid audio mode (section 3), and ASR-based lyric
   verification (section 3c) were derived from three generation takes where
-  large `{...}` blocks caused lyric dropouts. See
-  `docs/improving-seedance-music-video-skill.md` for the full case study.
+  large `{...}` blocks caused lyric dropouts.
 
 Key third-party sources (accessed 2026-08-20): Magnific
 [Seedance 2.5 animation guide](https://www.magnific.com/blog/seedance-2-5-animation-prompts/),

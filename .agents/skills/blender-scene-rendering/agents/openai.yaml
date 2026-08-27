@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Scene Rendering"
+  short_description: "Help with Blender Scene Rendering tasks"
+  default_prompt: "Use $blender-scene-rendering to handle this blender scene rendering task."

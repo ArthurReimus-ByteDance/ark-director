@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Geometry Nodes"
+  short_description: "Help with Blender Geometry Nodes tasks"
+  default_prompt: "Use $blender-geometry-nodes to handle this blender geometry nodes task."

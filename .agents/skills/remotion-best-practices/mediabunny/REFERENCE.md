@@ -5,6 +5,8 @@ metadata:
   tags: remotion, mediabunny, multimedia, video, audio
 ---
 
+> Mirror — canonical copy lives at `.agents/skills/mediabunny/SKILL.md`. Edit there.
+
 Mediabunny is a multimedia library for dealing with audio and video in the browser.
 Here is a compact overview of its capabilities: https://mediabunny.dev/llms.txt
 

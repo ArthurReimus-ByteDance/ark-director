@@ -73,11 +73,16 @@ default.
 
 Entry: shot objective, selected video mode, approved inputs, reference roles,
 prompt snapshot target, duration, and any requested audio (if Stage 5 was
-completed) exist.
+completed) exist. Before submission the `prompt-review` gate has passed for
+every prompt being submitted; the ordered `references:` array is verified 1:1
+against `shot.md` (same files, same order, same `@Image N` / `@Video N` /
+`@Audio N` bindings); and the pass uses the lowest suitable resolution for the
+current prototype.
 
 Required output: task registry entry, local media, exact prompt snapshot,
 provider metadata, actual media properties, cost fields, SHA-256, semantic QA,
-and `review` status.
+and `review` status. Resolution is raised only after the current pass is
+approved (final-candidate gate).
 
 Exit: the user approves a take or requests a bounded revision.
 

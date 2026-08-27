@@ -156,11 +156,11 @@ Audio includes <dialogue, ambience, sound effects, or music>.
 Full worked Seedance example:
 
 ```
-A film student examines an old camera in a dusty repair shop at golden hour.
-Visual style: digital cinema look, clean and high dynamic range.
-Camera: 85mm, f/1.4 — shallow depth of field, the student's eyes stay sharp
-while the shelf of lenses behind dissolves into compressed creamy bokeh.
-Audio: soft ticking of the wall clock and faint street ambience.
+A film student examines an old camera in a dusty repair shop at golden hour,
+in a clean, high-dynamic-range digital cinema look. Use 85mm, f/1.4 — shallow
+depth of field, the student's eyes stay sharp while the shelf of lenses behind
+dissolves into compressed creamy bokeh. Audio includes the soft ticking of the
+wall clock and faint street ambience.
 ```
 
 ### Seedream placement

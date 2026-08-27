@@ -1,5 +1,5 @@
 ---
-description: Write a Seedance 2.5 video ad prompt for any of 9 UGC ad modes (UGC, unboxing, how-to, showcase, review, TV spot, try-on, wild card).
+description: Write a Seedance 2.5 video ad prompt for any of 9 UGC ad modes (UGC, UGC How-To, Unboxing, Product Showcase, Product Review, TV Spot, Try-On, Wild Card).
 agent: build
 ---
 

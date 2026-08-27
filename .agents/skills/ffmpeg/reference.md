@@ -16,7 +16,7 @@
 
 | Filter | Syntax | Example |
 |--------|--------|---------|
-| scale | `scale=w:h` | `scale=1920:1080` or `scale=1280:-1` (auto height) |
+| scale | `scale=w:h` | `scale=1920:1080` or `scale=1280:-2` (auto height, even) |
 | crop | `crop=w:h:x:y` | `crop=1280:720:320:180` |
 | fps | `fps=N` | `fps=30` |
 | pad | `pad=w:h:x:y:color` | `pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black` |

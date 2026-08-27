@@ -106,7 +106,7 @@ Treat expensive media generation as a gated production workflow:
 **Generate per scene at its natural duration (4–30s), not per 30-second block.**
 Do not overload one generation with too many cuts, action beats, close
 encounters, and location changes. Right-size each scene to the duration it
-actually needs using the `duration` parameter (1–30s for 2.5, ≤15s for 2.0),
+actually needs using the `duration` parameter (4–30s for 2.5, ≤15s for 2.0),
 then chain approved scenes via `return_last_frame` / `first_frame` + a shared
 reference bundle and assemble in post. Reserve 30s single-pass or native
 extension for when you explicitly need continuous, seamless motion across scene
@@ -138,44 +138,15 @@ Seedance video prompts.
     as the wrong object: a pen-shaped device comes back as a laser, eyewear as
     the wrong frame.
 
-    **Element identification checklist.** Before writing any prompt, walk
-    every beat of every scene/shot and identify every visible element using
-    this checklist. An element is anything the model must render consistently
-    but cannot infer from text alone — it needs a generated reference image.
-
-    | Category | What to look for | Element type |
-    |---|---|---|
-    | On-camera characters | Every person visible on screen — including background characters, people visible *through* a phone/laptop screen during a video call, and any character with dialogue (even off-screen VO needs a voice lock) | `char_` sheet |
-    | Locations / settings | Every distinct physical space — including transitional spaces (a character walking *between* two locations), outdoor exteriors, and screen-within-screen locations (the room visible behind someone on a video call) | `loc_` sheet |
-    | Props (held/operated) | Every object a character holds, carries, aims, or operates — devices, packaging, boxes, tools, food, drink, documents | `prop_` sheet |
-    | Screen / UI surfaces | Every phone screen, laptop screen, tablet, monitor, signage, document, or text-heavy surface that shows specific content (an app, a website, a speed test, a map, a chat thread) | `screen_` ref |
-    | Brand / title cards | End cards, lower thirds, logo plates, brand overlays — anything with specific typography or logo placement that Seedance cannot render accurately | `card_` image |
-    | Audio assets | Music beds, ambient beds, SFX libraries, and any audio that recurs across scenes or needs to outlive a single video generation | `library/` assets |
-    | Costume variants | If a character wears a different outfit in different scenes, each outfit variant is a separate concern — either a separate prop sheet for scene-variant wearables, or a note in the character manifest |
-
-    If an element appears in only one shot, generate it as a scene-level
-    keyframe rather than a reusable Element. But if it appears in two or more
-    shots, or if its visual accuracy is critical to the story (e.g. a product
-    shot, a screen the camera lingers on), it must be a locked Element.
-
-    **Prop threshold test.** Before generating a `prop_` sheet, apply this
-    test — a prop needs a locked Element only if it meets **at least one** of
-    these criteria:
-
-    | Criterion | Example | Needs Element? |
-    |---|---|---|
-    | Branded product with logo or specific design | GFiber modem, smartphone with app UI | Yes — branding must be consistent |
-    | Object the camera lingers on or that drives the plot | A key, a letter, a device screen | Yes — accuracy is story-critical |
-    | Object that recurs across 2+ shots or scenes | Same phone in multiple ads | Yes — consistency required |
-    | Generic, unbranded, briefly visible background object | A coffee cup, a birthday cake, a tablet in a montage | No — describe in prompt text |
-    | Object held for only 1-2 seconds in a single shot | A pen, a glass of water, a newspaper | No — text is sufficient |
-
-    Generating a `prop_` sheet for a generic, briefly-visible object wastes
-    credits and adds reference noise. When in doubt, describe the object in
-    the Seedance prompt text and skip the Element. The model renders generic
-    objects (food, furniture, everyday items) well enough from text alone —
-    it only needs image references for branded, recurring, or story-critical
-    objects.
+    **Element identification checklist** and the **prop threshold test** — see
+    [docs/element-identification.md](docs/element-identification.md). The rules
+    in short: any element the model must render consistently but cannot infer
+    from text alone needs a generated reference image; each category
+    (character, location, prop, screen, card, audio, costume variant) maps to a
+    `char_`/`loc_`/`prop_`/`screen_`/`card_`/`library/` element; an element in
+    2+ shots or story-critical is a locked Element, otherwise a scene-level
+    keyframe; a prop needs a `prop_` sheet only for branded, recurring, or
+    story-critical objects.
 
 2. **Say what you want, not what you avoid.** The words you write are the words you
    summon — including the ones inside a "no". A prohibition still names and
@@ -219,10 +190,10 @@ The entire `projects/` tree is **local-only working state — never commit it to
 git.** Project files (manifests, prompts, references, generated assets, scripts)
 are large, frequently changing, and not meant to live in version control. They
 are the workspace's durable local source of truth, not the remote's. Do not
-`git add` anything under `projects/`. This rule is enforced by convention, not
-by `.gitignore` — the directory is intentionally left un-ignored so that
-individual tracked files (e.g. a project template or doc) *could* be added
-explicitly if ever needed, but the default is: hands off.
+`git add` anything under `projects/`. Generated media under `projects/` is
+gitignored by pattern; everything else in the tree is held out of git by
+convention — individual tracked files (e.g. a project template or doc) *could*
+be added explicitly if ever needed, but the default is: hands off.
 
 This workspace hosts many projects (films, ad campaigns, series, etc.). Each project lives under `projects/<project-name>/` and follows the same internal layout. The structure leans on **structured file naming** (token prefixes like `s01_sh010_t01_v01.mp4`, `char_gloria_turnaround_v01.png`) to self-describe assets, minimizing folder nesting:
 
@@ -365,103 +336,29 @@ For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
 `seedance-prompt-20` (2.0, for 4K output or Fast/Mini variants).
 
 **Compose directorial axes from the preset skills when the user names them.**
-Each preset skill resolves one axis into canonical prompt phrasing that drops
-into the six-part formula (Subject + Action + Scene + Visual Style + Camera +
-Audio); they are prompt-composition only and never call the API themselves.
-
-| Axis | Skill | Notes |
-|---|---|---|
-| Camera movement & MoveSet styles | `seedance-camera-presets` | Moves, techniques (dolly zoom, FPV, bullet-time orbit, one-take), and 10 MoveSet styles; keep ≤2 moves per clip |
-| Lens / focal length / aperture / sensor | `seedance-lens-presets` | Always pairs numeric optics with the visible result; 4K routes to `seedance-prompt-20` |
-| Lighting | `seedance-lighting-presets` | Causal lighting presets; emit both the Seedream `Lighting:` recipe (elements) and the Seedance visual-style phrase so image + video share one lighting intent |
-| Color grading | `color-grade-palettes` | Named palettes + film looks in the Visual Style slot; keep one project-wide palette; optional FFmpeg match graphs in the mix step |
-| Acting / emotion | `seedance-acting-console` | Scene-level analysis (motive, tactic, eye-work) + per-character cue encoding (6 emotions × 3 intensities); optional audio reinforcement via `seed-audio-prompt` |
-| Scene structure & dramaturgy | `tig-scene-engine` | Five-element engine (Goal, Obstacle, Tactic, Reversal, Value Shift); bespoke definitions — do not substitute textbook craft |
-| Staging / blocking | `tig-blocking-map` | Color-coded outline schematic for character disposition; geometry only, no style bleed |
-| Pacing / rhythm | `seedance-pacing-presets` | Speed ramps + montage pacing as timestamped blocks; timestamps are a time budget, not frame-accurate |
-| Animation medium & handcrafted style | `seedance-animation-styles` | Material-first Seedance prompts for clay, felt, wood puppets, toys, vintage cel, painterly 2D, crafted 3D, silicone, crayon, and custom media |
-| Music video | `seedance-music-video` | Song-first Seedance prompts: format (performance/narrative/conceptual/lyric/visualizer/hybrid), song-section map, beat/cut-density contract, audio-first lip-sync, and a per-genre style lock |
-
-Use a preset skill only when the user asks for a concrete axis ("dolly in on
-her face", "teal and orange grade", "Rage at medium intensity", "bullet-time
-slow-mo"). For ordinary shots without such direction, `seedance-prompt-25`
-alone is sufficient. Do not let two skills fight: exactly one grade, one
-dominant lighting direction, and 1–2 camera moves per clip. Record the chosen
-axis choices and their canonical phrases in `shot.md` alongside the prompt
-snapshot. Load `seedance-lighting-presets` / `color-grade-palettes` alongside
-`seedream-prompt` when generating matching element sheets. Use
-`seedance-animation-styles` when writing a Seedance prompt whose animation
-medium, surface behavior, motion cadence, and handmade imperfections must stay
-coherent throughout the video. Use `seedance-music-video` when the prompt's
-timing, energy, and visual structure must follow the music (music video, lyric
-video, visualizer, performance clip) rather than a spoken story.
+Each preset skill resolves one axis (camera, lens, lighting, grade, acting,
+structure, blocking, pacing, medium, music video) into canonical phrasing that
+drops into the six-part formula. The full axis→skill table and composition
+rules live in [docs/seedance-reference.md](docs/seedance-reference.md). Use a
+preset skill only when the user names a concrete axis; for ordinary shots
+`seedance-prompt-25` alone is sufficient, and never let two skills fight —
+exactly one grade, one dominant lighting direction, and 1–2 camera moves per
+clip. Record the chosen axes in `shot.md`.
 
 ### Audio-video alignment (dialogue scenes)
 
 When the user explicitly requests lip-synced dialogue audio, **generate the
-Seed Audio dialogue track first** and use it as a `reference_audio` input to
-Seedance. The audio drives the video — not the other way around. This
-prevents lip-sync drift, ensures the video duration fits the audio, and keeps
-dialogue timing verifiable. This is **opt-in** — not every dialogue scene
-needs it. When the user does not request lip-synced audio, generate video
-directly and let Seedance's native audio handle dialogue.
+Seed Audio dialogue track first** and pass it as a `reference_audio` input to
+Seedance — the audio drives the video. This is **opt-in**; without a lip-sync
+request, generate video directly and let Seedance's native audio handle
+dialogue. The full pipeline, contract, and submission checklist live in
+[docs/audio-video-alignment.md](docs/audio-video-alignment.md):
 
-**Audio-first pipeline (when requested):**
-
-```mermaid
-flowchart TD
-  SCENE[scene.md — script, dialogue, shot timings] --> AUDIO[Seed Audio T2A/TA2A generation]
-  AUDIO -->|verify duration ≤ video duration| AOK{duration OK?}
-  AOK -->|no| ADJ[adjust prompt — trim ambience, music tails, pauses]
-  ADJ --> AUDIO
-  AOK -->|yes| ASAVE[save to shot folder]
-  ASAVE -->|reference_audio input| SEED[Seedance video generation]
-  SCENE -->|shot timestamps align to audio| SEED
-  SEED -->|verify lip-sync, dialogue placement, timing| QA{QA pass?}
-  QA -->|no — timing drift| ADJ2[adjust shot timestamps in prompt, regenerate video]
-  ADJ2 --> SEED
-  QA -->|yes| DONE[approved take]
-```
-
-**Alignment contract (when audio is generated):**
-
-1. **Same dialogue text in both prompts.** The exact lines written in the
-   Seed Audio `text_prompt` must appear in the Seedance prompt inside
-   `{curly braces}` for lip-sync. No paraphrasing, no reordering, no omitted
-   lines. If one changes, both change.
-2. **Audio duration ≤ video duration.** Seed Audio output must fit within the
-   planned Seedance `duration` parameter. If the audio exceeds the video
-   duration, trim the audio prompt (shorter ambience tails, fewer pauses,
-   tighter scene descriptions) and regenerate before submitting the video
-   task. Never pad the video to fit an over-long audio.
-3. **Shot timestamps align to audio.** The `Shot N (start–ends)` time ranges
-   in the Seedance prompt must place each dialogue line at the second it
-   actually occurs in the generated audio. After generating the audio,
-   inspect it (or transcribe it with `speech_to_text`) and adjust the shot
-   timestamps before submitting the Seedance task.
-4. **Audio as `reference_audio`.** Pass the generated `.wav` file as a
-   `reference_audio` input to the Seedance task tool —
-   `seedance_2_5_create_task` for 2.5 (up to 10 audio refs, 30s) or
-   `seedance_create_task` for 2.0 (up to 3 audio refs, 15s). Label it `@Audio N` in
-   the Seedance prompt and bind it in every shot that contains dialogue or
-   music from that audio.
-5. **Single source of truth.** The `scene.md` file records the audio asset
-   path, SHA-256, verified duration, and the dialogue-to-shot timestamp
-   mapping. The `shot.md` manifest records the same audio asset as a
-   reference input. If the audio is regenerated, both files are updated and
-   any video that used the old audio is invalidated.
-
-**Before video submission (when audio is used):**
-
-- verify the audio file exists locally and its SHA-256 matches the manifest;
-- verify `audio_duration ≤ video_duration` (e.g., 28.88s ≤ 30s for 2.5; ≤ 15s for 2.0);
-- confirm every `{dialogue line}` in the Seedance prompt matches the Seed
-  Audio prompt verbatim;
-- adjust shot timestamps in the Seedance prompt to match the actual audio
-  timing;
-- pass the audio file as `reference_audio` in the Seedance task request;
-- record the audio asset path, hash, duration, and the dialogue-to-shot
-  timestamp mapping in `shot.md`.
+1. **Same dialogue text in both prompts** — verbatim, inside `{curly braces}` in Seedance.
+2. **Audio duration ≤ video duration** — trim the audio prompt, never pad the video.
+3. **Shot timestamps align to audio** — inspect/`speech_to_text` the audio, then adjust.
+4. **Audio as `reference_audio`** — bind `@Audio N` in every shot using it.
+5. **Single source of truth** — record path, SHA-256, duration, and timestamp mapping in `scene.md` and `shot.md`.
 
 ### Scene generation strategy
 
@@ -481,6 +378,12 @@ self-contained per scene. Use the `duration` parameter to right-size each scene
 - **Shared reference bundle.** Pass the same canonical Elements (characters,
   locations, props) as `reference_image` inputs to every scene so identity stays
   consistent across the chain.
+- **Frame-role exception.** Keyframe chaining (`first_frame` from the previous
+  scene's `return_last_frame`) combined with a canonical Element
+  `reference_image` bundle is the one intended exception to the "do not mix
+  I2V/FLF2V frame roles with an R2V reference bundle" rule in
+  [Storyboard-to-video handoff](#storyboard-to-video-handoff). The chained frame
+  anchors continuity; the Element bundle anchors identity.
 - **Per-scene audio (optional).** When the user requests lip-synced dialogue,
   generate Seed Audio for each scene's dialogue at the scene's own duration.
   Verify `audio_duration ≤ video_duration` per scene, then pass the audio as
@@ -532,53 +435,14 @@ Element ids double as `@tags` in scene/shot prompts (e.g. `@gloria`, `@neon-alle
 
 ### Asset file naming
 
-Individual generated files use **structured token prefixes** (underscore-separated fields; hyphens allowed inside a descriptor token). This makes files self-describing, sortable, and parseable by tools.
-
-**Numbering rules**
-- Scenes: 2-digit, prefixed `s` → `s01`, `s02`.
-- Shots: 3-digit, increments of **10** so shots can be inserted without renumbering → `sh010`, `sh020`; insert `sh015` between them.
-- Takes: 2-digit → `t01`, `t02` (one take = one generation attempt).
-- Versions: 2-digit → `v01`, `v02`; approved/final suffix → `final`.
-- References: 2-digit → `ref_01`.
-
-**Video**
-| Asset | Pattern | Example |
-|---|---|---|
-| Shot take | `<scene>_sh<NNN>_t<NN>_v<NN>.<ext>` | `s01_sh010_t01_v01.mp4` |
-| Shot final | `<scene>_sh<NNN>_final_v<NN>.<ext>` | `s01_sh010_final_v01.mp4` |
-| Scene render | `<scene>_render_v<NN>.<ext>` | `s01_render_v01.mp4` |
-
-**Image**
-| Asset | Pattern | Example |
-|---|---|---|
-| Storyboard keyframe | `<scene>_kf<NN>_v<NN>.png` | `s01_kf01_v01.png` |
-| Concept art | `concept_<descriptor>_v<NN>.png` | `concept_mood-board_v01.png` |
-| Character sheet | `char_<character-id>_<sheet-type>_v<NN>.png` | `char_gloria_turnaround_v01.png` |
-| Location sheet | `loc_<location-id>_<view>_v<NN>.png` | `loc_neon-alley_wide_v01.png` |
-| Prop sheet | `prop_<prop-id>_<view>_v<NN>.png` | `prop_red-motorcycle_side_v01.png` |
-| Reference (seed) | `ref_<NN>_<descriptor>.<ext>` | `ref_01_front.png` |
-
-**Audio**
-| Asset | Pattern | Example |
-|---|---|---|
-| Dialogue | `dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.wav` | `dlg_s01_sh010_gloria_t01_v01.wav` |
-| Music | `mus_<descriptor>_v<NN>.wav` | `mus_tension-build_v01.wav` |
-| SFX | `sfx_<descriptor>_v<NN>.wav` | `sfx_door-slam_v01.wav` |
-| Ambience | `amb_<scene>_<descriptor>_v<NN>.wav` | `amb_s01_rain_v01.wav` |
-| Scene mix | `mix_<scene>_v<NN>.wav` | `mix_s01_v01.wav` |
-
-**Prompt snapshots** (all modalities)
-| Asset | Pattern | Example |
-|---|---|---|
-| Video prompt | `prompt_<scene>_sh<NNN>_t<NN>_v<NN>.md` | `prompt_s01_sh010_t01_v01.md` |
-| Image prompt | `prompt_<scene>_kf<NN>_v<NN>.md` | `prompt_s01_kf01_v01.md` |
-| Character sheet prompt | `prompt_char_<character-id>_<sheet-type>_v<NN>.md` | `prompt_char_gloria_turnaround_v01.md` |
-| Location sheet prompt | `prompt_loc_<location-id>_<view>_v<NN>.md` | `prompt_loc_neon-alley_wide_v01.md` |
-| Prop sheet prompt | `prompt_prop_<prop-id>_<view>_v<NN>.md` | `prompt_prop_red-motorcycle_side_v01.md` |
-| Audio dialogue prompt | `prompt_dlg_<scene>_sh<NNN>_<character-id>_t<NN>_v<NN>.md` | `prompt_dlg_s01_sh010_gloria_t01_v01.md` |
-| Music prompt | `prompt_mus_<descriptor>_v<NN>.md` | `prompt_mus_tension-build_v01.md` |
-| Ambience prompt | `prompt_amb_<scene>_<descriptor>_v<NN>.md` | `prompt_amb_s01_rain_v01.md` |
-| Scene mix prompt | `prompt_mix_<scene>_v<NN>.md` | `prompt_mix_s01_v01.md` |
+Structured token prefixes (`s01_sh010_t01_v01.mp4`, `char_gloria_turnaround_v01.png`)
+make generated files self-describing, sortable, and parseable. The full
+numbering rules and token tables live in
+[docs/asset-naming.md](docs/asset-naming.md). Quick reference: scenes `sNN`;
+shots `shNNN` (increments of 10); panels `pNNN` (increments of 10); takes
+`tNN`; versions `vNN` (approved/final suffix `final`); type prefixes `char_`,
+`loc_`, `prop_`, `ref_`, `screen_`, `card_`, `kf`, `dlg_`, `mus_`, `sfx_`,
+`amb_`, `mix_`, `prompt_`.
 
 ### Metadata & manifests
 
@@ -603,13 +467,14 @@ Minimal `shot.md` frontmatter:
 project: midnight-run
 scene: s01
 shot: s01_sh010
-model: seedance-2-5
+model: dreamina-seedance-2-5-260628
 prompt: "A cinematic action scene of @gloria riding @red-motorcycle at speed down @neon-alley"
 prompt_file: scenes/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md
 prompt_sha256: "a1b2c3d4..."
 references:
   - elements/gloria/ref_01_front.png
   - elements/red-motorcycle/ref_01_side.png
+  - elements/neon-alley/ref_01_wide.png
 seed: 8842
 params:
   resolution: "720p"
@@ -662,10 +527,6 @@ inline in `shot.md` or `scene.md` during the drafting phase. Once a generation
 is submitted, the exact submitted text is frozen as the asset-side snapshot and
 the working copy is superseded — the snapshot is canonical from that point on.
 
-### Sub-projects
-
-When a project contains multiple discrete sub-projects (a film series, a multi-ad campaign), each sub-project gets a **fully parallel, segregated** structure under `sub-projects/<sub-project-id>/` — its own `elements/`, `scenes/`, `library/`, and `task_ids.json`. Assets are **not** shared between sub-projects by duplication; anything reused across sub-projects (a recurring character, brand elements) is promoted up to the **parent project's** `elements/` and referenced from there. This keeps sub-projects independent and archivable while avoiding duplicated character sheets.
-
 ## Workspace-level directories
 
 In addition to the `projects/` tree, the workspace root has three top-level directories for documentation and planning artifacts. Like `projects/`, `docs/`, `plans/`, and `specs/` are **local-only working state — never commit them to git.** The remote tracks only a `.gitkeep` placeholder per directory; do not `git add` the files inside them.
@@ -678,7 +539,12 @@ In addition to the `projects/` tree, the workspace root has three top-level dire
 
 **Lifecycle:** An idea typically flows `specs/ → plans/ → implementation`. A spec matures into a plan when the user approves the direction; a plan is consumed during implementation and may be archived or deleted after the work ships.
 
-**No loose files at workspace root.** All documentation, research, and reference files must live in `docs/`, `plans/`, or `specs/` — never loose at the workspace root. If a file doesn't fit one of those three purposes, it belongs inside a `projects/<project>/` subdirectory.
+**No loose files at workspace root.** All documentation, research, and reference files must live in `docs/`, `plans/`, or `specs/` — never loose at the workspace root. If a file doesn't fit one of those three purposes, it belongs inside a `projects/<project>/` subdirectory. The `tmp/` directory at the workspace root is the one exception, reserved for transient scratch.
+
+**Skills and `.agents/`:** `.agents/skills/` and `skills-lock.json` are committed
+to git (project-authored and vendored skills alike). Local-only working state is
+limited to `projects/`, `docs/`, `plans/`, and `specs/` described above; do not
+leave `skills-lock.json` entries describing untracked skill files.
 
 ### Task ID tracking
 
@@ -738,9 +604,10 @@ Rules:
 ### Secrets
 - Load `BYTEPLUS_MODELARK_API_KEY`, `BYTEPLUS_SEED_AUDIO_API_KEY`, base URL, and region from environment variables or a local `.env` (gitignored). Never hard-code keys or base URLs.
 - Keep a `.env.example` with placeholder values only. Never commit real credentials.
+- Other security rules — input validation/sanitization, least-privilege access, and dependency auditing — are inherited from the global AGENTS.md.
 
 ### Adding a new model tool (MCP)
-1. Define the tool with a clear, verb-noun name (e.g. `seedance.text_to_video`), a JSON Schema for inputs, and a single responsibility.
+1. Define the tool with a clear, verb-noun name (e.g. `seedance_submit_video_task`), a JSON Schema for inputs, and a single responsibility.
 2. Resolve key/region/base URL from env at runtime.
 3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct project path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
 4. Validate all prompt/reference inputs before calling the API.
@@ -811,7 +678,7 @@ Rules:
 - **Single-person video references.** The 3-panel character sheet is a design deliverable, not a video identity reference — feeding it directly to Seedance can clone the character into two. For video generation, run the `seedream-character-sheet-cleanup` skill to remove the head from the full-body panels (keeping only the close-up panel as the face anchor), then use the cleaned sheet as the reference. Do not derive a separate single front-view identity image. Add an "exactly one, never a second" guard in the prompt.
 - Technical success sets a take to `review`; only explicit user approval sets it to `approved`.
 - Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface.
-- Run the project's linter and type checker before finalizing any change. Record the exact commands in `.trae/rules/project_rules.md` once the runtime is established.
+- Run the project's linter and type checker before finalizing any change. Record the exact commands in `AGENTS.md` (Conventions) or a note under `docs/` once the runtime is established.
 
 ## References
 - BytePlus ModelArk quick start — https://docs.byteplus.com/en/docs/ModelArk/1399008

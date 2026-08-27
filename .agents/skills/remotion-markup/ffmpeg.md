@@ -7,6 +7,10 @@ metadata:
 
 ## FFmpeg in Remotion
 
+> Outside a Remotion project, prefer the workspace `ffmpeg` skill with bare
+> `ffmpeg`/`ffprobe`. The `npx remotion` wrappers below apply only inside a
+> Remotion project.
+
 `ffmpeg` and `ffprobe` do not need to be installed. They are available via the `npx remotion ffmpeg` and `npx remotion ffprobe`:
 
 ```bash

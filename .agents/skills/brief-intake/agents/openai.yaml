@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brief Intake"
+  short_description: "Help with Brief Intake tasks"
+  default_prompt: "Use $brief-intake to handle this brief intake task."

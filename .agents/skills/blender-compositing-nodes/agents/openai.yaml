@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Compositing Nodes"
+  short_description: "Help with Blender Compositing Nodes tasks"
+  default_prompt: "Use $blender-compositing-nodes to handle this blender compositing nodes task."

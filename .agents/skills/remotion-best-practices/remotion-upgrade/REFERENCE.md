@@ -19,7 +19,8 @@ description: Upgrade Remotion, its related packages, compatible Mediabunny packa
    - Find every installed `remotion` and `@remotion/*` dependency across the project and upgrade them all to that exact version. Preserve their dependency sections and the project's workspace or catalog conventions.
    - Read the current [Mediabunny compatibility page](https://www.remotion.dev/docs/mediabunny/version) and determine the Mediabunny version compatible with the target Remotion version. Upgrade every installed `mediabunny` and `@mediabunny/*` package to the documented compatible version.
    - Run the project's package manager to update its lockfile.
-4. Update the installed Remotion skills:
+4. Update the installed Remotion skills (verify the `remotion skills update`
+   command exists in the installed CLI before relying on it):
 
    ```bash
    npx remotion skills update

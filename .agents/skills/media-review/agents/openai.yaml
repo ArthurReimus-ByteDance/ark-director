@@ -1,0 +1,4 @@
+interface:
+  display_name: "Media Review"
+  short_description: "Help with Media Review tasks"
+  default_prompt: "Use $media-review to handle this media review task."

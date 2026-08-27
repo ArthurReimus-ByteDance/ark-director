@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Shader Nodes"
+  short_description: "Help with Blender Shader Nodes tasks"
+  default_prompt: "Use $blender-shader-nodes to handle this blender shader nodes task."

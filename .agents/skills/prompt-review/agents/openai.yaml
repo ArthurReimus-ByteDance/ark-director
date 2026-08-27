@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prompt Review"
+  short_description: "Help with Prompt Review tasks"
+  default_prompt: "Use $prompt-review to handle this prompt review task."

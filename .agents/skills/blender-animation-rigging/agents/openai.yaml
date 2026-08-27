@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Animation Rigging"
+  short_description: "Help with Blender Animation Rigging tasks"
+  default_prompt: "Use $blender-animation-rigging to handle this blender animation rigging task."

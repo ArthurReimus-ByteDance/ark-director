@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Physics Simulation"
+  short_description: "Help with Blender Physics Simulation tasks"
+  default_prompt: "Use $blender-physics-simulation to handle this blender physics simulation task."

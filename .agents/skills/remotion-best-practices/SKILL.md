@@ -5,6 +5,12 @@ metadata:
   tags: remotion, video, react, animation, composition
 ---
 
+> This skill and all `remotion-*` skills target **code-rendered Remotion
+> projects only**. For assembling Seedance/Seedream frame content, use the
+> `ffmpeg` / `ffmpeg-scene-transitions` / `ffmpeg-side-by-side-comparison`
+> skills instead. Audio and transcription go through Seed Audio
+> (`seed_audio_generate`) and `speech_to_text`, never third-party providers.
+
 ## New project setup
 
 If no Remotion project currently exists, load [Create a new Remotion project](remotion-create/REFERENCE.md)

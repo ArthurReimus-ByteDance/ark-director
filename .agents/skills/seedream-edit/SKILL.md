@@ -178,6 +178,9 @@ images). Always use `persist=true` unless you have a specific reason not to.
   (without coordinate markup)
 - `seedream_generate_image_variations` — parallel image generation with
   distinct seeds
+- `seedance_create_task` — video generation from images or text
+
+## Related skills
+
 - `seedream-character-sheet-cleanup` — post-generation cleanup workflow for
   removing duplicate faces from Seedance-facing character sheets
-- `seedance_create_task` — video generation from images or text

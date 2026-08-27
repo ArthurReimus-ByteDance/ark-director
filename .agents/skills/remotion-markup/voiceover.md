@@ -1,57 +1,34 @@
 ---
 name: voiceover
-description: Adding AI-generated voiceover to Remotion compositions using TTS
+description: Adding AI-generated voiceover to Remotion compositions using TTS (via Seed Audio in this workspace)
 metadata:
-  tags: voiceover, audio, elevenlabs, tts, speech, calculateMetadata, dynamic duration
+  tags: voiceover, audio, tts, speech, seed-audio, calculateMetadata, dynamic duration
 ---
 
 # Adding AI voiceover to a Remotion composition
 
-Use ElevenLabs TTS to generate speech audio per scene, then use [`calculateMetadata`](./calculate-metadata.md) to dynamically size the composition to match the audio.
+Generate speech audio per scene, then use [`calculateMetadata`](./calculate-metadata.md) to dynamically size the composition to match the audio.
 
-## Prerequisites
+## Audio source
 
-By default this guide uses **ElevenLabs** as the TTS provider (`ELEVENLABS_API_KEY` environment variable). Users may substitute any TTS service that can produce an audio file.
+In this workspace, all voice audio is generated with BytePlus Seed Audio via the
+`seed_audio_generate` MCP tool (credential `BYTEPLUS_SEED_AUDIO_API_KEY`);
+transcripts come from `speech_to_text`. Do not use third-party TTS/STT
+providers (e.g. ElevenLabs) or a local Whisper install — they bypass the
+workspace's canonical pipeline. An external TTS provider is acceptable only for
+a Remotion project that is explicitly **not** part of this workspace.
 
-If the user has not specified a TTS provider, recommend ElevenLabs and ask for their API key.
+## Generating audio
 
-Ensure the environment variable is available when running the generation script:
+Call `seed_audio_generate` with the per-scene script (see the `seed-audio-prompt`
+skill), download the output locally, then copy it into `public/` with a
+deterministic name so Remotion can load it via `staticFile()`:
 
 ```bash
-node --strip-types generate-voiceover.ts
+cp <generated-audio>.mp3 public/voiceover/${compositionId}/${scene.id}.mp3
 ```
 
-## Generating audio with ElevenLabs
-
-Create a script that reads the config, calls the ElevenLabs API for each scene, and writes MP3 files to the `public/` directory so Remotion can access them via `staticFile()`.
-
-The core API call for a single scene:
-
-```ts title="generate-voiceover.ts"
-const response = await fetch(
-  `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-  {
-    method: "POST",
-    headers: {
-      "xi-api-key": process.env.ELEVENLABS_API_KEY!,
-      "Content-Type": "application/json",
-      Accept: "audio/mpeg",
-    },
-    body: JSON.stringify({
-      text: "Welcome to the show.",
-      model_id: "eleven_multilingual_v2",
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.3,
-      },
-    }),
-  },
-);
-
-const audioBuffer = Buffer.from(await response.arrayBuffer());
-writeFileSync(`public/voiceover/${compositionId}/${scene.id}.mp3`, audioBuffer);
-```
+The dynamic-duration and playback sections below are unchanged.
 
 ## Dynamic composition duration with calculateMetadata
 

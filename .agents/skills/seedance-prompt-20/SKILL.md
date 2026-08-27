@@ -348,7 +348,7 @@ Model IDs are version-dated and change on release. Always copy the live ID from 
 ### Prompt limits
 - BytePlus recommends keeping prompts under 1,000 words so information stays focused. This is a quality recommendation, not a hard API rejection threshold; exceed it when necessary for coherent direction, then edit for focus.
 - The current local ModelArk MCP tool accepts up to 32,000 characters. Treat that as the hard client-side ceiling unless the live API or tool validator changes.
-- Languages: English (all models), Japanese, Indonesian, Spanish, Portuguese (Seedance 2.0).
+- Languages: English, Chinese, Japanese, Indonesian, Spanish, Portuguese (Seedance 2.0).
 
 ### Output resolutions and duration
 - Standard: 480P / 720P / 1080P / 4K.

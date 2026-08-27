@@ -5,6 +5,9 @@ metadata:
   tags: remotion, mediabunny, multimedia, video, audio
 ---
 
+> For Seedance/Seedream frame-content media handling, prefer the `ffmpeg`
+> skills. This library targets in-browser (Remotion) multimedia work.
+
 Mediabunny is a multimedia library for dealing with audio and video in the browser.
 Here is a compact overview of its capabilities: https://mediabunny.dev/llms.txt
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Modeling Modifiers"
+  short_description: "Help with Blender Modeling Modifiers tasks"
+  default_prompt: "Use $blender-modeling-modifiers to handle this blender modeling modifiers task."

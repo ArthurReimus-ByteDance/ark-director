@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Python Scripting"
+  short_description: "Help with Blender Python Scripting tasks"
+  default_prompt: "Use $blender-python-scripting to handle this blender python scripting task."

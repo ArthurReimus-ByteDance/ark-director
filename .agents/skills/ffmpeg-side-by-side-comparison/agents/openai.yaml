@@ -1,0 +1,4 @@
+interface:
+  display_name: "FFmpeg Side By Side Comparison"
+  short_description: "Help with FFmpeg Side By Side Comparison tasks"
+  default_prompt: "Use $ffmpeg-side-by-side-comparison to handle this ffmpeg side by side comparison task."

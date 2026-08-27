@@ -1,0 +1,4 @@
+interface:
+  display_name: "Seedance Graybox World"
+  short_description: "Help with Seedance Graybox World tasks"
+  default_prompt: "Use $seedance-graybox-world to handle this seedance graybox world task."
