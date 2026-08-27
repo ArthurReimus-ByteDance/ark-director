@@ -620,6 +620,26 @@ Rules:
 - Prefer deterministic, parameterized recipes over free-form prompts.
 - Document inputs, outputs, expected cost, latency, and failure modes.
 
+### Maintaining README.md
+- **`README.md` is the public-facing entry point for this repository.** Keep it
+  in sync with the workspace.
+- **When a skill is added, removed, renamed, or its description changes**, update
+  the **Skills** section of `README.md` in the same change. Each skill appears in
+  exactly one category table with a concise one-line description matching its
+  `SKILL.md` frontmatter description.
+- **When `skills-lock.json` changes** (new vendored skill, source change, or hash
+  update), verify the README's **Skill sources** table still reflects the correct
+  source for every skill.
+- **When the model catalog, architecture, or directory structure changes**, update
+  the corresponding README section to match `AGENTS.md`.
+- **README is a mirror, not the source of truth.** `AGENTS.md` is the canonical
+  contract; `README.md` is the public summary. Never put information in README that
+  contradicts `AGENTS.md`. When they diverge, fix README to match AGENTS.md (or
+  update both together if the canonical information itself is changing).
+- Do not commit README changes separately from the skill change that prompted them;
+  keep them in the same commit so the public doc never lags behind the actual
+  skill state.
+
 ### Lumina (web workspace) workflow
 - **Default workflow is local, not Lumina.** Unless the user explicitly says they are working in Lumina, assume the normal MCP-driven, local workflow. Lumina mode is opt-in only.
 - Lumina is BytePlus's all-in-one AI creative workspace at `https://ai.byteplus.com/lumina` (image page: `https://ai.byteplus.com/lumina/en/model/image?mode=image`), where a human drives Seedream/Seedance generation directly in the browser rather than via the API/MCP.
