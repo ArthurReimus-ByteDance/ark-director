@@ -107,6 +107,18 @@ When using `seedream_edit_image`:
 - a box that is too small leaves a blurred or featureless head — widen it to
   the full head before changing the prompt
 
+For the standard three-panel 16:9 sheet (e.g. 2048×1152), the front full-body
+panel is the middle third and the head sits at the top of that panel. A good
+starting box in `seedream_edit_image` normalized coordinates (0–999) is:
+
+```text
+bbox: {x1: 454, y1: 22, x2: 549, y2: 204}
+```
+
+That box covers the head and neck with margin and stays clear of the panel
+divider lines. Start there, widen it if `seed_understand` still reports a face
+in the center panel, and re-run the mandatory verification after every edit.
+
 ## Acceptance Check
 
 Confirm the points below with `seed_understand` (see Verification). Do not

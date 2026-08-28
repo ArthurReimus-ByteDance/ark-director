@@ -812,6 +812,13 @@ Source skill: `seed-audio-prompt`
 
 52. **Audio as reference_audio.** Passed to Seedance task as `reference_audio`.
 
+### Brand-name pronunciation
+
+53. **Respelling inside the dialogue line.** Any brand or domain name the
+    voiceover must say correctly has its phonetic respelling written *inside*
+    the dialogue line itself (not only in a note), using a real-word anchor
+    rather than spaced or capitalized letters (e.g. `Echo-nos`, not `EH ko nos`).
+
 ---
 
 ## Seedream image generation

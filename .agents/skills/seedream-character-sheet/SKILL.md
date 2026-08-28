@@ -173,6 +173,12 @@ Recommended anchors:
 - grounded realism
 - film-photo finish
 
+For a realistic (non-AI-looking) sheet, add the anti-AI-look cues from
+`seedream-prompt`: documentary editorial portrait photography, shot on a
+full-frame camera with a 50mm lens, visible skin pores, fine flyaway hair,
+subtle film grain, and slight facial asymmetry. Keep skin matte — never glossy —
+and forbid plastic/airbrushed skin and unnatural symmetry in Constraints.
+
 ## 6. Lighting
 
 Character sheets use **neutral, even studio lighting** — never scene-specific
@@ -192,6 +198,7 @@ Default:
 - no scene mood, no color cast
 - no hotspots
 - no blown highlights
+- no specular shine, flash, or gloss on the skin — matte skin texture, never glossy
 
 The same neutral lighting is used for every character sheet regardless of what
 lighting the scene or character's world uses.
@@ -240,6 +247,9 @@ Common negatives:
 - no background variation
 - no scene lighting or color cast
 - no exaggerated expressions, no smiling, no frowning, no strong emotions
+- no glossy skin, no specular shine or flash on the skin
+- no plastic skin, no airbrushed skin, no over-smoothing, no waxy texture, no CGI sheen
+- no unnatural symmetry
 - no distorted hands
 - no extra fingers
 - no watermark
@@ -257,17 +267,17 @@ Setting:
 Clean neutral gray studio background, consistent across all three panels. No props, no held objects, no furniture, no background variation.
 
 Style:
-Photorealistic, cinematic, professional character-sheet quality, consistent skin tone and wardrobe detail across all panels.
+Documentary editorial portrait photography, shot on a full-frame camera with a 50mm lens, natural skin texture with visible pores, subtle film grain, professional character-sheet quality, consistent skin tone and wardrobe detail across all panels. Realistic, not airbrushed.
 
 Lighting:
-Soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, identical lighting across all panels.
+Soft, even, neutral studio light, flat fill, neutral white balance, no mood, no dramatic shadows, no specular shine or flash on the skin, identical lighting across all panels.
 
 Composition:
 Three-panel character sheet with even spacing: back full-body view on the left, front full-body view in the center, face close-up on the right. Eye-level camera, consistent framing across the two body panels, relaxed neutral expression in every panel.
 
 Constraints:
 Quality: 4K, rich skin texture, natural hair detail, consistent character identity across all panels
-Negative: no props in hands, no held objects, no weapons, no background variation, no scene lighting or color cast, no exaggerated expressions, no smiling, no frowning, no strong emotions, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
+Negative: no props in hands, no held objects, no weapons, no background variation, no scene lighting or color cast, no exaggerated expressions, no smiling, no frowning, no strong emotions, no glossy skin, no specular shine or flash on the skin, no plastic skin, no airbrushed skin, no over-smoothing, no waxy texture, no CGI sheen, no unnatural symmetry, no extra panels, no side profile, no 3/4 view, no text overlays, no watermarks, no distorted anatomy, no extra fingers
 ```
 
 ## Worked example: Film-style pirate sheet

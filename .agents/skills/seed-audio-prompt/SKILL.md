@@ -306,6 +306,46 @@ Key request limits (see Quick reference card for the authoritative table):
 - Cross-lingual synthesis is supported; consult the [BytePlus voice list](https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01) for current supported languages.
 - Pricing: 0.15 USD per minute of generated audio (0.0025 USD/second), billed per second.
 
+## Conversational voiceover recipe (T2A)
+
+When the goal is a natural, non-robotic social/ad voiceover, write for
+performance, not just for speech:
+
+- **Fewer words.** Budget ≈ 2.2 spoken words per second of target clip duration
+  — a 29-second voiceover is at most ~64 words. If a take sounds rushed or
+  robotic, cut words; do not speed the model up.
+- **Emotion through delivery, not labels.** Give each beat a delivery cue tied
+  to a physical act: a quick intake of breath to open, speaking faster as
+  excitement builds, slowing down and drawing out a word for awe, a small laugh
+  on the punchline, a satisfied sigh before the close. A bare "casual,
+  friendly" description alone tends to read robotic.
+- **Timestamps are a budget, not a straightjacket.** Keep per-line
+  `[start:end]` windows only when lines must land on visual beats; for a
+  standalone voiceover, event-relative delivery cues usually sound more natural.
+
+## Brand-name pronunciation
+
+Two hard-won rules:
+
+1. **The respelling must live in the dialogue line itself**, not only in a
+   pronunciation note. The model reads the line text; a "pronounced X" note
+   alone will not override the written brand name.
+2. **Write the respelling as a real word the model already knows — never as
+   spaced or capitalized letters.** For "Echonos" (EH + KO + NOS), write
+   `Echo-nos` in the line: "Echo" anchors the hard "k" and the first syllable.
+   `Echo-nos` came out correctly where the unhyphenated name was blended and
+   `EH ko nos` was read letter-by-letter.
+
+Add one note in the prompt so the reader understands the respelling is
+intentional, and keep the ban positive — state how TO pronounce it, do not list
+the wrong blend:
+
+```text
+Pronunciation note
+The brand is written "Echo-nos" on purpose — say it as one smooth word: "Echo"
+then "nos".
+```
+
 ## Full example: T2A — Sci-fi news broadcast
 
 ```text
