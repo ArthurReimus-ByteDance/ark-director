@@ -64,6 +64,30 @@ If the back-view panel accidentally exposes too much face because of head turn
 or profile leakage, clean that panel too. The close-up face panel remains the
 only authoritative face and should stay untouched.
 
+## Gender and identity drift warning
+
+Removing the head from the full-body panel can cause **gender identity drift**
+in Seedance video generation. When the body panel is headless, the model may
+lose gender cues (hair length, facial structure, jawline) and render the
+character as the wrong gender. This was confirmed in production: a cleaned
+female character sheet caused the model to render the character as male.
+
+**Mitigation strategies:**
+
+1. **Test before committing.** After cleanup, run `seed_understand` on the
+   cleaned sheet and ask "Is this character male or female?" If the answer is
+   wrong, do not use the cleaned sheet for video generation.
+2. **Keep the uncleaned original as a fallback.** If the cleaned sheet causes
+   gender drift, switch back to the uncleaned sheet. The identity-consistency
+   benefit of cleanup is outweighed by the gender-accuracy risk.
+3. **Reinforce gender in the video prompt.** State the character's gender
+   explicitly and repeatedly: "Maya, a young Filipina woman — she is female."
+4. **When in doubt, skip cleanup.** The cleanup step exists to prevent
+   identity cloning (two faces competing on one sheet). If the character sheet
+   has a clear close-up panel and the full-body panels are not confusing, the
+   cleanup may not be necessary. Use cleanup only when the model is actually
+   cloning faces.
+
 ## Recommended Editing Mode
 
 Use `seedream_edit_image` with a bounding box around the entire head in the

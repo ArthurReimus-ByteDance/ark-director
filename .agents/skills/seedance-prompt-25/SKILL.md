@@ -744,6 +744,28 @@ Use <materials, colors, and style>. Audio includes <ambience, sound effects, or 
 > appendages should be used only when the action sequence is complete;
 > otherwise they may cause stiff motion or structural misinterpretation.
 
+**Video-lock blockout** — when the blockout is a complete animated render that
+must drive the output frame for frame (camera, cuts, blocking, and timing), use
+this master mode instead of coarse/fine. The blockout is the sole authority for
+motion and placement; it never supplies appearance. For the end-to-end Blender
+build → previz render → submit flow, use the `blender-to-seedance` pipeline
+skill.
+
+```
+@Video 1 is the blocking master. It defines the full edit — every cut point,
+camera position, angle, move, and framing, and the motion state and placement of
+every object — and is the SOLE authority for motion. Every output frame
+corresponds 1:1 to the same-timestamp frame of @Video 1; if text and video
+disagree about motion, the video wins. Do not use its gray surfaces, placeholder
+colors, or proxy shapes.
+@Image 1 defines <subject>'s <appearance, clothing, or structure>.
+@Image 2 defines <scene>'s <materials, lighting, or visual style>.
+
+Re-dress, never re-imagine: keep <cuts, camera, blocking, timing> from @Video 1
+exactly; no added, dropped, merged, or re-timed shots. Use <characters, scene,
+materials, and style>. Audio includes <dialogue, ambience, or action SFX>.
+```
+
 ## One-click video
 
 Organize multiple images, or images plus a style-reference video, into a
@@ -911,6 +933,53 @@ bookshelf fully covers the frame, then continue moving left at a similar speed i
 > Aperture, focal length, and shutter values can be included, but the intended
 > **visible result** is usually clearer than a numeric value alone.
 
+## Video call scenes
+
+Video calls (FaceTime, Messenger, Zoom, etc.) shown on a phone or laptop screen
+require special handling. The model has strong priors about video call UI and
+will render a selfie picture-in-picture (PiP) camera view in the corner by
+default — this is extremely difficult to suppress with negative prompt
+instructions alone.
+
+### Rules for video call scenes
+
+1. **Generate a screen UI mockup reference.** Create a Seedream image of the
+   video call interface showing the exact layout you want (e.g., full-screen
+   single video feed, no PiP). Use it as an `@Image N` reference. The model
+   copies the layout from the reference image — text instructions alone
+   cannot override its default video call UI priors.
+
+2. **Do not provide character sheet references for people on the phone screen.**
+   Providing a character sheet for someone visible only through a video call
+   causes the model to render them as a static image — they don't move or
+   talk. Instead, describe the person in text: "a young Filipino man (warm
+   brown skin, short textured black hair, friendly smile, plain t-shirt)
+   talking and moving naturally."
+
+3. **Give all speaking characters scripted dialogue.** Characters on phone
+   screens who have no dialogue lines will ad-lib random content. Provide
+   explicit dialogue for every speaking character using the `Dialogue language`
+   prefix. Direct their voice as "slightly distant through the phone speaker."
+
+4. **Use a Camera and Blocking section.** When a scene alternates between
+   showing the main character's face and showing the phone screen, define
+   explicit shot types:
+
+   ```text
+   [Camera and Blocking]
+   The camera alternates between two shots:
+   1. <Character>'s face — the camera faces them directly, eye-level.
+   2. The phone screen — over the shoulder, showing the screen clearly.
+   ```
+
+   Then label each stage with "Shot 1" or "Shot 2" so the model knows
+   which view to render at each timestamp.
+
+5. **Describe the phone screen layout positively.** Instead of "no selfie
+   PiP," describe what the screen *should* show: "a single full-screen video
+   feed — his face fills the entire phone screen." Negative phrasing names
+   and summons the feature you're trying to avoid (per directing principle #2).
+
 ## Spatial continuity
 
 For movement-heavy scenes, define a spatial continuity contract before writing
@@ -971,7 +1040,7 @@ Before generation, verify:
 7. **Editing master**: For editing, is the sole editing master, edit scope, target quantity, and content to preserve defined?
 8. **Emotion & camera**: Are abstract emotions and cinematography terms paired with visible/audible cues?
 9. **First/last frames**: Are first/last frames assigned one role per image? Do first and last share aspect ratio?
-10. **Storyboards & blockouts**: Does the storyboard state which structure to inherit? For blockouts, is coarse vs fine identified?
+10. **Storyboards & blockouts**: Does the storyboard state which structure to inherit? For blockouts, is coarse vs fine identified? Is a video-lock master treated as the sole motion authority, re-dressed not re-imagined?
 11. **Auto-lock rules**: Do editing, first/last-frame, and extension follow their locked aspect-ratio and duration rules?
 12. **Extension boundary**: For extension, are the boundary image, motion trend, and audio continuity checked?
 13. **One-click video**: Are material roles, image order, motion amount, editing style, and audio defined?
