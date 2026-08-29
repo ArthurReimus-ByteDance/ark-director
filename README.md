@@ -140,7 +140,7 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 
 ## Skills
 
-The workspace ships with **54 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
+The workspace ships with **55 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
 
 ### Production Orchestration
 
@@ -150,6 +150,7 @@ The workspace ships with **54 skills** across 13 categories. Skills are the cano
 | **brief-intake** | Two-mode brief intake that proposes genre-appropriate defaults for every directorial axis (structure, acting, camera, lens, lighting, grade, pacing, staging, medium, audio) and confirms them with the user. Fast mode (default) accepts the proposed set; full Q&A mode walks every axis. |
 | **prompt-review** | Mandatory quality gate that spawns sub-agents to review written prompts against the applicable skill's validation checklist and the universal directing principles. CRITICAL/MAJOR findings must be fixed before generation submission. Covers Seedance, Seed Audio, Seedream, character sheets, storyboards, and VFX prompts. |
 | **media-review** | Opens generated images and videos for visual review on macOS. Builds montage/contact sheets to compare many variants at once, and opens videos directly in the default player. Use when comparing takes, choosing variants, or doing source-vs-output comparisons. |
+| **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 clip, uploads it, and submits a video-to-video task where the previz is the locked motion/camera master and the prompt only dresses the world. Composes the `blender-*` skills, `seedance-prompt-25` blockout grammar, `modelark-mcp`, and `seedance-vfx-pipeline`'s save/manifest pattern. |
 
 ### Seedance — Video Prompting
 
@@ -269,7 +270,7 @@ Skills in this workspace come from three sources, tracked in `skills-lock.json`:
 
 | Source | Type | Examples |
 |---|---|---|
-| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `color-grade-palettes` |
+| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `color-grade-palettes`, `blender-to-seedance` |
 | **Remotion (vendored)** | `github: remotion-dev/skills` | `remotion-*` (9 skills), `mediabunny` |
 | **Blender (vendored)** | `github: ra100/blender-claude-plugin` | `blender-*` (8 skills) |
 | **FFmpeg (vendored)** | `github: digitalsamba/claude-code-video-toolkit` | `ffmpeg` |

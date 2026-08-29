@@ -68,7 +68,7 @@ gracefully degrades to whatever is configured.
 - `seed_media_get_artifact`
 - `seed-health://status` resource
 
-### Requires `BYTEPLUS_SEED_AUDIO_API_KEY`
+### Requires `BYTEPLUS_SEED_SPEECH_API_KEY`
 
 - `seed_audio_generate`
 - `seed_audio_generate_variations`
@@ -117,7 +117,7 @@ Copy `.env.example` to `.env` and configure at minimum:
 
 ```bash
 BYTEPLUS_MODELARK_API_KEY=your-modelark-key   # required for Seedream + Seedance
-BYTEPLUS_SEED_AUDIO_API_KEY=your-speech-key  # required for Seed Audio + Speech-to-Text
+BYTEPLUS_SEED_SPEECH_API_KEY=your-speech-key  # required for Seed Audio + Speech-to-Text
 BYTEPLUS_VOD_MEDIAKIT_API_KEY=your-mediakit-key # required for VOD enhancement, transcoding, and audio separation
 ```
 
@@ -301,7 +301,7 @@ treating the input as invalid.
 
 ### Seed Audio Tools
 
-Requires `BYTEPLUS_SEED_AUDIO_API_KEY`. Auth scope: `seed:audio:generate`.
+Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:audio:generate`.
 
 #### `seed_audio_generate`
 
@@ -913,7 +913,7 @@ where speed matters more than reasoning depth.
 
 ### Speech-to-Text
 
-Requires `BYTEPLUS_SEED_AUDIO_API_KEY`. Auth scope: `seed:asr:transcribe`.
+Requires `BYTEPLUS_SEED_SPEECH_API_KEY`. Auth scope: `seed:asr:transcribe`.
 
 #### `speech_to_text`
 
@@ -952,6 +952,16 @@ Returns `SpeechToTextOutput` with `result: TranscriptionResult` and optional
 `duration_ms`.
 
 Transcription output is text — no artifact persistence needed.
+
+**ASR error code `20000003` (silent audio).** Seed Speech ASR reports task
+state in the `X-Api-Status-Code` header: `20000000` = success, `20000001` /
+`20000002` = still processing, and `20000003` = terminal failure meaning
+**silent audio — no human speech was detected**. The tool surfaces this as
+`Seed Speech ASR query failed with status code 20000003` with
+`retryable=false`. It is not transient — retrying the same task will not help.
+Verify the audio actually contains speech and matches the declared
+`audio_format`: for `wav`/`raw` the gateway assumes 16 kHz, 16-bit, mono PCM,
+and a mismatch decodes to silence or garbage. Re-submit with corrected audio.
 
 ---
 
@@ -1256,6 +1266,7 @@ Set to `0` (default) for record-only mode with no enforcement.
 | Auth error (JWT mode) | Missing or invalid token | Check JWT configuration and scopes |
 | Budget rejected | Daily limit exceeded | Wait for UTC day rollover or increase budget |
 | `speech_to_text` timeout | ASR poll cap reached | Increase `SEED_SPEECH_ASR_POLL_MAX_SECONDS` or provide shorter audio |
+| `speech_to_text` error code `20000003` | Silent audio — no speech detected, or a format mismatch (e.g. non-16 kHz/16-bit/mono WAV) decoded to silence | Verify the audio contains speech and matches the declared `audio_format`; re-submit with corrected audio |
 | `media_upload` / `media_presign` not available | Missing TOS/S3 credentials | Set `TOS_*` or `S3_*` env vars and `OBJECT_STORAGE_BACKEND` |
 | Presigned URL expired | TTL elapsed (default 30 min) | Call `media_presign` with the `object_key` to generate a fresh URL |
 
@@ -1353,7 +1364,7 @@ Set to `0` (default) for record-only mode with no enforcement.
 ### Provider Credentials
 
 - `BYTEPLUS_MODELARK_API_KEY` — enables Seedream and Seedance
-- `BYTEPLUS_SEED_AUDIO_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR) (canonical; older tooling may also accept `BYTEPLUS_SEED_SPEECH_API_KEY` as an alias)
+- `BYTEPLUS_SEED_SPEECH_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR)
 - `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement, video transcoding, and audio separation
 - `BYTEPLUS_MODELARK_BASE_URL` — override ModelArk data-plane host
 - `BYTEPLUS_SEED_AUDIO_BASE_URL` — override Seed Audio host
