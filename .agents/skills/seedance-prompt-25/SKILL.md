@@ -870,6 +870,52 @@ Finally, <subject's final action, expression, or manner of speaking>.
 | Anger | both fists clenched, jawline tense, chest heaving, eyes sharp, squeezing words through gritted teeth |
 | Relief | long exhale, tense shoulders relaxing completely, a faint smile appearing, looking up toward the distance |
 
+## Scripted dialogue for all speaking characters
+
+Every character who speaks in the video — including background characters,
+people on phone screens, voiceover narrators, and characters with a single line
+— must have explicit scripted dialogue using the `Dialogue language` prefix.
+Characters without scripted lines will ad-lib random, unpredictable content
+that may not match the scene, product, or brand message.
+
+```text
+Dialogue language: English. <Character> says in natural <accent> English: {exact line here}
+```
+
+This applies to:
+- Main on-camera characters
+- Characters visible only through phone/laptop screens during video calls
+- Voiceover narrators (use "voiceover narration" after the accent qualifier)
+- Characters with a single word or short phrase
+
+Direct phone-screen character voices as "slightly distant through the phone
+speaker" to differentiate them from on-camera dialogue.
+
+## Describing screen and UI layout positively
+
+When directing what appears on a phone, laptop, or tablet screen, always
+describe what the screen **should** show — never what it should not show.
+Negative phrasing names and summons the feature you are trying to avoid (per
+directing principle #2: "Say what you want, not what you avoid").
+
+**Wrong (negative):**
+```text
+No selfie picture-in-picture. No small inset window. No secondary camera view.
+```
+
+**Right (positive):**
+```text
+The phone screen shows a single full-screen video feed — his face fills the
+entire screen edge to edge. A thin blue header bar with a call timer sits at
+the top. Nothing else appears on the screen — just his full-face video feed.
+```
+
+The positive description gives the model a complete picture of the desired
+layout. The model then has no "gap" to fill with its default priors (e.g.,
+selfie PiP). When a screen UI mockup reference image is also provided as
+`@Image N`, the positive text description and the reference image work
+together to lock the layout.
+
 ## Camera language
 
 ### Basic terms
@@ -945,9 +991,9 @@ instructions alone.
 
 1. **Generate a screen UI mockup reference.** Create a Seedream image of the
    video call interface showing the exact layout you want (e.g., full-screen
-   single video feed, no PiP). Use it as an `@Image N` reference. The model
-   copies the layout from the reference image — text instructions alone
-   cannot override its default video call UI priors.
+   single video feed). Use it as an `@Image N` reference. The model copies the
+   layout from the reference image — text instructions alone cannot override
+   its default video call UI priors.
 
 2. **Do not provide character sheet references for people on the phone screen.**
    Providing a character sheet for someone visible only through a video call
@@ -956,12 +1002,7 @@ instructions alone.
    brown skin, short textured black hair, friendly smile, plain t-shirt)
    talking and moving naturally."
 
-3. **Give all speaking characters scripted dialogue.** Characters on phone
-   screens who have no dialogue lines will ad-lib random content. Provide
-   explicit dialogue for every speaking character using the `Dialogue language`
-   prefix. Direct their voice as "slightly distant through the phone speaker."
-
-4. **Use a Camera and Blocking section.** When a scene alternates between
+3. **Use a Camera and Blocking section.** When a scene alternates between
    showing the main character's face and showing the phone screen, define
    explicit shot types:
 
@@ -974,11 +1015,6 @@ instructions alone.
 
    Then label each stage with "Shot 1" or "Shot 2" so the model knows
    which view to render at each timestamp.
-
-5. **Describe the phone screen layout positively.** Instead of "no selfie
-   PiP," describe what the screen *should* show: "a single full-screen video
-   feed — his face fills the entire phone screen." Negative phrasing names
-   and summons the feature you're trying to avoid (per directing principle #2).
 
 ## Spatial continuity
 
