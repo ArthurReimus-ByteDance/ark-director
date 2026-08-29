@@ -1,11 +1,11 @@
 ---
 name: seedance-prompt-20
-description: Write and revise production-grade Seedance 2.0 video prompts with reference-role classification, subject definitions, spatial continuity, shot sequencing, camera direction, native audio, and constraints. Use this skill for Seedance 2.0 prompts, shot lists, chase or action blocking, scene geography, reference-driven video, and corrections to generated motion or continuity. For Seedance 2.5 prompts, use seedance-prompt-25 instead.
+description: Write and revise production-grade Seedance 2.0 video prompts with reference-role classification, subject definitions, spatial continuity, shot sequencing, camera direction, native audio, and constraints. Use this skill for Seedance 2.0 prompts, shot lists, chase or action blocking, scene geography, reference-driven video, and corrections to generated motion or continuity. For Seedance 2.5 prompts, compose with seedance-prompt-25 instead.
 ---
 
 # Seedance 2.0 Prompt
 
-> **For Seedance 2.5 prompts, use the `seedance-prompt-25` skill instead.** This skill
+> **For Seedance 2.5 prompts, the `seedance-prompt-25` skill covers those.** This skill
 > is for the legacy Seedance 2.0 model. The 2.5 model has a different prompt anatomy
 > (flexible formula, 50 references, variable-duration scene staging, structured editing
 > templates) that is not covered here.

@@ -109,7 +109,7 @@ safe-location soundscape unless the story requires lingering threat.
 For native video audio, keep this arc inside the Seedance prompt so sound and
 picture share the same trigger. Use standalone Seed Audio when producing or
 replacing a separate soundtrack, dialogue stem, ambience bed, or mix element.
-When the audio is destined for a Seedance video, route the prompt to
+When the audio is destined for a Seedance video, the video prompt lives in
 `seedance-prompt-25` (2.5, up to 10 audio refs, 30s) or `seedance-prompt-20`
 (2.0, up to 3 audio refs, 15s). When the user has explicitly requested
 lip-synced dialogue, generate the Seed Audio track first, verify
@@ -516,3 +516,9 @@ For content longer than 2 minutes, chain generations: take the output of one cal
 
 ### Prompt language
 Prompt language and dialogue/script language should be the same language. Seed Audio 1.0 supports cross-lingual synthesis; consult the [API reference](https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01) for the current voice and language list.
+
+## Related skills
+
+- `seed-audio-commercial` — dramatic, story-driven audio commercials
+- `audio-dubbing` — dubbing pipeline with voice cloning (TA2A)
+- `audio-split` — reference audio segmentation for ≤30s clips

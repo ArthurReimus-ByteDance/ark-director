@@ -1,6 +1,6 @@
 ---
 name: lark-showcase-aigc
-description: Creates enterprise-facing Lark documents to showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark.
+description: Orchestrates lark-demo-doc-builder, lark-doc, lark-wiki, lark-drive, and design-doc-mermaid to build enterprise-facing Lark documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark.
 ---
 
 # Showcase AIGC
@@ -25,9 +25,9 @@ The final document should:
 - embed images, audio, and video inline when available;
 - read like a polished customer showcase, not an internal engineering note.
 
-## Mandatory routing
+## Orchestration
 
-When executing this skill, use these skills and tools as needed:
+This skill is an orchestrator — it sequences these skills and tools as needed:
 
 - `lark-demo-doc-builder` for the main document-building workflow and prompt/result table patterns.
 - `lark-doc` for document creation and block-level editing.

@@ -114,3 +114,5 @@ On the VIDEO result, after using the connector:
 - **Trajectory maps**: the flight of a bullet, a bird, a thrown object, or any function-driven curve is DESIGNED on the faint grid (real coordinates, parabolas, exported curves) and DELIVERED as a drawn dashed path on the map — one distinct muted color per path. The model reads the drawn path, not the grid. Bind each path in the legend with four facts: START, PATH shape, END, and TRIGGER beat ("dashed RED line = the bullet's path, from B's fist, flat and straight, exiting frame-right, on the gunshot").
 - **Camera path maps**: arrows on the drawing for dolly/pan direction — declare "arrows = camera path only" in the legend.
 - **Movement maps**: dashed line for a character's cross (A→new mark) — declare start, path, end mark, and WHEN the move happens (tie to a dialogue/action beat).
+
+Compose with `seedance-prompt-25` when writing the surrounding video prompt.

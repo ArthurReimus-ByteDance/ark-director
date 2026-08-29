@@ -216,7 +216,7 @@ Each mode has a camera discipline. Encode the camera style explicitly:
 | Pro Virtual Try-On | Tripod or gimbal, 85-135mm equivalent | 3-point studio lighting; editorial framing |
 | Wild Card | User-defined | State the camera discipline explicitly |
 
-Load `seedance-camera-presets` when the user names a specific camera
+Compose with `seedance-camera-presets` when the user names a specific camera
 move ("dolly in", "bullet-time orbit"). For ordinary ad mode prompts
 without such direction, this skill's camera table is sufficient.
 
@@ -240,10 +240,11 @@ lip-synced dialogue:
 - **Product Review**: voice is mandatory — silent videos engage at 0.90x
   vs 1.09x with voice. Voice won in every category tested.
 
-When the user requests lip-synced dialogue audio, use the audio-first
-pipeline: generate Seed Audio dialogue first, then pass it as
+When the user requests lip-synced dialogue audio, compose the audio-first
+pipeline: generate Seed Audio dialogue first (optionally compose with
+`seed-audio-prompt` for the prompt structure), then pass it as
 `reference_audio` to Seedance. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes)
-below. Load `seed-audio-prompt` for the audio prompt structure.
+below.
 
 ### 9. Close with the CTA
 
@@ -357,8 +358,8 @@ unless the user explicitly asks for them.
 When the user explicitly requests lip-synced dialogue audio for any UGC
 or review mode, follow the audio-first pipeline:
 
-1. **Generate Seed Audio dialogue first** — use `seed-audio-prompt` to
-   write the audio prompt, then generate via `seed_audio_generate`.
+1. **Generate Seed Audio dialogue first** — compose the audio prompt with
+   `seed-audio-prompt`, then generate via `seed_audio_generate`.
 2. **Verify audio duration ≤ video duration.** If audio exceeds video
    duration, trim the audio prompt (shorter ambience tails, fewer
    pauses) and regenerate.
@@ -374,20 +375,13 @@ generate video directly and let Seedance's native audio handle dialogue.
 
 ## Integration with existing skills
 
-| Partner skill | What it owns | What this skill provides |
-|---|---|---|
-| `seedance-prompt-25` | Six-part formula, reference syntax, audio brackets, scene staging, timestamps | Mode-specific phrasing that drops into the formula's slots |
-| `seed-audio-prompt` | Seed Audio 1.0 prompt structure (dialogue, music, SFX, ambience) | Mode-specific audio direction (voice style, ambience, music) |
-| `seedance-camera-presets` | Camera moves and MoveSet styles | Mode-specific camera discipline (handheld phone vs gimbal vs studio rig) |
-| `seedance-lighting-presets` | Lighting recipes (causal lighting for elements and video) | Mode-specific lighting approach (natural window vs 3-point studio vs broadcast) |
-| `seedance-acting-console` | Per-character emotion cues | Mode-specific creator performance direction (conversational vs professional vs testimonial) |
-| `seedance-pacing-presets` | Speed ramps and montage pacing | Mode-specific beat timing (5-beat spine, 1-2-1, 0-5-22-30) |
-
-Load a partner skill only when the user names a specific axis ("dolly
-in on her face", "golden hour lighting", "rage at medium intensity").
-For ordinary ad mode prompts without such direction, this skill alone
-is sufficient. Do not let two skills fight: exactly one dominant visual
-texture and 1-2 camera moves per clip.
+Compose with `seedance-prompt-25` for the six-part formula and with the axis
+preset skills (`seed-audio-prompt`, `seedance-camera-presets`,
+`seedance-lighting-presets`, `seedance-acting-console`, `seedance-pacing-presets`)
+only when the user names a specific axis ("dolly in on her face", "golden hour
+lighting", "rage at medium intensity"). For ordinary ad mode prompts without
+such direction, this skill alone is sufficient. Do not let two skills fight:
+exactly one dominant visual texture and 1-2 camera moves per clip.
 
 ## Custom-mode procedure
 

@@ -150,7 +150,7 @@ The workspace ships with **55 skills** across 13 categories. Skills are the cano
 | **brief-intake** | Two-mode brief intake that proposes genre-appropriate defaults for every directorial axis (structure, acting, camera, lens, lighting, grade, pacing, staging, medium, audio) and confirms them with the user. Fast mode (default) accepts the proposed set; full Q&A mode walks every axis. |
 | **prompt-review** | Mandatory quality gate that spawns sub-agents to review written prompts against the applicable skill's validation checklist and the universal directing principles. CRITICAL/MAJOR findings must be fixed before generation submission. Covers Seedance, Seed Audio, Seedream, character sheets, storyboards, and VFX prompts. |
 | **media-review** | Opens generated images and videos for visual review on macOS. Builds montage/contact sheets to compare many variants at once, and opens videos directly in the default player. Use when comparing takes, choosing variants, or doing source-vs-output comparisons. |
-| **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 clip, uploads it, and submits a video-to-video task where the previz is the locked motion/camera master and the prompt only dresses the world. Composes the `blender-*` skills, `seedance-prompt-25` blockout grammar, `modelark-mcp`, and `seedance-vfx-pipeline`'s save/manifest pattern. |
+| **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 clip, uploads it, and submits a video-to-video task where the previz is the locked motion/camera master and the prompt only dresses the world. Orchestrator: delegates the build to the `blender-*` skills, the grammar to `seedance-prompt-25` blockout mode, and submission to `modelark-mcp` (plus `seedance-vfx-pipeline`'s save/manifest pattern). |
 
 ### Seedance — Video Prompting
 
@@ -165,7 +165,7 @@ The workspace ships with **55 skills** across 13 categories. Skills are the cano
 | **seedance-pacing-presets** | Turns a named pacing or rhythm preset (speed ramp, slow motion, bullet time, ramp up, flash in/out, impact moment, montage, cut rhythm, speed up) into a canonical, timestamped motion, cut, and pacing block for the Seedance prompt. |
 | **seedance-acting-console** | Converts a directing directive into a production-grade acting block. Two layers: scene-level acting analysis (motive, goal, obstacle, tactic, eye-work as purposeful action) and cue encoding (maps the tactic's visible footprint to observable physical cues at three intensity levels using a six-emotion bank). |
 | **seedance-animation-styles** | Writes Seedance animation prompts for claymation, needle felt, wood puppets, toy miniatures, vintage rubber hose, painterly 2D, cubist ink, stylized 3D, silicone creatures, wax crayon, and custom animation media. Preserves handcrafted texture and material-specific motion. |
-| **seedance-music-video** | Writes production-grade music-video prompts: picks a video format (performance, narrative, conceptual, lyric, visualizer, hybrid), maps song sections to a visual plan, directs beat-synced cuts and camera, drives native audio or audio-first lip-sync, and locks a per-genre visual style. |
+| **seedance-music-video** | Writes production-grade music-video prompts: picks a video format (performance, narrative, conceptual, lyric, visualizer, hybrid), maps song sections to a visual plan, directs beat-synced cuts and camera, drives native audio or audio-first lip-sync, and locks a per-genre visual style. Orchestrator for the music-video layer: delegates every other directorial axis to its owning preset skill (see `docs/seedance-reference.md`). |
 | **seedance-graybox-world** | Writes Seedance 2.5 prompts for the Blender gray look — an untextured gray graybox/blockout 3D world with matcap-style shading, ambient-occlusion depth, and a neutral gray viewport background, like Blender's Solid viewport. Use when gray IS the desired final look, not just a previs reference. |
 
 ### Seedance — VFX
@@ -173,7 +173,7 @@ The workspace ships with **55 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **seedance-vfx-prompt** | Writes structured or compact Seedance 2.0 video-to-video VFX prompts using the `@Video N` / `@Image N` reference grammar. Covers the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting, layered space, timing triggers, camera moves synced to dialogue, diegetic audio, 4K face protection, photoreal creature integration, and source-clip inspection. Also covers Seedance 2.5 structured editing. |
-| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance VFX shot production. Composes `seedance-vfx-prompt` with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Supports both 2.0 and 2.5; defaults to 2.5 for full-duration edits. |
+| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance VFX shot production. Composes `seedance-vfx-prompt`, the modelark MCP tools, and `ffmpeg-side-by-side-comparison` to take a source clip and a change description through to a saved, manifested asset. Supports both 2.0 and 2.5; defaults to 2.5 for full-duration edits. |
 
 ### Seedream — Image Prompting
 
@@ -260,7 +260,7 @@ The workspace ships with **55 skills** across 13 categories. Skills are the cano
 
 | Skill | Description |
 |---|---|
-| **lark-showcase-aigc** | Creates enterprise-facing Lark/Feishu documents to showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark. |
+| **lark-showcase-aigc** | Orchestrates `lark-demo-doc-builder`, `lark-doc`, `lark-wiki`, `lark-drive`, and `design-doc-mermaid` to build enterprise-facing Lark/Feishu documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark. |
 
 ---
 
@@ -274,6 +274,12 @@ Skills in this workspace come from three sources, tracked in `skills-lock.json`:
 | **Remotion (vendored)** | `github: remotion-dev/skills` | `remotion-*` (9 skills), `mediabunny` |
 | **Blender (vendored)** | `github: ra100/blender-claude-plugin` | `blender-*` (8 skills) |
 | **FFmpeg (vendored)** | `github: digitalsamba/claude-code-video-toolkit` | `ffmpeg` |
+
+Vendored skills are upstream-owned and excluded from the skill-isolation
+remediation — their cross-skill directives are treated as upstream design (see
+`AGENTS.md`). Project-authored skills follow the global "Skill Independence &
+Orchestration" rule: one capability per skill, prose-only "compose with X"
+sibling hints, and explicitly-marked orchestrators.
 
 ---
 

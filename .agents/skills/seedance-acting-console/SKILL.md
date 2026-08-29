@@ -338,8 +338,8 @@ Seed Audio dialogue track first and pass it as `reference_audio` to Seedance.
 This is the stronger acting lever: lip-sync constrains the on-screen performance
 to the voice emotion.
 
-**Pair with `seed-audio-prompt`** for Seed Audio voice profile composition and
-generation. The exact dialogue lines in the Seed Audio `text_prompt` must appear
+**Optionally compose with `seed-audio-prompt`** for Seed Audio voice profile
+composition and generation. The exact dialogue lines in the Seed Audio `text_prompt` must appear
 verbatim inside `{curly braces}` in the Seedance prompt. If one changes, both
 change.
 

@@ -35,9 +35,8 @@ HDRI gray lighting):
 - https://docs.blender.org/manual/en/latest/editors/3dview/display/shading.html#material-preview-mode
 
 The prompt grammar lives in the partner skill `seedance-prompt-25` (six-part
-formula: Subject + Action + Scene + Visual Style + Camera + Audio). Load it
-alongside this skill when writing a full prompt; this skill supplies the
-graybox look block only.
+formula: Subject + Action + Scene + Visual Style + Camera + Audio). Compose with
+it when writing a full prompt; this skill supplies the graybox look block only.
 
 ## What "graybox" means here
 
@@ -325,7 +324,7 @@ explicitly asks for them.
 - **Do not mix with other style presets.** One look per shot. Do not combine
   graybox with a teal-orange grade, a lighting preset, or an animation-medium
   style — they fight the gray. Lighting here is always the single soft neutral
-  studio light; do not load `seedance-lighting-presets`.
+  studio light; do not stack a lighting preset on top of the gray.
 - **People are gender-neutral mannequins, not people.** When a human figure
   appears, render it as a gender-neutral articulated mannequin — jointed limbs,
   a featureless head, no skin, hair, facial features, or gendered clothing.

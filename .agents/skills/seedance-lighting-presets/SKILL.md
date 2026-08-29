@@ -37,9 +37,9 @@ the live pages over this skill where they conflict.
 
 The base prompt grammar lives in the partner skills `seedream-prompt` (Lighting
 section, avoiding-the-AI-look lighting guidance) and `seedance-prompt-25`
-(six-part formula, Visual Style slot, camera and audio syntax). Load those
-alongside this skill when writing a full prompt; this skill supplies the
-lighting block only.
+(six-part formula, Visual Style slot, camera and audio syntax). Compose with
+those skills when writing a full prompt; this skill supplies the lighting block
+only.
 
 ## Preset bank
 

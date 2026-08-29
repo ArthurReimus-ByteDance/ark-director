@@ -193,10 +193,10 @@ reaches Seedance.
 ## Workflow Pairing
 
 Recommended sequence:
-1. Use `seedream-character-sheet` to generate the three-panel character sheet.
+1. Assumes a three-panel sheet exists (e.g. from `seedream-character-sheet`).
 2. Inspect the full-body panels for duplicate readable faces.
 3. If a second face is visible, invoke this skill.
-4. Use `seedream-edit` with `seedream_edit_image` to remove the extra face.
+4. Use the `seedream_edit_image` MCP tool to remove the extra face.
 5. Verify the result with `seed_understand` — full-body panel headless,
    close-up face intact. Re-edit with a corrected bbox if verification fails.
 6. Save the cleaned sheet as a **new version/file**, not as an overwrite of the

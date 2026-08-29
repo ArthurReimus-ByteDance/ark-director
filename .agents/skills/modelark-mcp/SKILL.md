@@ -1188,6 +1188,9 @@ After downloading a Seedance result:
 7. For HEVC or other review-host-sensitive masters, optionally generate a
    lightweight H.264 proxy while preserving the original master.
 
+For FFmpeg post-processing and assembly, compose with the `ffmpeg` skill (and
+`ffmpeg-scene-transitions` for multi-clip crossfades).
+
 ### Parallel Variations
 
 Use variation tools when you want to give the user multiple options:

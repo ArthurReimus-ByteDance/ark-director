@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-pipeline
-description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill with the modelark MCP tools to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
+description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill, the modelark MCP tools, and ffmpeg-side-by-side-comparison to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
 ---
 
 # Seedance VFX Pipeline
@@ -25,8 +25,8 @@ Use this skill when the user wants to:
 - **produce a manifested, reproducible VFX asset** with `shot.md` + prompt file
 
 Do **not** use this skill when the user only wants to:
-- write a VFX prompt without submitting (use `seedance-vfx-prompt`)
-- generate text-to-video or image-to-video (use `seedance-prompt`)
+- write a VFX prompt without submitting (see `seedance-vfx-prompt`)
+- generate text-to-video or image-to-video (see `seedance-prompt-25`; `seedance-prompt-20` for 4K/Fast/Mini)
 - generate images or audio (use Seedream / Seed Audio skills)
 
 ## Prerequisites
@@ -90,7 +90,7 @@ The workspace's recurring pattern for a text-only before/after VFX demo:
 
 ## Step 1 — Write the VFX prompt
 
-Use the `seedance-vfx-prompt` skill to write the prompt. The prompt must follow
+Compose the prompt with the `seedance-vfx-prompt` skill. The prompt must follow
 the natural-language heading structure with all applicable sections:
 
 ```text

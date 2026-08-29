@@ -25,8 +25,8 @@ little shorter than the video).
 - Add a fade-in at the open and a fade-out at the close.
 - Diagnose or fix audio drifting out of sync after clips were joined.
 
-For single-clip operations (trim, resize, speed, extract audio), use the
-`ffmpeg` skill instead. This skill is for the multi-clip assembly.
+For single-clip operations (trim, resize, speed, extract audio), the
+`ffmpeg` skill covers those. This skill is for the multi-clip assembly.
 
 ## Why sync drifts (read this first)
 
@@ -175,5 +175,5 @@ transition) and open the film to eyeball the cuts.
 
 ## Reference
 
-- `ffmpeg` skill — general single-clip operations and the same crossfade recipe
-  in its "Crossfade assembly — A/V sync pitfall" section.
+- `ffmpeg` skill — general single-clip operations; this skill's crossfade
+  recipe above is self-contained.

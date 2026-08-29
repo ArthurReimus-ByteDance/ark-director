@@ -20,8 +20,8 @@ skill: it never calls MCP tools or the Ark API, and it never runs generation.
 The base prompt grammar — the six-part formula, `At Ns` timestamp syntax, the
 bounce-speed-ramp technique contract, the audio bracket syntax `()<>{}【】`,
 and scene-staging rules — is defined in `seedance-prompt-25` and is **not
-redefined here**. Load `seedance-prompt-25` for the full prompt contract; this
-skill only adds the pacing preset bank on top.
+redefined here**. Compose with `seedance-prompt-25` for the full prompt contract;
+this skill only adds the pacing preset bank on top.
 
 The output of this skill is always a **pacing block** — a timestamped
 description of where motion speeds up, slows down, lands on a beat, or cuts —
@@ -151,10 +151,10 @@ list before generation.
 - **Keep 1-2 camera moves per clip.** Pacing blocks describe timing, not camera
   gymnastics. Compose the camera treatment with `seedance-camera-presets` and
   keep simultaneous moves to at most two per clip.
-- **Pacing needs a shot list.** When the scene has multiple cuts, use the
-  storyboard / multi-shot staging from `seedream-storyboard` and
-  `film-production` rather than one raw prompt. A montage without an ordered
-  cut list lets the model cut or reorder arbitrarily.
+- **Pacing needs a shot list.** When the scene has multiple cuts, prefer
+  `seedream-storyboard` / `film-production` for the shot list rather than one
+  raw prompt. A montage without an ordered cut list lets the model cut or
+  reorder arbitrarily.
 - **30s single-pass or native extension only for continuous seamless motion.**
   Reserve them for a genuine single continuous take or audio-driven long
   dialogue where seamless motion across scene boundaries matters more than
@@ -166,9 +166,9 @@ list before generation.
   target.
 - **Dialogue scenes: align pacing to audio.** When dialogue exists with
   `generate_audio: true`, the pacing timestamps should align to the spoken
-  beats. For lip-sync-critical scenes, pair with `seed-audio-prompt` to
-  generate the Seed Audio track first, then align pacing timestamps to the
-  actual audio timing.
+  beats. For lip-sync-critical scenes, optionally compose with
+  `seed-audio-prompt` to generate the Seed Audio track first, then align pacing
+  timestamps to the actual audio timing.
 - **Generation parameters stay in the API.** Duration, resolution, aspect
   ratio, and watermark never go in the prompt. Keep `watermark: false` by
   default.

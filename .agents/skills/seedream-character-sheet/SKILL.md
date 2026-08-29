@@ -173,8 +173,8 @@ Recommended anchors:
 - grounded realism
 - film-photo finish
 
-For a realistic (non-AI-looking) sheet, add the anti-AI-look cues from
-`seedream-prompt`: documentary editorial portrait photography, shot on a
+For a realistic (non-AI-looking) sheet, add the anti-AI-look cues: documentary
+editorial portrait photography, shot on a
 full-frame camera with a 50mm lens, visible skin pores, fine flyaway hair,
 subtle film grain, and slight facial asymmetry. Keep skin matte — never glossy —
 and forbid plastic/airbrushed skin and unnatural symmetry in Constraints.
@@ -314,7 +314,7 @@ Recommended sequence:
 1. Use this skill to write the character-sheet prompt.
 2. Generate the sheet with Seedream.
 3. Inspect the body panels for extra readable faces.
-4. If needed, invoke `seedream-character-sheet-cleanup`.
+4. If needed, optionally compose with `seedream-character-sheet-cleanup`.
 5. Save each generated result under `elements/<character-id>/` beside `character.md`.
 6. Record the approved filename as `selected_variant` in `character.md`; keep reference images in the same element folder using the `ref_<NN>_...` convention.
 

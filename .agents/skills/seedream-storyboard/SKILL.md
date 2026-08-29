@@ -309,8 +309,8 @@ holds, wears, or operates on camera — a device, weapon, eyewear, or tool — m
 have its own canonical prop sheet and be bound as an `@Image N` input. Never
 describe a held or worn prop in text only: a text-only prop renders as the wrong
 object (a pen-shaped device can come back as a laser, eyewear as the wrong
-frame). If the prop has no sheet, generate the prop sheet first with the prop
-workflow, then return to the board.
+frame). If the prop has no sheet, generate a prop sheet first using the
+prop-sheet workflow in the `seedream-prompt` skill, then return to the board.
 
 Bind the active location in every panel, including close-ups and medium shots.
 A panel without a location reference drifts to an unrelated setting (a night
@@ -604,10 +604,10 @@ descriptions are kept to 1–2 sentences. If it still overflows, split the board
 
 ### 9d. Prompt-review gate
 
-Before submitting any generation task, run the `prompt-review` skill (or
-`/prompt-review` command) against the finalized prompt. This is a mandatory
-quality gate per the workspace AGENTS.md — CRITICAL/MAJOR findings must be
-fixed before submission. The review covers:
+The workspace AGENTS.md mandates a prompt-review gate before submission —
+CRITICAL/MAJOR findings must be fixed before generation. Invoke it via the
+`/prompt-review` command (or compose with the `prompt-review` skill) against the
+finalized prompt. The review covers:
 
 - Element bindings (`@Image N` indices match the request and manifest)
 - Directing principles (assets first, positive instructions, direct don't describe)
@@ -938,3 +938,8 @@ technical record.
 
 Do not claim that a storyboard, asset, or variant exists unless it was actually
 generated and saved.
+
+## Compose with other skills
+
+- Compose with `seedream-character-sheet` / `seedream-location-asset` (and prop
+  sheets via `seedream-prompt`) for canonical Element references in every panel.

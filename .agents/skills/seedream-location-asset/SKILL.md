@@ -26,8 +26,9 @@ Do **not** use this skill for:
 
 ## Source authority
 
-This skill follows the Seedream prompt structure and adapts it specifically for
-location/environment generation.
+This skill follows the Seedream prompt structure from `seedream-prompt` and
+adapts it specifically for location/environment generation; compose with
+`seedream-prompt` for the general Seedream prompt structure.
 
 - [Seedream 5.0 Pro official blog](https://seed.bytedance.com/en/blog/beyond-generation-it-understands-design-introducing-seedream-5-0-pro)
 - [Seedream 4.0-5.0 API Tutorial](https://docs.byteplus.com/en/docs/ModelArk/1824121)

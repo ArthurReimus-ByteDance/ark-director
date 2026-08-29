@@ -96,7 +96,7 @@ Decide which mode the request calls for. If unclear, ask one short question.
 ## Input handling
 
 - Pasted prose / beat outline / scene → work directly.
-- `.docx` / `.pdf` / Fountain / Final Draft / "read the whole thing" → read the file first (use the docx / pdf-reading / file-reading skills as needed), then audit/write.
+- `.docx` / `.pdf` / Fountain / Final Draft / "read the whole thing" → read the file first (using your available file-reading tools), then audit/write.
 - If given a full script and asked about structure, first **segment it into sequences** (jeopardy-opens → jeopardy-resolves) before auditing, and audit sequence by sequence.
 
 ---
@@ -195,3 +195,4 @@ Short notice is the only kind you give.
 - Genre default: psychological drama / thriller. Confirm theme/idea with the user when writing.
 - Audit is in-chat prose; rewrites within it are in FD format.
 - The single most common real failure to hunt for: **a reversal that turns the plot but does not move the audience's verdict — it is inert.** Surface it first.
+- When an audited scene becomes a storyboard or video, compose with `tig-blocking-map` for staging and `seedance-prompt-25` for the video prompt.

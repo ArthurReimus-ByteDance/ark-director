@@ -63,7 +63,7 @@ This skill provides three complementary strategies, applied in order:
 
 ## When to use this skill
 
-Use this skill **in addition to** `seedance-prompt-25` whenever any of these
+This skill applies **in addition to** `seedance-prompt-25` whenever any of these
 apply:
 
 - The scene contains **Tagalog or Filipino dialogue** (in `{curly braces}`)
@@ -72,10 +72,11 @@ apply:
 - The user asks for **Philippine-language content**, **Filipino video**, or
   **Tagalog pronunciation/intonation** guidance
 
-Do **not** use this skill alone — always compose it with the base
-`seedance-prompt-25` formula (Subject + Action + Scene + Style + Camera +
-Audio). This skill provides the Filipino-specific audio and dialogue layer; the
-base skill provides the visual, reference, staging, and camera layers.
+This skill extends the `seedance-prompt-25` six-part formula (Subject + Action +
+Scene + Style + Camera + Audio) with the Filipino-specific audio and dialogue
+layer; compose with the base skill when the scene contains Filipino dialogue. It
+can also be used standalone for pronunciation and intonation guidance. The base
+skill provides the visual, reference, staging, and camera layers.
 
 ## Relationship to seedance-prompt-25
 
@@ -581,7 +582,7 @@ flowchart TD
 
 ### Step 1: Simplify vocabulary and generate Tagalog dialogue with Seed Audio
 
-Use the `seed-audio-prompt` skill to compose a Seed Audio prompt for the
+Compose the Seed Audio prompt with the `seed-audio-prompt` skill for the
 Tagalog dialogue. Key additions for Filipino:
 
 1. **Simplify vocabulary first** — rewrite all dialogue using common, modern
@@ -1032,9 +1033,10 @@ Teacher Mae asks: {Naiintindihan ba ninyo?}
 ### Fallback to Seedance 2.0
 
 Seedance 2.5 supports 480p/720p/1080p output resolution. For 4K output,
-or for Fast/Mini speed variants, use the `seedance-prompt-20` skill with model
-`dreamina-seedance-2-0-260128`. Note that 2.0 has a 15s max duration (vs 30s on
-2.5) and fewer reference slots (9 imgs / 3 vids / 3 audios vs 30/10/10).
+or for Fast/Mini speed variants, the `seedance-prompt-20` skill covers the 2.0
+model (`dreamina-seedance-2-0-260128`). Note that 2.0 has a 15s max duration
+(vs 30s on 2.5) and fewer reference slots (9 imgs / 3 vids / 3 audios vs
+30/10/10).
 
 ### Phonetic annotation summary
 

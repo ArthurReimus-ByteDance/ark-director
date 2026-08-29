@@ -484,11 +484,11 @@ Negative: no floating objects, no mismatched lighting directions
 ## Character-sheet routing
 
 For character sheets, identity sheets, turnaround sheets, or Seedance-facing
-character references, use the partner `seedream-character-sheet` skill instead
-of embedding that workflow here.
+character references, prefer the sibling `seedream-character-sheet` skill rather
+than embedding that workflow here.
 
-If the generated character sheet later needs duplicate-face cleanup, follow it
-with the companion `seedream-character-sheet-cleanup` skill.
+If the generated character sheet later needs duplicate-face cleanup, optionally
+compose with the companion `seedream-character-sheet-cleanup` skill.
 
 ## Usage tips
 

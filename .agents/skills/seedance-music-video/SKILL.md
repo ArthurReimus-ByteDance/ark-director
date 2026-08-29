@@ -12,7 +12,9 @@ description: >
   montage pacing that is not tied to a whole song, use seedance-pacing-presets
   instead. Compose with seedance-prompt-25 for the full six-part grammar and
   with seed-audio-prompt when an original music master or lip-synced vocal track
-  is needed first.
+  is needed first. This skill is an orchestrator for the music-video layer: it
+  delegates every other directorial axis to its owning preset skill (see
+  docs/seedance-reference.md for the canonical axis table).
 ---
 
 # Seedance Music Video
@@ -336,25 +338,17 @@ from drifting across the section chain and during later shots.
 ## Partner-skill routing
 
 This skill owns the music-video layer: format, song map, beat contract, audio
-contract, and genre lock. Route every other axis to its owning skill instead of
-duplicating it, and never let two skills fight:
-
-| Concern | Route to |
-|---|---|
-| Full six-part grammar, reference roles, staging, timestamp rules, audio syntax | `seedance-prompt-25` |
-| Speed ramps, montage cut rhythm, beat-snapped pacing blocks | `seedance-pacing-presets` |
-| Named camera moves, ≤2 moves per clip | `seedance-camera-presets` |
-| Acting, emotional cues, lip-sync delivery | `seedance-acting-console` |
-| Original music / vocal master, audio-first track | `seed-audio-prompt`, `seed-audio-commercial` |
-| Animation medium inside the MV (clay, felt, cel…) | `seedance-animation-styles` |
-| Named grade palette / lighting setup | `color-grade-palettes`, `seedance-lighting-presets` |
-| Storyboard, full multi-scene production | `seedream-storyboard`, `film-production` |
+contract, and genre lock. Other axes belong to their owning preset skills — see
+the canonical axis→skill table in `docs/seedance-reference.md` (including
+`seed-audio-prompt` / `seed-audio-commercial` for an original music or vocal
+master, and `seedream-storyboard` / `film-production` for storyboard and
+multi-scene production). Never let two skills fight:
 
 **Guardrail:** the genre lock is the sole palette, lighting, and camera source
-**unless the user names a specific axis** — then load that axis's preset skill
-and keep exactly one grade, one dominant lighting direction, and at most two
-camera moves per clip. Do not stack a second grade or camera treatment on top
-of a genre recipe.
+**unless the user names a specific axis** — then compose that axis with its
+owning preset skill and keep exactly one grade, one dominant lighting direction,
+and at most two camera moves per clip. Do not stack a second grade or camera
+treatment on top of a genre recipe.
 
 ## Output formats
 

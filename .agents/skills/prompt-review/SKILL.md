@@ -47,9 +47,9 @@ Do not trigger for:
 
 ## Prompt type detection
 
-Match each prompt to its reviewing skill by file naming convention and content:
+Match each prompt to its checklist source by file naming convention and content:
 
-| Prompt type | File prefix | Reviewing skill |
+| Prompt type | File prefix | Checklist source |
 |---|---|---|
 | Seedance 2.5 video | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-prompt-25` |
 | Seedance 2.0 video (4K/Fast/Mini) | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-prompt-20` |
@@ -64,12 +64,10 @@ Match each prompt to its reviewing skill by file naming convention and content:
 | Seedream brand/title card | `prompt_card_*` | `seedream-prompt` (general image rules apply) |
 | Seedream storyboard | `prompt_sNN_kf*` (multi-panel) | `seedream-storyboard` |
 | Seedance music video | `prompt_sNN_shNNN_tNN_vNN.md` (song-driven) | `seedance-music-video` |
-| UGC hooks (intermediate) | Hook variant output blocks | `ugc-hook-lab` |
-| UGC scripts (intermediate) | Per-beat script structure blocks | `ugc-script-architect` |
-| UGC compliance audit | Compliance audit output | `ugc-compliance-gate` |
-| UGC brief (intermediate) | Campaign brief output | `ugc-creative-brief` |
-| UGC platform (intermediate) | Platform adaptation output | `ugc-platform-optimizer` |
-| UGC testing (intermediate) | Testing strategy output | `ugc-testing-strategist` |
+
+The "Checklist source" column is a provenance label only — this skill never loads
+a sibling; the applicable checklist is always read from this skill's own bundled
+`references/review-checklists.md`.
 
 When a prompt could match multiple types (e.g., a Seedance 2.5 prompt with Filipino
 dialogue), stack the checklists — the sub-agent checks against all applicable skills.
@@ -399,8 +397,8 @@ organized by prompt type with a table of contents at the top for quick navigatio
 
 ## Compose with other skills
 
-- After prompts pass review and generation tasks are submitted, use `media-review` to
-  review the generated media output.
-- For end-to-end production coordination, use `film-production` as the manager.
+- After prompts pass review and generation tasks are submitted, consider composing
+  with `media-review` to review the generated media output.
+- For end-to-end production coordination, `film-production` is the production manager.
 - This skill is called by the main agent during prompt-writing work; it does not call
   generation tools itself.

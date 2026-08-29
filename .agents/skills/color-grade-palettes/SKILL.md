@@ -40,8 +40,7 @@ options. Official sources, accessed **2026-08-13**:
 
 When the official guides are updated, prefer the live pages over this skill
 where they conflict. The base prompt grammar lives in `seedance-prompt-25` and
-`seedream-prompt`; load the relevant one alongside this skill when composing a
-full prompt.
+`seedream-prompt`; compose with the relevant one when composing a full prompt.
 
 ## Palette bank
 
@@ -168,8 +167,8 @@ or `Style:` section (Seedream).
 Emitted only when `post_grade` is true, and **only for cross-shot matching in
 the mix step — never re-grade against a baked-in prompt grade**. The prompt
 grade is canonical; these graphs nudge separately generated takes of the same
-palette to match each other. Load the `ffmpeg` skill to execute the graphs in
-the mix step.
+palette to match each other. The FFmpeg filter graphs can be executed with the
+`ffmpeg` skill at the caller's discretion in the mix step.
 
 Teal & Orange Epic:
 

@@ -8,7 +8,9 @@ description: >
   master and the prompt only dresses the world (characters, locations, materials,
   style). Composes the blender-* skills (build), seedance-prompt-25 blockout
   grammar (prompt), modelark-mcp (submit/poll/download), and
-  seedance-vfx-pipeline's save/manifest pattern. Use whenever the user wants to
+  seedance-vfx-pipeline's save/manifest pattern. This is an orchestrator skill:
+  it delegates the build to the blender-* skills, the grammar to
+  seedance-prompt-25, and submission to modelark-mcp. Use whenever the user wants to
   direct a shot from 3D — "blockout to video", "graybox previz to Seedance",
   "3D to Seedance", "previz the camera then render", "Blender blocking to
   Seedance" — or wants camera, cuts, and timing locked down before spending
@@ -54,7 +56,7 @@ Do **not** use when:
 
 ## Steps
 
-### 1. Build the blockout (delegate to blender-* skills)
+### 1. Build the blockout (via the Blender MCP tools)
 
 Build via the Blender MCP tools (`blender_execute_blender_code` etc.; see
 `docs/blender-mcp-setup.md`). Conventions:
@@ -90,7 +92,7 @@ Before writing any prompt:
 
 ### 4. Write the prompt
 
-Delegate grammar to `seedance-prompt-25` blockout mode, then apply the
+Compose the grammar with `seedance-prompt-25` blockout mode, then apply the
 **video-lock contract** in `references/prompt-contract.md`. The prompt's job is
 to dress the world, never to re-choreograph it.
 
@@ -111,7 +113,7 @@ to dress the world, never to re-choreograph it.
 
 - `ffprobe` + full decode check.
 - `seed_understand` a contact sheet (opening, transitions, ending).
-- `ffmpeg-side-by-side-comparison` previz vs output to verify the camera lock.
+- `ffmpeg-side-by-side-comparison` — verify the camera lock with a previz-vs-output comparison.
 - Technical success = `review`; only explicit user approval = `approved`.
 
 ## Manifest (shot.md additions)
@@ -142,8 +144,8 @@ references: 4
 - **Placement-only references.** Character/location sheets define identity and
   materials only; proxies give position, scale, and motion only.
 - **Watermark false** by default. Right-size the duration; do not pad to 30s.
-- **Prompt-review gate.** Run `prompt-review` on the blockout prompt before
-  submitting.
+- **Prompt-review gate.** Run the prompt-review gate (per the workspace AGENTS.md)
+  on the blockout prompt before submitting.
 
 ## Self-check
 

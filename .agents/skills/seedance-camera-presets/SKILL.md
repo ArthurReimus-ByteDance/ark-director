@@ -22,8 +22,8 @@ canonical, drop-in **Camera block** for the Seedance 2.5 six-part prompt formula
 it never runs generation. The base prompt grammar — the six-part formula,
 `@Image N` / `@Video N` reference-role syntax, `At Ns` timestamp syntax, and
 audio bracket syntax — is defined in `seedance-prompt-25` and is **not
-redefined here**. Load `seedance-prompt-25` for the full prompt contract; this
-skill only adds the preset bank on top.
+redefined here**. Compose with `seedance-prompt-25` for the full prompt
+contract; this skill only adds the preset bank on top.
 
 The output of this skill is always a **Camera block** — one or two sentences
 describing shot size, angle, camera movement, and speed — plus any timestamped

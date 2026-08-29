@@ -19,8 +19,8 @@ Built on BytePlus Seed Audio 1.0 TA2A (Text + Audio-to-Audio) with cross-lingual
 
 ## When NOT to use
 
-- User just wants a single TTS voice reading text (use `seed-audio-prompt` skill)
-- User wants a full soundscape with music + SFX (use `seed-audio-commercial` or `seed-audio-prompt`)
+- User just wants a single TTS voice reading text (see `seed-audio-prompt`)
+- User wants a full soundscape with music + SFX (see `seed-audio-commercial` or `seed-audio-prompt`)
 - User wants to edit video visuals (use `seedance-vfx-pipeline` or `seedance-prompt-25`)
 - User wants the video's **lip movement to re-sync** to the new language (this skill overlays cloned audio on unchanged frames; for re-rendered lip-sync use the Seedance 2.5 audio edit in `seedance-vfx-prompt`)
 - User wants to transcribe/translate without audio output (use Seed 2.1 understand + translation)
@@ -184,14 +184,12 @@ Ending: Clean ending matching @Audio1 exactly, same tail silence and room tone.
 
 Prepare the source audio for upload as a Seed Audio reference. The **30-second per-clip limit** is the primary constraint — not file size.
 
-**Use the `audio-split` skill to do this.** It splits sources into ≤30s reference clips at cut points you choose, snaps cuts to subtitle gaps when given the target `.srt` (`-s` flag, never cuts mid-line), outputs MP3 320kbps clips + a `manifest.txt` with offsets, and can print per-segment relative timestamps for prompt authoring:
-
-```bash
-# Split source at scene boundaries, snapped to SRT gaps (never mid-line)
-.agents/skills/audio-split/scripts/split_segments.sh -i source.wav -o segs -s script.srt 22 40
-# Show per-segment relative [start:end] timestamps for the prompts
-python3 .agents/skills/audio-split/scripts/srt_timestamps.py table script.srt 22 40
-```
+Split the source into ≤30s reference clips at cut points you choose, snapped to
+subtitle gaps when a target `.srt` is available (never mid-line), output as MP3
+320kbps clips with offsets for assembly, and per-segment relative timestamps for
+prompt authoring. The inline splitting recipe below covers this; for SRT-snapped
+cutting with per-segment relative timestamps, optionally compose with the
+`audio-split` skill (`-s` flag).
 
 **Single reference clip (source ≤30s):**
 When the source is under 30s and under 10MB, compress to MP3 and upload one clip labeled `@Audio1`. This is the simplest case — one generation covers the full source.

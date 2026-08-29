@@ -546,6 +546,18 @@ to git (project-authored and vendored skills alike). Local-only working state is
 limited to `projects/`, `docs/`, `plans/`, and `specs/` described above; do not
 leave `skills-lock.json` entries describing untracked skill files.
 
+**Vendored skills (isolation exemption):** vendored SKILL.md files — the
+`remotion-*` set, `mediabunny` (`remotion-dev/skills`), the `blender-*` set
+(`ra100/blender-claude-plugin`), and `ffmpeg`
+(`digitalsamba/claude-code-video-toolkit`) — are upstream-owned and excluded from
+the skill-isolation remediation. They are overwritten on re-vendor, so their
+cross-skill directives (e.g. `remotion-best-practices` routing to vendored
+sibling copies inside its own directory, `remotion-interactivity` linking to
+`../remotion-markup/video-editing.md`, `ffmpeg` routing to the local scene/fade
+skills) are treated as upstream design, not workspace violations. Project-local
+skills must still follow the global "Skill Independence & Orchestration" rule.
+
+
 ### Task ID tracking
 
 Keep a single project-level task registry at `projects/<project>/task_ids.json`. This file maps provider task IDs to shot/asset metadata and is the canonical place to resume polling after a timeout or restart. Do not scatter per-scene `task_ids.json` files or freeform submission JSONs across scene/shot folders.

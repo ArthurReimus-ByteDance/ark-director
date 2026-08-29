@@ -18,8 +18,8 @@ segment's absolute offset and duration.
 
 ## When NOT to use
 
-- Reassembling generated segments (use `audio-dubbing` offset-mix or `scripts/mix_segments.sh`)
-- Generating or composing Seed Audio prompts (use `seed-audio-prompt` or `audio-dubbing`)
+- Reassembling generated segments (see the `audio-dubbing` skill's offset-mix stage)
+- Generating or composing Seed Audio prompts (see `seed-audio-prompt` or `audio-dubbing`)
 
 ## Core limits
 

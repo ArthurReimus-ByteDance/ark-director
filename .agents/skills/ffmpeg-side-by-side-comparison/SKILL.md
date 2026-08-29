@@ -8,7 +8,7 @@ description: >
   comparison of two takes or versions, a compare or review grid, a
   side-by-side demo, or asks to put clip X and clip Y next to each other —
   even if they never say "side-by-side". For chronological assembly with
-  crossfades, use `ffmpeg-scene-transitions`; this skill places clips
+  crossfades, consider `ffmpeg-scene-transitions`; this skill places clips
   simultaneously (or staggered one-at-a-time with a frozen second half).
   Complements the `ffmpeg` skill.
 ---

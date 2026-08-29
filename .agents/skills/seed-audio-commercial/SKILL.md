@@ -109,9 +109,9 @@ graph LR
 
 ### Step 3 — Compose the T2A prompt
 
-Assemble the prompt following `seed-audio-prompt`'s five ingredients (scene and
-atmosphere, characters and dialogue, ending), arranged as one chronological
-audio scene. Use this commercial template:
+Assemble the prompt using the full-soundscape order shown in the template below
+(scene and atmosphere, characters and dialogue, ending), arranged as one
+chronological audio scene. Use this commercial template:
 
 ```text
 Scene and atmosphere
