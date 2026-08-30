@@ -86,6 +86,13 @@ are reviewed and promoted.
 - **A single-image grid cannot be directly promoted to a video keyframe.** To
   promote a panel from a grid, crop it or re-generate that panel as a
   standalone image using the same canon and the panel's recorded prompt.
+- **But the whole grid CAN be passed to Seedance as a storyboard-grid
+  reference.** A monochrome sketch grid is the standard reverse-engineering /
+  template-factory handoff: upload it and bind it as `@Image 1`
+  (`reference_image`) with "Do not use the grid's sketch lines, panel numbers,
+  or divider lines." It locks shot order and approximate composition; the
+  prompt text supplies color, motion grammar, and timing. The board itself
+  stays a review artifact — only the video that consumes it is a deliverable.
 - **A one-panel board is always a single image** regardless of mode — the mode
   distinction applies only when the board has two or more narrative panels.
 
@@ -240,9 +247,19 @@ scene's subject, conflict or product, environment, and intended emotion.
 
 ### 4. Decide panel density
 
+**Dynamic panel count.** When an upstream analysis has identified the scene's
+shots or beats — a `seed_understand` breakdown, a `tig-scene-engine` beat list,
+a `film-production` shot list, a script/beat sheet, or any story analysis —
+the board defaults to **one panel per identified scene/shot**, regardless of
+any earlier guess or fixed budget. The panel count is dynamic and follows the
+analysis, not a hard-coded number. If the analysis names 8 shots, the board has
+8 panels; if it names 3, the board has 3. Only trim below the analysis count
+when the user explicitly sets a smaller budget (then keep the most
+story-critical shots and record the omitted ones as motion notes).
+
 When the user specifies a panel count, treat it as a creative constraint.
-Otherwise, panel count follows information and state changes, not duration
-alone.
+Otherwise, if no upstream analysis exists, panel count follows information and
+state changes, not duration alone.
 
 Add a panel for:
 

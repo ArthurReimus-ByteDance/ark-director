@@ -1,0 +1,11 @@
+{
+  "templates": [
+    {
+      "id": "psychedelic-neon-cosmic",
+      "name": "Psychedelic Neon Cosmic Journey",
+      "category": "animation",
+      "tags": ["psychedelic", "vaporwave", "neon", "surreal", "animation"],
+      "path": "psychedelic-neon-cosmic/"
+    }
+  ]
+}

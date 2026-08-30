@@ -257,7 +257,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedance-prompt-25/SKILL.md",
-      "computedHash": "6a32ed7c792860759a71db4552580b0a275cc3c64763b450843319ac97589f88"
+      "computedHash": "2a6c8a71d044caf00038161a17b3d4f404fff27fd05f772e4eef3961e58f01f7"
     },
     "seedance-prompt-25-filipino": {
       "source": "local",
@@ -311,7 +311,13 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedream-storyboard/SKILL.md",
-      "computedHash": "d1b44ac4bb2bd896020bbd4d52ecec5948f37825b6f0a83926ff3c59bff7acfd"
+      "computedHash": "7d6d7808e7cce6559d359306150eeeb155bcfe933b11a697d5657d8200ad41ad"
+    },
+    "template-factory": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/template-factory/SKILL.md",
+      "computedHash": "69f91721ebdded6378e5ffccb04bd84c84a75ee818685def6a37e09f959485d4"
     },
     "tig-blocking-map": {
       "source": "local",

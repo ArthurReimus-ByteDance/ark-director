@@ -365,6 +365,32 @@ front foot, and scans the room left to right" is testable.
 - **Stay inside the stage budget.** Detail only the movements critical to the
   stage; one primary state change per stage.
 
+### Motion grammar (why a shot reads "static")
+
+A prompt that names *what* moves but not *how* it moves produces a static take.
+For every moving element — subjects, props, effects, light, background — write
+the full motion grammar, not a bare verb:
+
+| Axis | Question to answer |
+|---|---|
+| **Motion type** | translate / rotate / scale / parallax / drift / float-bob / pulse / flicker / color-cycle / twinkle / shimmer / sway / wave / slide / zoom / rotation |
+| **Direction** | up/down, left/right, toward/away, clockwise/counterclockwise, along what axis |
+| **Speed** | slow / medium / fast, or a frequency (e.g. "~0.5Hz sway") |
+| **Amplitude** | how far ("~5% of body height", "full spectrum cycle") |
+| **Easing** | constant / sinusoidal / accelerating / smooth |
+| **Loop period** | how often it repeats ("~2s per cycle"), or "continuous" |
+
+Also state **camera motion explicitly** — including when the camera is truly
+static and only elements/light move (very common in stylized animation) — and
+**light/color motion** (pulse, strobe, flicker, hue cycle, bloom, shimmer) with
+its rate.
+
+Example: instead of "the neon figure floats, a rainbow beam shines from its
+head", write "the featureless neon figure floats with a gentle up-down bob
+(~0.5Hz sine, ~5% of body height) in a leaning pose, while a fan-shaped rainbow
+beam projects from its head with the color bands continuously scrolling along
+the beam (~1s full-spectrum cycle) and the background stars twinkle randomly."
+
 ## Special audio and text syntax
 
 | Content | Syntax | Example |
@@ -691,6 +717,14 @@ Shot N: <closing action and final visible state>.
 
 The final video uses <visual style>. Audio includes <dialogue, ambience, action sound effects, or music>.
 ```
+
+> **Monochrome sketch board as the first reference.** When the board is a
+> colorless sketch (the `template-factory` / reverse-engineering default), bind
+> it as `@Image 1` (`reference_image`) and exclude only the board's own marks:
+> "Do not use the grid's sketch lines, panel numbers, or divider lines." The
+> board locks shot order, staging, and approximate composition; the prompt text
+> supplies color, motion grammar, and timing. Never rely on the board for color
+> or style.
 
 ### Blockout references
 

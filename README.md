@@ -140,13 +140,14 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 
 ## Skills
 
-The workspace ships with **55 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
+The workspace ships with **56 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
 
 ### Production Orchestration
 
 | Skill | Description |
 |---|---|
 | **film-production** | Master orchestrator for multi-scene, multi-modality productions. Advances one production stage at a time (brief → development → canon → storyboard → audio → shot generation → review → assembly → delivery), delegates modality-specific work to specialist skills, and preserves explicit human approval at creative locks and handoffs. |
+| **template-factory** | Pinterest-inspired template factory that reverse-engineers a reference video ("pin") into reproducible AIGC output. Orchestrates pin intake, `seed_understand` breakdown, keyframe extraction, a deep motion review, a dynamic monochrome-sketch storyboard (passed to Seedance as `@Image 1`), optional Seedream element sheets, and a Seedance 2.5 video — every prompt passing the mandatory `prompt-review` gate. |
 | **brief-intake** | Two-mode brief intake that proposes genre-appropriate defaults for every directorial axis (structure, acting, camera, lens, lighting, grade, pacing, staging, medium, audio) and confirms them with the user. Fast mode (default) accepts the proposed set; full Q&A mode walks every axis. |
 | **prompt-review** | Mandatory quality gate that spawns sub-agents to review written prompts against the applicable skill's validation checklist and the universal directing principles. CRITICAL/MAJOR findings must be fixed before generation submission. Covers Seedance, Seed Audio, Seedream, character sheets, storyboards, and VFX prompts. |
 | **media-review** | Opens generated images and videos for visual review on macOS. Builds montage/contact sheets to compare many variants at once, and opens videos directly in the default player. Use when comparing takes, choosing variants, or doing source-vs-output comparisons. |
@@ -270,7 +271,7 @@ Skills in this workspace come from three sources, tracked in `skills-lock.json`:
 
 | Source | Type | Examples |
 |---|---|---|
-| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `color-grade-palettes`, `blender-to-seedance` |
+| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `template-factory`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `color-grade-palettes`, `blender-to-seedance` |
 | **Remotion (vendored)** | `github: remotion-dev/skills` | `remotion-*` (9 skills), `mediabunny` |
 | **Blender (vendored)** | `github: ra100/blender-claude-plugin` | `blender-*` (8 skills) |
 | **FFmpeg (vendored)** | `github: digitalsamba/claude-code-video-toolkit` | `ffmpeg` |

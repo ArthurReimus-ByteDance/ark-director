@@ -218,6 +218,29 @@ Source skill: `seedance-prompt-25`
     far shorter than the API `duration`, the prompt must explicitly direct the
     gap (pauses, hesitations, action beats); otherwise right-size the duration.
 
+### Motion grammar (stylized animation & reverse-engineered takes)
+
+47. **Every moving element has motion grammar.** Each element that moves is
+    described with motion type (translate/rotate/scale/parallax/drift/float-bob/
+    pulse/flicker/color-cycle/twinkle/shimmer/sway/wave/slide/zoom/rotation),
+    direction, speed, amplitude, easing, and loop period — not as a bare verb.
+    A prompt that names *what* moves but not *how* it moves produces a static
+    take.
+
+48. **Camera motion stated explicitly.** The prompt states camera motion — and
+    explicitly says when the camera is static and only elements/light move.
+
+49. **Light/color motion stated.** Any pulse, strobe, flicker, hue cycle, bloom,
+    or shimmer is described with its rate (e.g. "~1Hz chromatic shimmer").
+
+### Storyboard grid reference
+
+50. **Sketch board bound as @Image N.** When a storyboard grid is passed as a
+    reference, it is bound to an `@Image N` with the reading order (left-to-right,
+    top-to-bottom) and the exclusion "Do not use the grid's sketch lines, panel
+    numbers, or divider lines." It locks shot order and composition only — color,
+    motion, and timing stay in the prompt text.
+
 ---
 
 ## Seedance 2.5 edit (video-to-video)
@@ -1068,78 +1091,86 @@ Source skill: `seedream-storyboard`
 
 1. **One frozen, decisive moment per panel.** Not a collage or multi-panel grid.
 
-2. **Panel budget honored.** When user requests one panel, the strongest representative
-   moment is selected — not silently expanded.
+2. **Dynamic panel count.** When an upstream analysis (`seed_understand`,
+   `tig-scene-engine`, `film-production`, or a script/beat sheet) has identified
+   N scenes/shots, the board defaults to one panel per identified scene/shot —
+   not a fixed budget. A user-specified smaller count is honored only when
+   explicit, with omitted shots recorded as motion notes.
 
-3. **Explicit canon.** Recurring identities, locations, props, and style are in an
+3. **Monochrome sketch for Seedance handoff.** When the board will be passed to
+   Seedance as a storyboard-grid reference, it is a colorless pencil/ink sketch
+   (no color). The board locks shot order and composition; it never supplies
+   color or style.
+
+4. **Explicit canon.** Recurring identities, locations, props, and style are in an
    explicit canon section.
 
-4. **Canonical Element sheets attached.** When matching Element sheets exist, they are
+5. **Canonical Element sheets attached.** When matching Element sheets exist, they are
    attached to the generation request — not substituted with text descriptions.
 
-5. **Screen direction and geography.** Treated as sequence-level constraints.
+6. **Screen direction and geography.** Treated as sequence-level constraints.
 
-6. **Natural language.** Coherent natural language, not comma-heavy keyword piles.
+7. **Natural language.** Coherent natural language, not comma-heavy keyword piles.
 
-7. **References bound by role and target.** Every reference bound with exact `@Image N`
+8. **References bound by role and target.** Every reference bound with exact `@Image N`
    tokens.
 
-8. **Production notes outside image.** Arrows, labels, dialogue, timing, and production
+9. **Production notes outside image.** Arrows, labels, dialogue, timing, and production
    notes are outside the generated image unless visible story-world text is required.
 
 ### Panel prompt structure
 
-9. **References.** Each reference labeled with role (character identity, location
-   geometry, prop identity, composition control, approved style).
+10. **References.** Each reference labeled with role (character identity, location
+    geometry, prop identity, composition control, approved style).
 
-10. **Panel purpose.** The new story information or emotion this panel communicates.
+11. **Panel purpose.** The new story information or emotion this panel communicates.
 
-11. **Subject and decisive moment.** One frozen moment. Every visible subject, pose,
+12. **Subject and decisive moment.** One frozen moment. Every visible subject, pose,
     expression, action, and prop named. Identity and prop references bound inline.
 
-12. **Setting and state.** Location, time, weather, persistent landmarks, visible
+13. **Setting and state.** Location, time, weather, persistent landmarks, visible
     object state. Location reference bound inline.
 
-13. **Staging and continuity.** Screen-left/right positions, foreground/midground/
+14. **Staging and continuity.** Screen-left/right positions, foreground/midground/
     background, eyelines, distances, overlaps, travel direction, entrances/exits, and
     what must match the previous panel.
 
-14. **Style.** Medium, realism level, palette, stable treatment. Style reference bound
+15. **Style.** Medium, realism level, palette, stable treatment. Style reference bound
     inline when provided.
 
-15. **Lighting.** Source, direction, quality, color, and atmosphere.
+16. **Lighting.** Source, direction, quality, color, and atmosphere.
 
-16. **Composition.** Aspect ratio, shot size, camera height/angle, lens intent,
+17. **Composition.** Aspect ratio, shot size, camera height/angle, lens intent,
     framing, depth, and focus priority. Composition guide bound inline when provided.
 
-17. **Constraints.** Appropriate quality (draft or final), preservation (approved
+18. **Constraints.** Appropriate quality (draft or final), preservation (approved
     identity, geometry, pose, state, style), exclusion (only material faults — no text
     overlays, labels, storyboard borders, watermarks, unintended subjects, duplicated
     faces, control-guide marks).
 
 ### Sequential generation
 
-18. **Sequence contract.** Cohesive ordered set of N separate images, one per panel.
+19. **Sequence contract.** Cohesive ordered set of N separate images, one per panel.
     Recurring identity, wardrobe, location geometry, prop design, palette, and
     rendering style kept consistent.
 
-19. **Each image is one moment.** Not a collage or multi-panel grid.
+20. **Each image is one moment.** Not a collage or multi-panel grid.
 
-20. **Global visual canon.** Stable identity, location, prop, style, aspect ratio, and
+21. **Global visual canon.** Stable identity, location, prop, style, aspect ratio, and
     lighting rules stated before individual panels.
 
 ### Revisions
 
-21. **Local edits preferred.** After a composition is approved, prefer local edits over
+22. **Local edits preferred.** After a composition is approved, prefer local edits over
     full re-generation.
 
-22. **Seeds for tracking.** Used for experiment tracking, not as the identity system.
+23. **Seeds for tracking.** Used for experiment tracking, not as the identity system.
 
 ### Status
 
-23. **Review on generation.** Technically successful generation enters `review`.
+24. **Review on generation.** Technically successful generation enters `review`.
 
-24. **Explicit user choice.** Only explicit user choice sets `selected_variant` or
+25. **Explicit user choice.** Only explicit user choice sets `selected_variant` or
     `approved`.
 
 ---

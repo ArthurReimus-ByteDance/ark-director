@@ -1,0 +1,47 @@
+{
+  "id": "psychedelic-neon-cosmic",
+  "name": "Psychedelic Neon Cosmic Journey",
+  "version": "1.0",
+  "category": "animation",
+  "model": "dreamina-seedance-2-5-260628",
+  "default_resolution": "720p",
+  "default_ratio": "1:1",
+  "analyze": {
+    "system": "You are a film-analysis expert. Extract a reproducible breakdown as JSON.",
+    "schema_ref": "VideoBreakdown v1.0",
+    "temperature": 0.2,
+    "thinking": false,
+    "deidentify": true
+  },
+  "motion_review": {
+    "thinking": true,
+    "reasoning_effort": "high",
+    "temperature": 0.2
+  },
+  "storyboard": {
+    "skill": "seedream-storyboard",
+    "variants": 3,
+    "review": true,
+    "render": "monochrome-sketch"
+  },
+  "element_mapping": {
+    "character": { "skill": "seedream-character-sheet", "variants": 3, "size": "2048x2048" },
+    "location": { "skill": "seedream-location-asset", "variants": 3, "size": "2816x1584" },
+    "prop": { "skill": "seedream-prompt", "variants": 3, "size": "1024x1024" },
+    "screen": { "skill": "seedream-prompt", "variants": 3, "size": "1024x1024" }
+  },
+  "seedance_mapping": {
+    "skill": "seedance-prompt-25",
+    "subject_slot": "from element descriptors + @tag bindings",
+    "action_slot": "from shots[].action + shots[].motion imperative wording",
+    "scene_slot": "from location elements",
+    "style_slot": "from visual_style",
+    "camera_slot": "from camera + per-shot camera + motion.camera_motion",
+    "audio_slot": "from audio"
+  },
+  "defaults": {
+    "watermark": false,
+    "generate_audio": false,
+    "duration_hint": "sum of shot durations, right-sized"
+  }
+}

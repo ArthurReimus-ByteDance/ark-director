@@ -1,0 +1,42 @@
+{
+  "skill_name": "template-factory",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Reverse-engineer the reference video pins/01.mp4 into a storyboard and a Seedance 2.5 video. No audio. Generate the 3-panel storyboard with Seedream and the video with Seedance.",
+      "expected_output": "A breakdown from seed_understand, a monochrome-sketch storyboard whose panel count matches the number of shots Seed identified (not a fixed 3), and a Seedance 2.5 video prompt that passes prompt-review and is submitted with the sketch board as @Image 1.",
+      "files": [],
+      "expectations": [
+        "The storyboard panel count is dynamic and equals the number of identified shots.",
+        "The storyboard is monochrome sketch only, never full color.",
+        "The storyboard prompt passes the prompt-review gate before generation.",
+        "The sketch board is passed to Seedance as @Image 1 reference_image.",
+        "The Seedance prompt passes the prompt-review gate before submission.",
+        "The Seedance prompt includes per-shot motion grammar (type, direction, speed, easing), not just static action descriptions."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our generated take looks too static compared to the template. Diagnose why and fix it.",
+      "expected_output": "A deep motion-review pass (thinking=true) that extracts per-shot motion grammar and emits positive-only imperative fix wording merged into the Seedance prompt.",
+      "files": [],
+      "expectations": [
+        "The motion review runs as a second seed_understand pass inside the factory, not as a separate skill.",
+        "The output merges shots[].motion into analysis.json.",
+        "The imperative motion wording follows positive-only phrasing (no negative instructions).",
+        "The motion wording is reviewed as part of the Seedance prompt-review gate."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Generate 3 storyboard variants of the same board and select one for video generation.",
+      "expected_output": "Three variants with identical prompt/references/params and distinct seeds, then a selection gate that requires human review by default.",
+      "files": [],
+      "expectations": [
+        "The three variants share the same prompt, references, and parameters; only the seed differs.",
+        "The selection requires human review by default (storyboard.review: true).",
+        "Auto-selection only occurs when the template sets review: false, and records selected_variant as auto, never approved."
+      ]
+    }
+  ]
+}
