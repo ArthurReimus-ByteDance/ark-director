@@ -720,11 +720,25 @@ The final video uses <visual style>. Audio includes <dialogue, ambience, action 
 
 > **Monochrome sketch board as the first reference.** When the board is a
 > colorless sketch (the `template-factory` / reverse-engineering default), bind
-> it as `@Image 1` (`reference_image`) and exclude only the board's own marks:
-> "Do not use the grid's sketch lines, panel numbers, or divider lines." The
-> board locks shot order, staging, and approximate composition; the prompt text
-> supplies color, motion grammar, and timing. Never rely on the board for color
-> or style.
+> it as `@Image 1` (`reference_image`) — but the board is a **composition
+> reference only**, and a reference image's style outweighs text, so the prompt
+> must explicitly forbid copying the board's *rendering medium*, not just its
+> markup:
+>
+> ```text
+> @Image 1 is an [N]-panel storyboard grid used ONLY as a reference for scene
+> order and approximate composition — read it left to right, top to bottom. Do
+> not copy the board's rendering style: render everything in <full-color /
+> photorealistic / final style>, and do not reproduce the sketch lines, paper
+> texture, graphite shading, panel numbers, or divider lines from the image.
+> ```
+>
+> The "do not use sketch lines / panel numbers / dividers" phrasing alone is NOT
+> enough — it removes the board's *markup* but the model still copies the
+> *medium* (line art, paper, monochrome) into the video. Always state the target
+> style positively in the same block. The board locks shot order, staging, and
+> approximate composition; the prompt text supplies color, motion grammar, and
+> timing.
 
 ### Blockout references
 

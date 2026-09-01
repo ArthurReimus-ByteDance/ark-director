@@ -235,11 +235,25 @@ Source skill: `seedance-prompt-25`
 
 ### Storyboard grid reference
 
-50. **Sketch board bound as @Image N.** When a storyboard grid is passed as a
-    reference, it is bound to an `@Image N` with the reading order (left-to-right,
-    top-to-bottom) and the exclusion "Do not use the grid's sketch lines, panel
-    numbers, or divider lines." It locks shot order and composition only — color,
+50. **Sketch board bound as @Image N with a style override.** When a storyboard
+    grid is passed as a reference, it is bound to an `@Image N` with the reading
+    order (left-to-right, top-to-bottom) AND a positive style override — the
+    prompt must state the board is used ONLY for scene order and composition and
+    that the output must render in the target style, not copy the board's
+    rendering medium. The bare "Do not use the grid's sketch lines, panel
+    numbers, or divider lines" exclusion only removes the board's *markup* — it
+    does not stop the model from copying the *medium* (line art, paper texture,
+    monochrome shading). It locks shot order and composition only; color,
     motion, and timing stay in the prompt text.
+
+### Revision diff
+
+51. **No approved per-shot detail lost.** When a prompt is revised to change one
+    shot, every OTHER shot's previously-approved wording (descriptors, motion
+    rates, glow pulses, gradient outlines, camera moves) is carried over
+    verbatim. A revision that silently drops detail from untouched shots is a
+    MAJOR finding — diff the new prompt against the prior snapshot and flag any
+    removed descriptor or rate.
 
 ---
 

@@ -257,7 +257,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedance-prompt-25/SKILL.md",
-      "computedHash": "2a6c8a71d044caf00038161a17b3d4f404fff27fd05f772e4eef3961e58f01f7"
+      "computedHash": "ef9b02615f454e44ecdef25e07a9210ff1bf1994929091c03de020b7757774e4"
     },
     "seedance-prompt-25-filipino": {
       "source": "local",
