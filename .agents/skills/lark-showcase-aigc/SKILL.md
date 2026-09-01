@@ -373,6 +373,27 @@ If a prompt includes named references, convert them into external-facing labels 
 
 If the source prompt uses many internal reference labels, add a short "Reference legend" near the prompt so external readers understand the role of each reference without seeing internal asset names or storage details.
 
+### Soft-wrap prompt code blocks (default lint)
+
+Every prompt code block is soft-wrapped by default. Never write a prompt as
+one long unwrapped line that forces horizontal scrolling in a table cell.
+
+Lark code blocks cannot be forced to auto-wrap through the CLI: the docx API
+has a `wrap` field, but `lark-cli` does not expose it on `<pre>`, so the wrap
+must happen at authoring time.
+
+- Break long prompt lines at natural boundaries — after `@Image N` /
+  `@Video N` / `@Audio N` reference bindings, after `[Shot N (start–end)]`
+  timestamp blocks, at sentence ends, and at commas or clause boundaries.
+- Target a line length of roughly 100–120 characters so a prompt reads
+  without horizontal scrolling in a table cell.
+- Never break mid-token, mid-word, or inside `{dialogue}` / `<sound effect>`
+  / `(music)` syntax.
+- Soft-wrap is presentation-only: the inserted line breaks do not change
+  prompt wording, order, or content. The verbatim check still applies —
+  a prompt must match its frozen snapshot after normalizing presentation
+  whitespace (see lark-demo-doc-builder's Completeness & accuracy review).
+
 ### Scene-by-scene label cleanup
 
 The per-scene breakdown tables are the second most common source of jargon.
