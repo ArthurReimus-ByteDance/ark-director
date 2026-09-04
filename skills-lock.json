@@ -235,6 +235,12 @@
       "skillPath": ".agents/skills/seedance-lighting-presets/SKILL.md",
       "computedHash": "53e35d9c7d5bffb4f3114e471882dd93930ed980f8d4e3b741bac76ba6301cda"
     },
+    "seedance-motion-design": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/seedance-motion-design/SKILL.md",
+      "computedHash": "d39f8a0626d22ec814bb41d53522eeee50c2b8b96478b4f2c9be900fc60c0bdf"
+    },
     "seedance-music-video": {
       "source": "local",
       "sourceType": "local",
