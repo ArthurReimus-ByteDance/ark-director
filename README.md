@@ -140,7 +140,7 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 
 ## Skills
 
-The workspace ships with **57 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
+The workspace ships with **58 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
 
 ### Production Orchestration
 
@@ -263,6 +263,7 @@ The workspace ships with **57 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **lark-showcase-aigc** | Orchestrates `lark-demo-doc-builder`, `lark-doc`, `lark-wiki`, `lark-drive`, and `design-doc-mermaid` to build enterprise-facing Lark/Feishu documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark. |
+| **showcase-html** | Builds a self-contained local HTML review page for a project's generated media — color-coded element/video cards, an "elements used" list per video, before/after comparison tables, and a combined grid/side-by-side view. Data-driven: a `showcase.json` manifest + an embedded template render into one portable `index.html`. Use when the user wants an HTML review page, media gallery, or comparison page. |
 
 ---
 
@@ -272,7 +273,7 @@ Skills in this workspace come from three sources, tracked in `skills-lock.json`:
 
 | Source | Type | Examples |
 |---|---|---|
-| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `template-factory`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `color-grade-palettes`, `blender-to-seedance` |
+| **Project-authored** | `local` | All `seedance-*`, `seedream-*`, `seed-audio-*`, `film-production`, `template-factory`, `brief-intake`, `prompt-review`, `media-review`, `tig-*`, `ugc-ad-modes`, `ffmpeg-scene-transitions`, `ffmpeg-side-by-side-comparison`, `modelark-mcp`, `lark-showcase-aigc`, `showcase-html`, `color-grade-palettes`, `blender-to-seedance` |
 | **Remotion (vendored)** | `github: remotion-dev/skills` | `remotion-*` (9 skills), `mediabunny` |
 | **Blender (vendored)** | `github: ra100/blender-claude-plugin` | `blender-*` (8 skills) |
 | **FFmpeg (vendored)** | `github: digitalsamba/claude-code-video-toolkit` | `ffmpeg` |

@@ -78,6 +78,80 @@ stack lines up.
 - **4-up grid (2x2):** `xstack` (below).
 - **Ladder / arbitrary layout:** `xstack` with an explicit `layout`.
 
+## Combined grid view (N same-aspect clips)
+
+For a full set of 16:9 clips that should all be watchable at once (e.g. a lens
+swap, weather, or style comparison), build a uniform **grid** rather than a long
+strip. A portrait 1×N strip is awkward on a landscape monitor; a grid is not.
+
+**Pick the grid by its aspect ratio.** For N same-aspect 16:9 clips, a uniform
+`cols × rows` grid yields `(cols×16):(rows×9)`. Choose the clean factorization
+closest to a landscape ratio:
+
+| N | Layout | Canvas ratio | Example resolution |
+|---|---|---|---|
+| 2 | 1×2 side-by-side | 32:9 | 2560×720 |
+| 4 | 2×2 | 16:9 | 2560×1440 |
+| 6 | **3×2** | **8:3** | **2880×1080** |
+| 8 | 4×2 | 32:9 | 3840×1080 |
+| 9 | 3×3 | 16:9 | 2880×1620 |
+
+8:3 (2.667:1) is a cinematic ultra-wide ratio — good default for 6 clips. 2×2
+and 3×3 are native 16:9 and fill a monitor with no letterbox.
+
+**Recipe (3×2 grid, 6 clips, labeled):** scale every input to the same size,
+overlay a label, then two `hstack` rows joined by `vstack`. This FFmpeg build's
+`drawtext` may be absent, so generate label PNGs with PIL and `overlay` them
+(see [Adding labels](#adding-labels-before--after)).
+
+```bash
+# label PNGs (PIL): /tmp/label_0.png .. label_5.png
+python3 - <<'EOF'
+from PIL import Image, ImageDraw, ImageFont
+font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 30)
+labels = ['50mm - base','24mm - wide','135mm - telephoto','fisheye','anamorphic','8mm - ultrawide']
+for i, text in enumerate(labels):
+    d = ImageDraw.Draw(Image.new('RGBA',(10,10)))
+    b = d.textbbox((0,0), text, font=font)
+    w, h = b[2]-b[0], b[3]-b[1]; pad = 14
+    im = Image.new('RGBA', (w+pad*2, h+pad*2), (0,0,0,0))
+    dr = ImageDraw.Draw(im)
+    dr.rounded_rectangle([0,0,im.width-1,im.height-1], radius=8, fill=(0,0,0,150))
+    dr.text((pad,pad), text, font=font, fill=(255,255,255,255))
+    im.save(f'/tmp/label_{i}.png')
+EOF
+
+ffmpeg -y -v error \
+  -i a.mp4 -i b.mp4 -i c.mp4 -i d.mp4 -i e.mp4 -i f.mp4 \
+  -i /tmp/label_0.png -i /tmp/label_1.png -i /tmp/label_2.png \
+  -i /tmp/label_3.png -i /tmp/label_4.png -i /tmp/label_5.png \
+  -filter_complex "\
+[0:v]scale=960:540,setsar=1[v0];\
+[1:v]scale=960:540,setsar=1[v1];\
+[2:v]scale=960:540,setsar=1[v2];\
+[3:v]scale=960:540,setsar=1[v3];\
+[4:v]scale=960:540,setsar=1[v4];\
+[5:v]scale=960:540,setsar=1[v5];\
+[6:v]format=rgba[l0];[v0][l0]overlay=16:16[v0l];\
+[7:v]format=rgba[l1];[v1][l1]overlay=16:16[v1l];\
+[8:v]format=rgba[l2];[v2][l2]overlay=16:16[v2l];\
+[9:v]format=rgba[l3];[v3][l3]overlay=16:16[v3l];\
+[10:v]format=rgba[l4];[v4][l4]overlay=16:16[v4l];\
+[11:v]format=rgba[l5];[v5][l5]overlay=16:16[v5l];\
+[v0l][v1l][v2l]hstack=inputs=3[r1];\
+[v3l][v4l][v5l]hstack=inputs=3[r2];\
+[r1][r2]vstack=inputs=2[v]" \
+  -map "[v]" -map 0:a -c:v libx264 -crf 20 -preset medium -c:a aac -b:a 192k -movflags +faststart \
+  grid.mp4
+```
+
+Notes:
+- Each cell stays native 16:9 with no distortion — just scaled down.
+- `-map 0:a` keeps one shared audio track (the first input's) so the whole
+  grid plays in sync; mute with `-an` if a silent comparison is wanted.
+- Label only when the cells are not self-evident; skip the PIL/label steps for
+  an unlabeled grid.
+
 ## 4-up grid with xstack
 
 ```bash

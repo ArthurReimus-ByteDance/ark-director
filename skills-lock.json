@@ -95,7 +95,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/ffmpeg-side-by-side-comparison/SKILL.md",
-      "computedHash": "9b63929f4bc9985c99aff943e94e6c676f1c8961c96b109baf30a2b16beee59d"
+      "computedHash": "5a45102540ad72b9cfe57d6afeb5a6db9abb3c39bf6c725f9d815a3cd3488c37"
     },
     "film-production": {
       "source": "local",
@@ -282,6 +282,12 @@
       "sourceType": "local",
       "skillPath": ".agents/skills/seedance-vfx-pipeline/SKILL.md",
       "computedHash": "32b8de125b31fad6b051fd56bf519434ebdb6d85c28ee90a831562916e74c451"
+    },
+    "showcase-html": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/showcase-html/SKILL.md",
+      "computedHash": "a126d6ed4df7ea1d659884f42c5075632005b40e300b70e32ab637da647970b8"
     },
     "seedream-character-sheet": {
       "source": "local",
