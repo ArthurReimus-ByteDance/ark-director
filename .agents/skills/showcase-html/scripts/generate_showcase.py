@@ -90,18 +90,18 @@ def read_log(proj, limit=200):
 # selection write-back
 # --------------------------------------------------------------------------- #
 
-_FM_RE = re.compile(r"^(---\n)(.*?)(\n---)", re.DOTALL)
+_FM_RE = re.compile(r"^(---\n)(.*?)(\n---)(.*)$", re.DOTALL)
 
 
 def _edit_frontmatter(text, apply_fn):
     m = _FM_RE.match(text)
     if not m:
         return None
-    head, fm, tail = m.group(1), m.group(2), m.group(3)
+    head, fm, tail, rest = m.group(1), m.group(2), m.group(3), m.group(4)
     new_fm = apply_fn(fm)
     if new_fm is None:
         return None
-    return head + new_fm + tail
+    return head + new_fm + tail + rest
 
 
 def _set_scalar(fm, filename):
@@ -117,10 +117,12 @@ def _set_scalar(fm, filename):
 def _set_map_key(fm, key, filename):
     key_esc = re.escape(key)
     if re.search(r"^selected_variants\s*:", fm, re.M):
-        if re.search(rf"^  {key_esc}\s*:", fm, re.M):
+        existing = re.search(rf"^(?P<ind>[ \t]+){key_esc}\s*:.*$", fm, re.M)
+        if existing:
+            indent = existing.group("ind")
             return re.sub(
-                rf"^  {key_esc}\s*:.*$",
-                f"  {key}: {filename}",
+                rf"^[ \t]+{key_esc}\s*:.*$",
+                f"{indent}{key}: {filename}",
                 fm, count=1, flags=re.M,
             )
         return re.sub(
@@ -133,6 +135,8 @@ def _set_map_key(fm, key, filename):
 
 def update_manifest(meta, filename, proj):
     """Set one asset's selection in its manifest frontmatter. Returns (ok, err)."""
+    if meta.get("field") == "selected_variants" and not meta.get("key"):
+        return False, "selected_variants requires a key"
     path = proj / meta["manifest"]
     if not path.exists():
         return False, f"missing manifest: {meta['manifest']}"
@@ -159,7 +163,10 @@ def read_selection(selectable, proj):
             continue
         text = path.read_text(encoding="utf-8")
         if meta.get("field") == "selected_variants":
-            m = re.search(rf"^  {re.escape(meta['key'])}\s*:\s*(.*)$", text, re.M)
+            key = meta.get("key")
+            if not key:
+                continue
+            m = re.search(rf"^[ \t]+{re.escape(key)}\s*:\s*(.*)$", text, re.M)
         else:
             m = re.search(r"^selected_variant\s*:\s*(.*)$", text, re.M)
         if m:
@@ -309,7 +316,7 @@ class ShowcaseHandler(BaseHTTPRequestHandler):
                 if not meta:
                     errors.append(f"{cid}: not a selectable asset")
                     continue
-                if not isinstance(filename, str) or re.search(r"[\\/\r\n]", filename):
+                if not isinstance(filename, str) or not filename.strip() or re.search(r"[\\/\r\n]", filename):
                     errors.append(f"{cid}: invalid filename")
                     continue
                 ok, err = update_manifest(meta, filename, self.proj)
