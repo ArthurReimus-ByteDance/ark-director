@@ -323,10 +323,6 @@
       : 'Pick variants, then press Ctrl+S (⌘S) to save.';
   }
 
-  function buildSelectionPayload() {
-    return { project: data.title || 'project', selections };
-  }
-
   async function saveSelections() {
     if (!viaServer) return; // read-only in file:// mode
     const n = Object.keys(selections).length;

@@ -53,11 +53,6 @@ def log_file(proj):
     return proj / "selection.log"
 
 
-def log_path(proj):
-    """Absolute path to the audit log, for surfacing in the UI."""
-    return str(log_file(proj))
-
-
 def append_log(proj, event, **fields):
     """Append one timestamped event record to the project audit log."""
     record = {
@@ -280,7 +275,7 @@ class ShowcaseHandler(BaseHTTPRequestHandler):
         rel = path.lstrip("/")
         fp = (self.proj / rel).resolve()
         proj_root = self.proj.resolve()
-        if not str(fp).startswith(str(proj_root)) or not fp.is_file():
+        if not fp.is_relative_to(proj_root) or not fp.is_file():
             self.send_error(404)
             return
         ctype = {
@@ -313,6 +308,9 @@ class ShowcaseHandler(BaseHTTPRequestHandler):
                 meta = self.selectable.get(cid)
                 if not meta:
                     errors.append(f"{cid}: not a selectable asset")
+                    continue
+                if not isinstance(filename, str) or re.search(r"[\\/\r\n]", filename):
+                    errors.append(f"{cid}: invalid filename")
                     continue
                 ok, err = update_manifest(meta, filename, self.proj)
                 if ok:
