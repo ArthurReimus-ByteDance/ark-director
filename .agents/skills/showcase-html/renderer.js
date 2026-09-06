@@ -13,6 +13,19 @@
     return n;
   };
 
+  // ---- toast ----
+  const toast = el('div', 'toast');
+  document.body.appendChild(toast);
+  let toastTimer = null;
+  function showToast(message, type) {
+    toast.textContent = message;
+    toast.className = 'toast show ' + (type || '');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.className = 'toast';
+    }, 2600);
+  }
+
   // collect selectable ASSETS: assetId -> {manifest, field, key}
   // (many cards can share one assetId; each card carries its own filename)
   const selectable = {};
@@ -326,7 +339,7 @@
   async function saveSelections() {
     if (!viaServer) return; // read-only in file:// mode
     const n = Object.keys(selections).length;
-    if (!n) { selStatus.textContent = 'Select at least one variant first.'; return; }
+    if (!n) { showToast('Select at least one variant first.', 'error'); return; }
     selStatus.textContent = 'Saving…';
     try {
       const res = await fetch('/api/select', {
@@ -336,12 +349,20 @@
       });
       const r = await res.json();
       if (r.ok) {
-        selStatus.textContent = 'Saved ' + r.applied.length + ' selection(s)' + (r.errors.length ? ' — ' + r.errors.length + ' error(s)' : '') + '.';
+        const errs = r.errors.length;
+        selStatus.textContent = 'Saved ' + r.applied.length + ' selection(s)' + (errs ? ' — ' + errs + ' error(s)' : '') + '.';
+        if (errs) {
+          showToast('Saved ' + r.applied.length + ' selection(s), ' + errs + ' error(s).', 'error');
+        } else {
+          showToast('Saved ' + r.applied.length + ' selection(s) successfully.', 'success');
+        }
         refreshActivity();
       } else {
+        showToast('Save failed: ' + (r.error || 'unknown error'), 'error');
         selStatus.textContent = 'Save failed: ' + (r.error || 'unknown error');
       }
     } catch (e) {
+      showToast('Save failed: ' + e.message, 'error');
       selStatus.textContent = 'Save failed (is the server running?): ' + e.message;
     }
   }
