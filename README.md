@@ -134,7 +134,7 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 5. **Break into scenes and shots** — write `scene.md` and `shot.md` manifests.
 6. **Generate** — use the `seedance-*` and `seed-audio-*` skills to author prompts, then submit via the MCP tools.
 7. **Assemble** — use the `ffmpeg-*` skills to concatenate approved takes with crossfades and mix audio.
-8. **Review** — use the `media-review` skill to open and compare generated assets.
+8. **Review** — use the `showcase-html` skill to review generated assets in-browser (use `--quick <file paths>` for ad-hoc comparison, or full `showcase.json` for project-wide review with synchronized playback, contact sheets, and pick-winner selection).
 
 ---
 
@@ -150,7 +150,7 @@ The workspace ships with **58 skills** across 13 categories. Skills are the cano
 | **template-factory** | Pinterest-inspired template factory that reverse-engineers a reference video ("pin") into reproducible AIGC output. Orchestrates pin intake, `seed_understand` breakdown, keyframe extraction, a deep motion review, a dynamic monochrome-sketch storyboard (passed to Seedance as `@Image 1`), optional Seedream element sheets, and a Seedance 2.5 video — every prompt passing the mandatory `prompt-review` gate. |
 | **brief-intake** | Two-mode brief intake that proposes genre-appropriate defaults for every directorial axis (structure, acting, camera, lens, lighting, grade, pacing, staging, medium, audio) and confirms them with the user. Fast mode (default) accepts the proposed set; full Q&A mode walks every axis. |
 | **prompt-review** | Mandatory quality gate that spawns sub-agents to review written prompts against the applicable skill's validation checklist and the universal directing principles. CRITICAL/MAJOR findings must be fixed before generation submission. Covers Seedance, Seed Audio, Seedream, character sheets, storyboards, and VFX prompts. |
-| **media-review** | Opens generated images and videos for visual review on macOS. Builds montage/contact sheets to compare many variants at once, and opens videos directly in the default player. Use when comparing takes, choosing variants, or doing source-vs-output comparisons. |
+| **media-review** | Thin CLI fallback for opening generated media on macOS when no browser is available. For all normal review workflows, prefer `showcase-html` (`--quick` for ad-hoc file comparison, or full `showcase.json` for project review with synchronized playback, contact sheets, and variant selection). |
 | **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 clip, uploads it, and submits a video-to-video task where the previz is the locked motion/camera master and the prompt only dresses the world. Orchestrator: delegates the build to the `blender-*` skills, the grammar to `seedance-prompt-25` blockout mode, and submission to `modelark-mcp` (plus `seedance-vfx-pipeline`'s save/manifest pattern). |
 
 ### Seedance — Video Prompting

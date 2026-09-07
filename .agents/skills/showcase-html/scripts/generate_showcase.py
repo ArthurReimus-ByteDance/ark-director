@@ -29,6 +29,7 @@ import datetime
 import json
 import os
 import re
+import subprocess
 import sys
 import threading
 import webbrowser
@@ -217,12 +218,179 @@ def validate(data, proj):
             m = section.get("media")
             if m and "src" in m and not (proj / m["src"]).exists():
                 missing.append(m["src"])
+        elif section.get("kind") == "takes":
+            for grp in section.get("groups", []):
+                for tk in grp.get("takes", []):
+                    m = tk.get("media")
+                    if m and "src" in m and not (proj / m["src"]).exists():
+                        missing.append(m["src"])
+                    cs = tk.get("contactSheet")
+                    if cs and not (proj / cs).exists():
+                        missing.append(cs)
         else:
             for card in section.get("cards", []):
                 m = card.get("media")
                 if m and "src" in m and not (proj / m["src"]).exists():
                     missing.append(m["src"])
     return missing
+
+
+# --------------------------------------------------------------------------- #
+# ffprobe + contact sheet helpers
+# --------------------------------------------------------------------------- #
+
+def _run_ffprobe(path):
+    """Return dict with duration, width, height, fps, codec, size_mb or {} on failure."""
+    try:
+        r = subprocess.run(
+            [
+                "ffprobe", "-v", "quiet",
+                "-show_entries", "format=duration,size:stream=codec_name,codec_type,width,height,r_frame_rate",
+                "-of", "json", str(path),
+            ],
+            capture_output=True, text=True, timeout=15,
+        )
+        if r.returncode != 0:
+            return {}
+        d = json.loads(r.stdout)
+        fmt = d.get("format", {})
+        streams = d.get("streams", [])
+        vstream = next((s for s in streams if s.get("codec_type") == "video"), {})
+        duration = float(fmt.get("duration", 0))
+        size_bytes = int(fmt.get("size", 0))
+        width = vstream.get("width", 0)
+        height = vstream.get("height", 0)
+        fps_raw = vstream.get("r_frame_rate", "0/1")
+        fps_num, fps_den = fps_raw.split("/")
+        fps = round(int(fps_num) / int(fps_den), 1) if int(fps_den) else 0
+        codec = vstream.get("codec_name", "")
+        has_audio = any(s.get("codec_type") == "audio" for s in streams)
+        return {
+            "duration": duration,
+            "size_bytes": size_bytes,
+            "width": width,
+            "height": height,
+            "fps": fps,
+            "codec": codec,
+            "has_audio": has_audio,
+        }
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, ValueError, KeyError):
+        return {}
+
+
+def _fmt_duration(seconds):
+    if seconds < 10:
+        return f"{seconds:.2f}s"
+    return f"{seconds:.1f}s"
+
+
+def _fmt_size(bytes_val):
+    mb = bytes_val / (1024 * 1024)
+    if mb < 10:
+        return f"{mb:.1f} MB"
+    return f"{mb:.0f} MB"
+
+
+def _ffprobe_chips(path):
+    """Return a chips list for a take card from ffprobe."""
+    info = _run_ffprobe(path)
+    if not info:
+        return []
+    chips = []
+    if info["size_bytes"]:
+        chips.append(_fmt_size(info["size_bytes"]))
+    if info["duration"]:
+        chips.append(_fmt_duration(info["duration"]))
+    if info["fps"]:
+        chips.append(f"{info['fps']}fps")
+    if info["width"] and info["height"]:
+        chips.append(f"{info['width']}x{info['height']}")
+    if info["codec"]:
+        audio_str = " + AAC" if info["has_audio"] else ""
+        chips.append(f"{info['codec']}{audio_str}")
+    return chips
+
+
+def generate_contact_sheet(video_path, output_path, frames=4):
+    """Generate a 4-frame contact sheet (opening, 1/3, 2/3, ending) as a JPEG."""
+    info = _run_ffprobe(video_path)
+    if not info or not info["duration"]:
+        return False
+    duration = info["duration"]
+    w = info["width"] or 1280
+    h = info["height"] or 720
+    timestamps = [
+        min(0.1, duration / 2),
+        duration / 3,
+        2 * duration / 3,
+        max(duration - 0.1, 3 * duration / 4),
+    ]
+    clip_dur = 0.2
+    thumb_w = w // 2
+    thumb_h = h // 2
+    filter_parts = []
+    for i, ts in enumerate(timestamps):
+        end_ts = ts + clip_dur
+        filter_parts.append(
+            f"[0:v]trim={ts:.3f}:{end_ts:.3f},setpts=PTS-STARTPTS,"
+            f"scale={thumb_w}:{thumb_h}[t{i}]"
+        )
+    inputs = "".join(f"[t{i}]" for i in range(len(timestamps)))
+    filter_complex = ";".join(filter_parts) + f";{inputs}hstack=inputs={len(timestamps)}[out]"
+    try:
+        r = subprocess.run(
+            [
+                "ffmpeg", "-y", "-i", str(video_path),
+                "-filter_complex", filter_complex,
+                "-map", "[out]", "-frames:v", "1",
+                "-q:v", "3", str(output_path),
+            ],
+            capture_output=True, timeout=30,
+        )
+        return r.returncode == 0 and output_path.exists()
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
+def enrich_takes(data, proj, generate_sheets=False):
+    """Auto-populate chips and contact sheets for takes sections."""
+    for section in data.get("sections", []):
+        if section.get("kind") != "takes":
+            continue
+        for grp in section.get("groups", []):
+            # also enrich group meta from first take if empty
+            first_info = None
+            for tk in grp.get("takes", []):
+                src = tk.get("media", {}).get("src", "")
+                if not src:
+                    continue
+                video_path = proj / src
+                if not video_path.exists():
+                    continue
+                info = _run_ffprobe(video_path)
+                if not first_info and info:
+                    first_info = info
+                # auto-populate chips if missing or if we're regenerating
+                if (not tk.get("chips") or generate_sheets) and info:
+                    tk["chips"] = _ffprobe_chips(video_path)
+                # generate contact sheet if requested
+                if generate_sheets and not tk.get("contactSheet"):
+                    cs_path = video_path.with_name(
+                        video_path.stem + "_contacts.jpg"
+                    )
+                    if generate_contact_sheet(video_path, cs_path):
+                        tk["contactSheet"] = str(cs_path.relative_to(proj))
+            # auto-populate group meta if empty or regenerating
+            if (not grp.get("meta") or generate_sheets) and first_info:
+                meta = []
+                if first_info["width"] and first_info["height"]:
+                    ratio = "16:9" if first_info["width"] > first_info["height"] else "9:16"
+                    meta.append(f"{first_info['height']}p")
+                    meta.append(ratio)
+                if first_info["duration"]:
+                    meta.append(f"{_fmt_duration(first_info['duration'])}")
+                if meta:
+                    grp["meta"] = meta
 
 
 # --------------------------------------------------------------------------- #
@@ -351,23 +519,272 @@ def serve(proj, data, port):
 # CLI
 # --------------------------------------------------------------------------- #
 
+_VIDEO_EXTS = {".mp4", ".mov", ".webm", ".mkv", ".avi"}
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
+_AUDIO_EXTS = {".wav", ".mp3", ".ogg", ".flac", ".aac"}
+
+
+def _detect_media_type(path):
+    ext = path.suffix.lower()
+    if ext in _VIDEO_EXTS:
+        return "video"
+    if ext in _IMAGE_EXTS:
+        return "image"
+    if ext in _AUDIO_EXTS:
+        return "audio"
+    return None
+
+
+def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=False):
+    """Build a minimal showcase page from a list of media file paths — no showcase.json needed.
+
+    Videos from the same directory are grouped into takes groups.
+    Images are placed in a grid section.
+    Audio files are placed in an audio section.
+    """
+    # resolve to absolute paths and validate
+    resolved = []
+    for p in paths:
+        fp = Path(p).resolve()
+        if not fp.exists():
+            print(f"warning: file not found: {p}")
+            continue
+        resolved.append(fp)
+    if not resolved:
+        sys.exit("no valid media files found")
+
+    # determine the common root (for relative paths)
+    common_root = Path(os.path.commonpath([str(p.parent) for p in resolved]))
+
+    # group by type
+    videos_by_dir = {}
+    images = []
+    audios = []
+    for fp in resolved:
+        mtype = _detect_media_type(fp)
+        if mtype == "video":
+            d = str(fp.parent)
+            videos_by_dir.setdefault(d, []).append(fp)
+        elif mtype == "image":
+            images.append(fp)
+        elif mtype == "audio":
+            audios.append(fp)
+        else:
+            print(f"warning: unrecognized file type: {fp}")
+
+    sections = []
+
+    # build takes groups for videos
+    if videos_by_dir:
+        groups = []
+        for d, vids in sorted(videos_by_dir.items()):
+            dpath = Path(d)
+            group_title = dpath.name or "Videos"
+            takes = []
+            first_info = None
+            for v in sorted(vids):
+                info = _run_ffprobe(v)
+                if not first_info and info:
+                    first_info = info
+                chips = _ffprobe_chips(v) if info else []
+                take = {
+                    "label": v.stem,
+                    "media": {"type": "video", "src": str(v)},
+                    "chips": chips,
+                }
+                # contact sheet
+                if do_contact_sheets:
+                    cs_path = v.with_name(v.stem + "_contacts.jpg")
+                    if generate_contact_sheet(v, cs_path):
+                        take["contactSheet"] = str(cs_path)
+                takes.append(take)
+            meta = []
+            if first_info:
+                if first_info.get("height"):
+                    ratio = "16:9" if first_info.get("width", 0) > first_info.get("height", 0) else "9:16"
+                    meta.append(f"{first_info['height']}p")
+                    meta.append(ratio)
+                if first_info.get("duration"):
+                    meta.append(_fmt_duration(first_info["duration"]))
+            groups.append({
+                "title": group_title,
+                "uc": "",
+                "meta": meta,
+                "takes": takes,
+            })
+        sections.append({
+            "id": "video-review",
+            "title": "Video Review",
+            "icon": "🎥",
+            "iconBg": "var(--accent-soft)",
+            "count": f"{sum(len(g['takes']) for g in groups)} videos · {len(groups)} group(s)",
+            "desc": "Quick review — auto-generated from file paths. Videos from the same folder are grouped.",
+            "kind": "takes",
+            "groups": groups,
+        })
+
+    # build grid for images
+    if images:
+        cards = []
+        for img in sorted(images):
+            cards.append({
+                "type": "elem",
+                "kindPill": "Image",
+                "media": {"type": "image", "src": str(img), "alt": img.name},
+                "tag": "",
+                "title": img.stem,
+                "sub": img.name,
+                "chips": [],
+                "prompt": "",
+            })
+        sections.append({
+            "id": "images",
+            "title": "Images",
+            "icon": "🖼️",
+            "iconBg": "var(--accent-2-soft)",
+            "count": f"{len(images)} image(s)",
+            "desc": "Quick review — auto-generated from file paths.",
+            "kind": "grid",
+            "mediaOnly": True,
+            "cards": cards,
+        })
+
+    # build grid for audio
+    if audios:
+        cards = []
+        for aud in sorted(audios):
+            cards.append({
+                "type": "audio",
+                "kindPill": "Audio",
+                "media": {"type": "audio", "src": str(aud)},
+                "tag": "AUDIO",
+                "title": aud.stem,
+                "sub": aud.name,
+                "chips": [],
+                "prompt": "",
+            })
+        sections.append({
+            "id": "audio",
+            "title": "Audio",
+            "icon": "🔊",
+            "iconBg": "var(--accent-3-soft)",
+            "count": f"{len(audios)} track(s)",
+            "desc": "Quick review — auto-generated from file paths.",
+            "kind": "grid",
+            "mediaOnly": False,
+            "cards": cards,
+        })
+
+    data = {
+        "title": "Quick Review",
+        "kicker": "Ad-hoc Media Review",
+        "lede": f"Auto-generated from {len(resolved)} file(s). No showcase.json required.",
+        "badges": [],
+        "sections": sections,
+        "footer": "Generated with showcase-html --quick.",
+    }
+
+    # use absolute paths for media src (since there's no project dir)
+    # convert to file:// URIs for browser access
+    for section in data["sections"]:
+        if section.get("kind") == "takes":
+            for grp in section.get("groups", []):
+                for tk in grp.get("takes", []):
+                    src = tk.get("media", {}).get("src", "")
+                    if src and not src.startswith("http"):
+                        tk["media"]["src"] = "file://" + src
+                    cs = tk.get("contactSheet", "")
+                    if cs and not cs.startswith("http"):
+                        tk["contactSheet"] = "file://" + cs
+        else:
+            for card in section.get("cards", []):
+                src = card.get("media", {}).get("src", "")
+                if src and not src.startswith("http") and not src.startswith("file://"):
+                    card["media"]["src"] = "file://" + src
+
+    # determine output path
+    if out_path:
+        out = Path(out_path)
+    else:
+        out = Path.cwd() / "_quick_review.html"
+    # write to a temp dir, use common_root for relative paths if possible
+    # but since we're using file:// URIs, the output location doesn't matter
+    # generate using the template directly
+    with open(TEMPLATE, "r", encoding="utf-8") as f:
+        template = f.read()
+    with open(RENDERER, "r", encoding="utf-8") as f:
+        renderer = f.read()
+
+    data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    html = (
+        template
+        .replace("__TITLE__", data["title"])
+        .replace("__DATA__", data_json)
+        .replace(
+            "<script>\n/* renderer injected by generator; see scripts/generate_showcase.py */\n</script>",
+            "<script>\n" + renderer + "\n</script>",
+        )
+    )
+    out.write_text(html, encoding="utf-8")
+    print(f"wrote {out} ({out.stat().st_size} bytes)")
+    if open_browser:
+        webbrowser.open(f"file://{out.resolve()}")
+    return out
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("project_dir")
-    parser.add_argument("--out", default="index.html")
+    parser = argparse.ArgumentParser(
+        description="Generate a self-contained showcase index.html from showcase.json, or a quick review page from file paths."
+    )
+    parser.add_argument("project_dir", nargs="?", default=None,
+                        help="Project directory containing showcase.json. Required unless --quick is used.")
+    parser.add_argument("--quick", nargs="+", metavar="PATH",
+                        help="Quick mode: build a review page from file paths (no showcase.json needed).")
+    parser.add_argument("--out", default=None,
+                        help="Output HTML filename (default: index.html, or _quick_review.html in --quick mode).")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--serve", action="store_true")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--contact-sheets", action="store_true",
+                        help="Generate contact sheet images for video takes via FFmpeg.")
+    parser.add_argument("--open", action="store_true",
+                        help="Open the generated HTML in the default browser.")
     args = parser.parse_args()
+
+    # ---- quick mode ----
+    if args.quick:
+        out_path = args.out or "_quick_review.html"
+        quick_review(
+            args.quick,
+            out_path=out_path,
+            do_contact_sheets=args.contact_sheets,
+            open_browser=True,  # always open in quick mode
+        )
+        return
+
+    # ---- normal mode (requires project_dir + showcase.json) ----
+    if not args.project_dir:
+        parser.error("project_dir is required (or use --quick with file paths)")
+    if not os.path.isdir(args.project_dir):
+        sys.exit(f"not a directory: {args.project_dir}")
 
     proj = os.path.abspath(args.project_dir)
     proj_path = Path(proj)
+    out_name = args.out or "index.html"
     manifest = os.path.join(proj, "showcase.json")
     if not os.path.exists(manifest):
         sys.exit(f"missing manifest: {manifest}")
 
     data = load_json(manifest)
+
+    # auto-populate take chips from ffprobe + optionally generate contact sheets
+    enrich_takes(data, proj_path, generate_sheets=args.contact_sheets)
+    # write back enriched data so the manifest stays in sync
+    if args.contact_sheets:
+        with open(manifest, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        print("updated showcase.json with ffprobe chips + contact sheet paths")
 
     missing = validate(data, proj_path)
     if missing:
@@ -381,12 +798,14 @@ def main():
         return
 
     if args.serve:
-        generate(proj_path, data, args.out)
+        generate(proj_path, data, out_name)
         serve(proj_path, data, args.port)
         return
 
-    out = generate(proj_path, data, args.out)
+    out = generate(proj_path, data, out_name)
     print(f"wrote {out} ({out.stat().st_size} bytes)")
+    if args.open:
+        webbrowser.open(f"file://{out.resolve()}")
 
 
 if __name__ == "__main__":

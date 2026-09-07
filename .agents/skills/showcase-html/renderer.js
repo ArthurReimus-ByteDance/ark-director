@@ -177,6 +177,8 @@
       section.appendChild(buildTable(s));
     } else if (s.kind === 'panel') {
       section.appendChild(buildPanel(s));
+    } else if (s.kind === 'takes') {
+      section.appendChild(buildTakes(s));
     } else {
       const grid = el('div', s.mediaOnly ? 'grid media-only' : 'grid');
       for (const c of (s.cards || [])) grid.appendChild(buildCard(c));
@@ -284,6 +286,129 @@
     if (s.media) panel.appendChild(mediaNode(s.media));
     if (s.caption) panel.appendChild(el('div', 'caption', s.caption));
     return panel;
+  }
+
+  function buildTakes(s) {
+    const wrap = el('div', 'takes-wrap');
+    for (const grp of (s.groups || [])) {
+      const card = el('div', 'takes-card');
+      const isSelectable = viaServer;
+
+      // header
+      const hdr = el('div', 'takes-header');
+      hdr.appendChild(el('h3', null, grp.title || ''));
+      if (grp.uc) hdr.appendChild(el('span', 'takes-uc', grp.uc));
+      if (grp.meta && grp.meta.length) {
+        const mc = el('div', 'takes-meta');
+        for (const m of grp.meta) mc.appendChild(el('span', 'chip', m));
+        hdr.appendChild(mc);
+      }
+      card.appendChild(hdr);
+
+      // controls
+      const videos = [];
+      const ctrl = el('div', 'takes-controls');
+      const playAll = el('button', 'takes-btn', '▶ Play all');
+      playAll.addEventListener('click', () => {
+        const anyPlaying = videos.some(v => !v.paused);
+        videos.forEach(v => {
+          if (anyPlaying) { v.pause(); }
+          else { v.currentTime = 0; v.play().catch(() => {}); }
+        });
+        playAll.textContent = anyPlaying ? '▶ Play all' : '⏸ Pause all';
+      });
+      ctrl.appendChild(playAll);
+
+      // prompt toggle
+      let promptPre = null;
+      if (grp.promptFile) {
+        const promptBtn = el('button', 'takes-btn takes-btn-ghost', '📝 Prompt');
+        promptBtn.addEventListener('click', () => {
+          if (promptPre) {
+            promptPre.style.display = promptPre.style.display === 'none' ? 'block' : 'none';
+          }
+        });
+        ctrl.appendChild(promptBtn);
+      }
+      card.appendChild(ctrl);
+
+      // prompt (lazy-loaded via fetch in server mode, embedded in file mode)
+      if (grp.promptFile) {
+        promptPre = el('pre', 'takes-prompt');
+        promptPre.style.display = 'none';
+        promptPre.textContent = 'Loading…';
+        fetch(grp.promptFile)
+          .then(r => r.ok ? r.text() : Promise.reject())
+          .then(text => { promptPre.textContent = text; })
+          .catch(() => {
+            // file:// fallback: can't fetch, show path
+            promptPre.textContent = 'Prompt file: ' + grp.promptFile + '\n(open in editor to view)';
+          });
+        card.appendChild(promptPre);
+      }
+
+      // takes grid
+      const body = el('div', 'takes-body');
+      for (const tk of (grp.takes || [])) {
+        const col = el('div', 'takes-take');
+
+        // video
+        if (tk.media) {
+          const frame = el('div', 'takes-video-frame');
+          const v = document.createElement('video');
+          v.controls = true;
+          v.preload = 'metadata';
+          v.src = tk.media.src;
+          v.addEventListener('play', () => {
+            playAll.textContent = '⏸ Pause all';
+          });
+          v.addEventListener('pause', () => {
+            if (videos.every(vv => vv.paused)) playAll.textContent = '▶ Play all';
+          });
+          videos.push(v);
+          frame.appendChild(v);
+
+          // pick winner button
+          if (isSelectable && tk.id && tk.manifest && tk.filename) {
+            const pick = el('button', 'select-toggle takes-pick', 'Pick winner');
+            pick.setAttribute('data-id', tk.id);
+            pick.setAttribute('data-filename', tk.filename);
+            pick.addEventListener('click', (e) => {
+              e.stopPropagation();
+              chooseVariant(tk.id, tk.filename, pick);
+            });
+            frame.appendChild(pick);
+          }
+
+          col.appendChild(frame);
+        }
+
+        // label
+        if (tk.label) col.appendChild(el('h4', null, tk.label));
+
+        // chips
+        if (tk.chips && tk.chips.length) {
+          const ci = el('div', 'takes-info');
+          for (const c of tk.chips) ci.appendChild(el('span', 'chip', c));
+          col.appendChild(ci);
+        }
+
+        // contact sheet
+        if (tk.contactSheet) {
+          const cs = document.createElement('img');
+          cs.className = 'takes-contact-sheet';
+          cs.src = tk.contactSheet;
+          cs.alt = 'Contact sheet';
+          cs.loading = 'lazy';
+          col.appendChild(cs);
+        }
+
+        body.appendChild(col);
+      }
+      card.appendChild(body);
+      wrap.appendChild(card);
+    }
+    return wrap;
   }
 
   function mediaNode(m) {

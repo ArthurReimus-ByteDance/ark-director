@@ -1,9 +1,24 @@
 ---
 name: media-review
-description: Open generated media (images and videos) for the user to visually review on macOS. Use whenever the user wants to review, compare, or choose between generated assets — image variations, video takes, character/environment sheets, or side-by-side source-vs-output comparisons. Builds montage/contact sheets for images to compare many at once, and opens videos directly in the default player (no keyframe extraction). Triggers include "review the variants", "open these for me to look at", "compare the takes", "which one should I pick".
+description: >
+  Thin CLI fallback for opening generated media (images and videos) for the
+  user to visually review on macOS when no browser is available. For all
+  normal review workflows, prefer the `showcase-html` skill (`--quick` for
+  ad-hoc file comparison, or full `showcase.json` for project review with
+  synchronized playback, contact sheets, and variant selection). This skill
+  is only needed in environments without a browser, or as a quick `open`
+  command when the user explicitly says "just open these files".
 ---
 
 # Media Review
+
+> **Prefer `showcase-html` instead.** This skill is a thin fallback for
+> environments without a browser. The `showcase-html --quick` command
+> provides a strictly better experience: inline video playback, synchronized
+> comparison, ffprobe metadata, contact sheets, and variant selection — all
+> in a single browser page. Use this skill only when `showcase-html` is
+> unavailable or the user explicitly wants files opened in the OS default
+> player.
 
 Help the user visually review generated media assets on macOS. Since the agent
 runs in a CLI with no graphical display, the practical way to let the user
