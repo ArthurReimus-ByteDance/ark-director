@@ -12,7 +12,8 @@ description: >
   prompts", "check prompts", "QA prompts", "validate prompts", "lint prompts", or when
   the agent has finished writing prompts for a scene and is about to submit generation
   tasks. Do not use for non-prompt assets (manifests, scene definitions) or for
-  reviewing generated media output (use media-review instead).
+  reviewing generated media output (use `showcase-html` instead —
+  run `generate_showcase.py --quick <file paths>` for ad-hoc review).
 ---
 
 # Prompt Review
@@ -40,7 +41,7 @@ Main agent writes/updates prompts
 - After revising a prompt based on generated output feedback.
 
 Do not trigger for:
-- Media review (use `media-review` skill).
+- Media review (use `showcase-html --quick`).
 - Manifest or scene definition edits (those are production metadata, not prompts).
 - Prompts that have already been frozen as prompt snapshots unless the user explicitly
   asks to re-review a frozen snapshot.
@@ -398,7 +399,8 @@ organized by prompt type with a table of contents at the top for quick navigatio
 ## Compose with other skills
 
 - After prompts pass review and generation tasks are submitted, consider composing
-  with `media-review` to review the generated media output.
+  with `showcase-html` (`--quick` for ad-hoc review, or full `showcase.json` for
+  project-wide review) to review the generated media output.
 - For end-to-end production coordination, `film-production` is the production manager.
 - This skill is called by the main agent during prompt-writing work; it does not call
   generation tools itself.

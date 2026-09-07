@@ -102,6 +102,10 @@ Treat expensive media generation as a gated production workflow:
    behavior is approved.
 8. **Technical and semantic QA** — inspect actual streams, decode integrity,
    contact sheets, key story transitions, and audio before requesting approval.
+   Use `showcase-html` (`--quick` for ad-hoc file comparison, or full
+   `showcase.json` for project-wide review) as the canonical review surface —
+   it provides synchronized playback, ffprobe metadata, auto-generated contact
+   sheets, and in-browser variant selection.
 
 **Generate per scene at its natural duration (4–30s), not per 30-second block.**
 Do not overload one generation with too many cuts, action beats, close
@@ -463,7 +467,10 @@ take is awaiting review, record it under `outputs` or `generated_output`.
 The `showcase-html` review page writes `selection.json` (current variant picks)
 and `selection.log` (timestamped audit of select/save actions) into the project
 root during `--serve` review. These are review-state artifacts, local-only like
-`task_ids.json` and `ref_cache.json`, and are not committed.
+`task_ids.json` and `ref_cache.json`, and are not committed. The `--serve` mode
+also supports pick-winner selection for video takes — clicking "Pick winner" on
+a take writes `selected_variant` back into the shot's `shot.md` manifest via
+the same `/api/select` endpoint as element variants.
 
 Minimal `shot.md` frontmatter:
 
@@ -709,13 +716,13 @@ Rules:
 ## Verification
 - Every MCP tool needs: (a) a **smoke test** against the live Ark API using the fast/low-cost variant, and (b) mocked unit tests for input validation, the task-polling state machine, and error handling.
 - Skills must assert end-to-end that an asset is produced, saved, hashed, and associated with its exact submitted prompt.
-- For video, record `ffprobe` output, run a full decode check, and inspect contact sheets covering the opening, major transitions, and ending.
+- For video, record `ffprobe` output, run a full decode check, and inspect contact sheets covering the opening, major transitions, and ending. Use `showcase-html --quick <file paths> --contact-sheets` to generate the review page with auto-populated ffprobe metadata and 4-frame contact sheets in one command.
 - For native audio, confirm the audio stream exists and evaluate the requested sound arc. Loudness measurements support but do not replace listening.
 - **Assembly A/V sync.** Before concatenating or crossfading takes, verify each take's audio duration equals its video duration (ffprobe both streams). Generated clips often carry audio slightly shorter than video; pad each audio track to the video duration (`apad`) before crossfading, otherwise audio and video drift apart cumulatively across boundaries. The exact recipe lives in the `ffmpeg` skill's "Crossfade assembly — A/V sync pitfall" section.
 - **Single-person video references.** The 3-panel character sheet is a design deliverable, not a video identity reference — feeding it directly to Seedance can clone the character into two. For video generation, run the `seedream-character-sheet-cleanup` skill to remove the head from the full-body panels (keeping only the close-up panel as the face anchor), then use the cleaned sheet as the reference. Do not derive a separate single front-view identity image. Add an "exactly one, never a second" guard in the prompt. After cleanup, verify the cleaned sheet with `seed_understand` before using it — the full-body panels must be headless and the close-up face panel must be intact. **Gender drift warning:** removing the head from the full-body panel can cause the model to lose gender cues (hair, jawline, facial structure) and render the character as the wrong gender. If this happens, fall back to the uncleaned original sheet — gender accuracy outweighs the identity-cloning benefit of cleanup. Reinforce gender explicitly in the video prompt ("Maya, a young Filipina woman — she is female").
 - **Video call screen references.** When a shot shows a video call on a phone or laptop screen, generate the video call UI as a Seedream screen reference image (e.g., full-screen single video feed, no selfie PiP) and pass it as `@Image N`. The model has strong priors about video call UI and will render a selfie camera PiP by default — negative prompt instructions ("no selfie PiP") cannot suppress this. Only a reference image showing the exact layout will override it. Do not provide character sheet references for people visible only through the video call screen — this makes them render as static images. Describe them in text and give them scripted dialogue lines.
-- Technical success sets a take to `review`; only explicit user approval sets it to `approved`.
-- Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface.
+- Technical success sets a take to `review`; only explicit user approval sets it to `approved`. Present takes for review using `showcase-html` (`--quick` for ad-hoc comparison, or full `showcase.json` for project review with synchronized playback, contact sheets, and pick-winner selection that writes back to `shot.md`). The `media-review` skill is a thin CLI fallback for environments without a browser.
+- Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface. The `showcase-html` page handles common codecs natively via the browser's `<video>` element.
 - Run the project's linter and type checker before finalizing any change. Record the exact commands in `AGENTS.md` (Conventions) or a note under `docs/` once the runtime is established.
 
 ## References
