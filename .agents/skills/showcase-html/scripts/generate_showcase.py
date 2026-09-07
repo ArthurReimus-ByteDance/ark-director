@@ -178,16 +178,30 @@ def read_selection(selectable, proj):
 
 
 def collect_selectable(data):
-    """Map card id -> selection metadata from showcase.json."""
+    """Map card id -> selection metadata from showcase.json.
+
+    Covers both grid sections (cards with id+manifest) and takes sections
+    (groups[].takes[] with id+manifest+filename).
+    """
     out = {}
     for section in data.get("sections", []):
-        for card in section.get("cards", []):
-            if card.get("id") and card.get("manifest"):
-                out[card["id"]] = {
-                    "manifest": card["manifest"],
-                    "field": card.get("field", "selected_variant"),
-                    "key": card.get("key"),
-                }
+        if section.get("kind") == "takes":
+            for grp in section.get("groups", []):
+                for tk in grp.get("takes", []):
+                    if tk.get("id") and tk.get("manifest"):
+                        out[tk["id"]] = {
+                            "manifest": tk["manifest"],
+                            "field": "selected_variant",
+                            "key": None,
+                        }
+        else:
+            for card in section.get("cards", []):
+                if card.get("id") and card.get("manifest"):
+                    out[card["id"]] = {
+                        "manifest": card["manifest"],
+                        "field": card.get("field", "selected_variant"),
+                        "key": card.get("key"),
+                    }
     return out
 
 
