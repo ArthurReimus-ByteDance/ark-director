@@ -7,9 +7,11 @@ description: >
   list per video, before/after comparison tables, and a combined grid/side-by-side
   view. Generates a data-driven page from a single showcase.json manifest plus an
   embedded template (no external assets), and optionally composes a combined-view
-  MP4 with FFmpeg. Use whenever the user wants an HTML review page, a media
-  showcase or gallery, a before/after comparison page, a combined grid view, or a
-  local template to preview generated assets and their prompts.
+  MP4 with FFmpeg. Also supports locking variant selections back into element
+  manifests via a local server (--serve) with a timestamped activity log. Use
+  whenever the user wants an HTML review page, a media showcase or gallery, a
+  before/after comparison page, a combined grid view, or a local template to
+  preview generated assets, their prompts, and pick winning variants.
 ---
 
 # Showcase HTML
@@ -65,26 +67,59 @@ Full field reference: [references/schema.md](references/schema.md).
    before/after. Use relative paths (resolved against the project dir). Read
    prompts verbatim from the `prompt_*.md` snapshots — never retype them.
 
+   **Mark selectable cards** so variants can be locked from the page. Every card
+   that represents a *variant* of an approved asset gets:
+   - `id` — the asset's stable key (the element id, e.g. `lucky-lion`; or a
+     short key like `lockup` for a multi-asset brand kit). All variant cards of
+     one asset share the same `id`.
+   - `manifest` — relative path to the manifest to write back to
+     (e.g. `elements/lucky-lion/character.md`).
+   - `field` — `selected_variant` (default) or `selected_variants` (map, for a
+     multi-asset kit). When `selected_variants`, also set `key`.
+   See [references/schema.md](references/schema.md#variant-selection-in-browser-lock-of-a-chosen-version).
+
 3. **(Optional) Compose the combined view.** Use `ffmpeg-side-by-side-comparison`
    to build a grid/side-by-side MP4, then reference it in a `panel` section.
 
-4. **Generate.**
+4. **Generate and open** (review-only, no selection write-back):
 
 ```bash
 python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
   projects/<project> --out index.html
-```
-
-5. **Open it.** Launch the page in the default browser — do **not** ask the
-   user to run `open` themselves:
-
-```bash
 open projects/<project>/index.html
 ```
 
-6. **Verify.** Confirm every media `src` resolves (relative paths are the #1
-   failure). Spot-check the sections, prompts, and combined view in the opened
-   page.
+   **To let the user lock variants from the browser**, run the server — it is the
+   single supported save path. It serves the page and persists selections back
+   to the manifests:
+
+```bash
+python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+  projects/<project> --serve --port 8000
+```
+
+   The user clicks a variant to mark it, then presses **Ctrl+S / ⌘S** (or clicks
+   the "Save" button) to persist. Saving writes the matching
+   `selected_variant` / `selected_variants.<key>` into the element manifest,
+   records it in `selection.json`, and appends a timestamped audit log at
+   `selection.log` (JSON Lines: one record per event, with UTC `ts`, `event`,
+   and per-event fields). The page shows an **Activity log** panel at the
+   bottom with this history.
+
+   **Plain HTML (`file://`) is read-only.** Double-clicking `index.html` is for
+   *viewing* media and prompts only: no select buttons, no save, no activity
+   log. The page shows a banner directing the user to `--serve` if they want to
+   select and save. This keeps one unambiguous path — a browser cannot write
+   files to disk by default, so persistence is deliberately server-only rather
+   than a confusing mix of downloads and pickers.
+
+5. **Verify.** Run `--check` to confirm every media `src` resolves (relative
+   paths are the #1 failure), then spot-check sections, prompts, and the
+   combined view in the opened page:
+
+```bash
+python3 .agents/skills/showcase-html/scripts/generate_showcase.py projects/<project> --check
+```
 
 ## Section recipes
 
@@ -127,10 +162,19 @@ filter graph and the PIL label fallback when `drawtext` is unavailable.
 ## Self-check
 
 1. `showcase.json` is valid JSON and every media `src` resolves relative to the
-   project dir.
+   project dir (run `--check`).
 2. Prompts are copied verbatim from `prompt_*.md` snapshots (not retyped).
 3. Each video card's `refs` matches its `shot.md` `references:` list 1:1.
-4. The page is a single portable `index.html` (no external CSS/JS/fonts).
-5. The generated file opens cleanly and the combined view plays.
-6. The page was opened in the browser via `open projects/<project>/index.html`
+4. Selectable cards carry `id` + `manifest` (+ `key` for `selected_variants`),
+   and multiple variant cards of one asset share the same `id`.
+5. The page is a single portable `index.html` (no external CSS/JS/fonts).
+6. The generated file opens cleanly and the combined view plays.
+7. The page was opened in the browser via `open projects/<project>/index.html`
    (never asking the user to open it manually).
+
+## Concurrency warning
+
+`showcase.json` is **not merge-safe**. If two agents edit it at once, one edit is
+silently lost. When regenerating alongside other work, read the file fresh
+immediately before editing, make a minimal targeted change, and write it back
+atomically — do not hold a stale copy across multiple tool calls.

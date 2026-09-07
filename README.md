@@ -263,7 +263,7 @@ The workspace ships with **58 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **lark-showcase-aigc** | Orchestrates `lark-demo-doc-builder`, `lark-doc`, `lark-wiki`, `lark-drive`, and `design-doc-mermaid` to build enterprise-facing Lark/Feishu documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark. |
-| **showcase-html** | Builds a self-contained local HTML review page for a project's generated media — color-coded element/video cards, an "elements used" list per video, before/after comparison tables, and a combined grid/side-by-side view. Data-driven: a `showcase.json` manifest + an embedded template render into one portable `index.html`. Use when the user wants an HTML review page, media gallery, or comparison page. |
+| **showcase-html** | Builds a self-contained local HTML review page for a project's generated media — color-coded element/video cards, an "elements used" list per video, before/after comparison tables, a combined grid/side-by-side view, click-to-zoom lightbox, and in-browser variant locking (via `--serve`) that writes selections back to element manifests with a timestamped activity log. Data-driven: a `showcase.json` manifest + an embedded template render into one portable `index.html`. Use when the user wants an HTML review page, media gallery, comparison page, or to pick winning variants. |
 
 ---
 

@@ -50,6 +50,30 @@ Card fields:
 | `chips` | string[] | Meta chips (resolution, duration, size). |
 | `refs` | array | `{name, role, kind}` — "Elements used" list. `kind` is `vid`/`img`/`aud`. |
 | `prompt` | string | Prompt text, rendered in a `<pre>`. |
+| `id` | string | **Selection key** — the asset's stable id (e.g. `lucky-lion`, or `lockup` for a multi-asset brand kit). Present only on selectable cards. Multiple variant cards may share one `id`. |
+| `manifest` | string | Relative path to the element manifest this asset writes its selection back to (e.g. `elements/lucky-lion/character.md`). |
+| `field` | string | Which frontmatter field the selection writes: `selected_variant` (default) or `selected_variants` (map). |
+| `key` | string | Required when `field: "selected_variants"` — the map key to write (e.g. `lockup`). |
+
+### Variant selection (in-browser "lock" of a chosen version)
+
+A card is **selectable** when it carries `id` + `manifest` (+ `key` when it
+targets a `selected_variants` map). Selection is a **server-only** feature:
+
+- **`--serve`** (the one supported save path) — runs a local HTTP server with a
+  write-back endpoint. The user clicks a variant to mark it, then presses
+  **Ctrl+S / ⌘S** (or the "Save" button). The page POSTs the selections to the
+  server, which writes the asset's `selected_variant` (or a single
+  `selected_variants.<key>`) into the manifest frontmatter, records
+  `selection.json`, and appends a timestamped audit log at `selection.log`. An
+  **Activity log** panel shows the history.
+- **`file://` (double-clicked `index.html`)** — **read-only**. No select buttons,
+  no save, no activity log; a banner directs the user to `--serve`. This is
+  deliberate: a browser cannot write to disk from `file://`, so persistence is
+  server-only rather than a mix of downloads and pickers.
+
+On load (server mode), the page reads the *current* selection from the manifests
+so already-locked variants show as selected.
 
 ### `kind: "table"` (before/after or VFX scenarios)
 

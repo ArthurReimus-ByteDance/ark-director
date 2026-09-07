@@ -460,6 +460,11 @@ generation; continue the existing task unless it has reached a terminal state.
 Reserve `selected_variant` and `approved` for an explicit user choice. While a
 take is awaiting review, record it under `outputs` or `generated_output`.
 
+The `showcase-html` review page writes `selection.json` (current variant picks)
+and `selection.log` (timestamped audit of select/save actions) into the project
+root during `--serve` review. These are review-state artifacts, local-only like
+`task_ids.json` and `ref_cache.json`, and are not committed.
+
 Minimal `shot.md` frontmatter:
 
 ```yaml
@@ -689,7 +694,7 @@ Rules:
   options to choose from. This applies to Seedream image generations in the
   Elements pipeline and concept/storyboard pipelines. Increase or decrease only
   when the user explicitly requests it.
-- **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible.
+- **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible. For visual review, the `showcase-html` skill offers an in-browser variant-locking path: run its `--serve` mode and click a variant to write `selected_variant` / `selected_variants.<key>` back into the manifest, recording the choice in `selection.json` and appending a timestamped audit line to `selection.log`. Either mechanism is acceptable; the invariant is that the winner is recorded in the manifest, not left only in chat.
 - Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
 - **Content-safety false positives on output (copyright).** Seedance can reject an
   otherwise-innocuous prompt with `OutputVideoSensitiveContentDetected.PolicyViolation`
