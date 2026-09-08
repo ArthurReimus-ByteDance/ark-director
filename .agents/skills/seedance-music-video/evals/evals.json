@@ -137,6 +137,50 @@
         "The rewrite keeps the music-video structure (format, song map, audio contract) on the original track.",
         "No watermark is enabled unless the user explicitly asks for one."
       ]
+    },
+    {
+      "id": 12,
+      "prompt": "The supplied song map says the second chorus is quieter, with sparse piano and a nearly whispered refrain. Keep the same intimate composition in both choruses. No timing grid needed.",
+      "expected_output": "A deliberate restrained repetition matching the supplied map.",
+      "files": [],
+      "expectations": [
+        "Uses the supplied map as evidence without claiming to have listened.",
+        "Preserves the repeated composition and quieter second refrain instead of requiring escalation.",
+        "Provides an intentional visual change small enough for intimacy; no invented BPM or timestamps."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Original supplied audio map: rubato piano, no regular meter, a vocal phrase measured at 17.170–19.730s. Draft its timing direction and one optional simplified prompt window.",
+      "expected_output": "Faithful event timing with evidence kept separate.",
+      "files": [],
+      "expectations": [
+        "Preserves raw 17.170–19.730s evidence.",
+        "Any simplified window is labeled derived and contains the phrase; does not replace raw timing.",
+        "Does not snap the phrase to beat one or mandate an early frame offset."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Make a single continuous shot of a still singer while the supplied map shows increasingly dense drums. I want emotional distance through counterpoint, no cuts. No exact timestamps.",
+      "expected_output": "A held performance against rising percussion.",
+      "files": [],
+      "expectations": [
+        "Preserves the continuous shot and counterpoint rather than adding beat cuts.",
+        "Grounds the sound change in supplied information and does not invent a chorus.",
+        "Defines a readable visual relationship while retaining stillness; avoids exact invented timestamps."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "I have not uploaded my track yet. Pitch an untimed music-video treatment for unresolved grief; the song structure is undecided.",
+      "expected_output": "A provisional treatment useful without fabricated audio analysis.",
+      "files": [],
+      "expectations": [
+        "Labels track-specific structure and energy as provisional.",
+        "Offers a coherent audience effect and visual rule without invented BPM, measured timings or lyrics.",
+        "Does not block an untimed treatment on audio upload; exact sync remains unresolved."
+      ]
     }
   ]
 }

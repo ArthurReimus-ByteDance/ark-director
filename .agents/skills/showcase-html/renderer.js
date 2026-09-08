@@ -28,20 +28,9 @@
 
   // collect selectable ASSETS: assetId -> {manifest, field, key}
   // (many cards can share one assetId; each card carries its own filename)
-  const selectable = {};
-  (function () {
-    for (const s of data.sections) {
-      for (const c of (s.cards || [])) {
-        if (c.id && c.manifest) {
-          selectable[c.id] = {
-            manifest: c.manifest, field: c.field || 'selected_variant',
-            key: c.key || null,
-          };
-        }
-      }
-    }
-  })();
-  const selections = {}; // assetId -> filename
+  const selectable = data.selectableRegistry || {};
+  let sessionToken = null, expectedRevision = null;
+  const selections = Object.create(null); // assetId -> filename
 
   // ---- nav ----
   const nav = el('nav');
@@ -369,7 +358,7 @@
           frame.appendChild(v);
 
           // pick winner button
-          if (isSelectable && tk.id && tk.manifest && tk.filename) {
+          if (isSelectable && selectable[tk.id] && tk.filename) {
             const pick = el('button', 'select-toggle takes-pick', 'Pick winner');
             pick.setAttribute('data-id', tk.id);
             pick.setAttribute('data-filename', tk.filename);
@@ -434,22 +423,17 @@
 
   // ---- selection helpers (manual save via Ctrl+S / Cmd+S) ----
   function chooseVariant(id, filename, btn) {
-    if (selections[id] === filename) {
-      delete selections[id];
-      btn.classList.remove('selected');
-      btn.textContent = 'Select';
-    } else {
-      selections[id] = filename;
-      // clear other selected buttons that share the same asset id
-      document.querySelectorAll('.select-toggle.selected').forEach((b) => {
-        if (b.getAttribute('data-id') === id && b !== btn) {
-          b.classList.remove('selected');
-          b.textContent = 'Select';
-        }
-      });
-      btn.classList.add('selected');
-      btn.textContent = '✓ Selected';
-    }
+    if (selections[id] === filename) return;
+    selections[id] = filename;
+    // clear other selected buttons that share the same asset id
+    document.querySelectorAll('.select-toggle.selected').forEach((b) => {
+      if (b.getAttribute('data-id') === id && b !== btn) {
+        b.classList.remove('selected');
+        b.textContent = 'Select';
+      }
+    });
+    btn.classList.add('selected');
+    btn.textContent = '✓ Selected';
     updateSelStatus();
   }
 
@@ -463,17 +447,19 @@
 
   async function saveSelections() {
     if (!viaServer) return; // read-only in file:// mode
+    if (!sessionToken || !expectedRevision) { showToast('Session not ready. Reload the page.', 'error'); return; }
     const n = Object.keys(selections).length;
     if (!n) { showToast('Select at least one variant first.', 'error'); return; }
     selStatus.textContent = 'Saving…';
     try {
       const res = await fetch('/api/select', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ selections }),
+        headers: { 'Content-Type': 'application/json', 'X-Showcase-Token': sessionToken },
+        body: JSON.stringify({ selections, expected_revision: expectedRevision }),
       });
       const r = await res.json();
       if (r.ok) {
+        expectedRevision = r.revision;
         const errs = r.errors.length;
         selStatus.textContent = 'Saved ' + r.applied.length + ' selection(s)' + (errs ? ' — ' + errs + ' error(s)' : '') + '.';
         if (errs) {
@@ -481,7 +467,7 @@
         } else {
           showToast('Saved ' + r.applied.length + ' selection(s) successfully.', 'success');
         }
-        refreshActivity();
+        document.dispatchEvent(new Event('showcase-saved'));
       } else {
         showToast('Save failed: ' + (r.error || 'unknown error'), 'error');
         selStatus.textContent = 'Save failed: ' + (r.error || 'unknown error');
@@ -501,14 +487,22 @@
   });
 
   if (selIds.length && viaServer) {
-    fetch('/api/selection')
+    fetch('/api/session')
       .then((r) => r.json())
       .then((existing) => {
-        for (const k in existing) selections[k] = existing[k];
+        if (!existing.token || !existing.revision) throw new Error(existing.error || "Session unavailable");
+        sessionToken = existing.token;
+        expectedRevision = existing.revision;
+        for (const k in existing.selections) {
+          if (selectable[k] && selectable[k].variants[existing.selections[k]]) selections[k] = existing.selections[k];
+        }
         refreshSelectButtons();
         updateSelStatus();
       })
-      .catch(() => {});
+      .catch(error => {
+        selStatus.textContent = 'Session unavailable: ' + error.message;
+        showToast('Reload after resolving the selection conflict.', 'error');
+      });
   }
 
   function refreshSelectButtons() {
@@ -568,6 +562,7 @@
         .then(renderLog)
         .catch(() => {});
     }
+    document.addEventListener('showcase-saved', refreshActivity);
     refreshActivity();
   }
 })();

@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "approval.explicit_choice",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Generation inputs match explicit manifest selections.",
+      "exceptions": []
+    },
+    {
+      "id": "references.current_hashes",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Current reference content matches the recorded hash.",
+      "exceptions": []
+    },
+    {
+      "id": "references.ordered_bindings",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Ordered roles and prompt bindings agree.",
+      "exceptions": []
+    },
+    {
+      "id": "references.control_only",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Control-only references stay outside generation requests.",
+      "exceptions": []
+    },
+    {
+      "id": "submission.reconcile_unknown",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Unknown or existing submissions reconcile rather than resubmit.",
+      "exceptions": []
+    },
+    {
+      "id": "model.supported_mode",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Selected parameters and reference mode have current capability evidence.",
+      "exceptions": []
+    },
+    {
+      "id": "narrative.observable_event",
+      "severity": "error",
+      "applies_to": [
+        "narrative_video"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Narrative action has an observable event and end state.",
+      "exceptions": []
+    },
+    {
+      "id": "asset.visible_consistency",
+      "severity": "error",
+      "applies_to": [
+        "static_image",
+        "narrative_video"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Visible design follows approved or requested descriptors.",
+      "exceptions": []
+    },
+    {
+      "id": "revision.declared_delta",
+      "severity": "error",
+      "applies_to": [
+        "editing"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "Changes stay within may_change and preserve declared locks.",
+      "exceptions": []
+    },
+    {
+      "id": "review.complete_evidence",
+      "severity": "error",
+      "applies_to": [
+        "preflight"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "All applicable checks have complete request-bound evidence.",
+      "exceptions": []
+    }
+  ]
+}

@@ -11,7 +11,9 @@ Before writing a dubbing prompt, correctly identify every speaker and assign the
 5. **Verify against source** — count should match the audible number of voices
 6. **Confirm with user if ambiguous** — never guess when uncertain
 
-## Clues to identify speakers
+## Clues to investigate speaker attribution
+
+These clues are hypotheses, not evidence of an actor identity, age, gender, or profession. Quotation, narration, impersonation, and indirect address can invalidate them. Confirm assignments against the audible source and supplied cast/script metadata before generation.
 
 ### Direct address
 - "Ms. Ford" → speaker is NOT Ms. Ford; they are addressing her
@@ -25,7 +27,7 @@ Before writing a dubbing prompt, correctly identify every speaker and assign the
 
 ### First-person references
 - "I want to talk to your client" → speaker is not the lawyer; they are the client's counterpart
-- "my health is failing" → speaker is an older person
+- "my health is failing" → health-related dialogue; it does not establish the speaker's age
 - "I'll wait for him to return" → speaker is someone who was meeting with him
 
 ### Formal vs casual register
@@ -63,7 +65,7 @@ If a line makes more sense in the other speaker's voice, double-check.
 
 ## When to use Seed 2.1 for help
 
-If the script is complex, ambiguous, or in a language you don't fully understand, use Seed 2.1 multimodal understanding to analyze the script. Call the `seed_understand` MCP tool with the script text in the `prompt` field. The model ID is `dola-seed-2-1-turbo-260628` (or the configured default). Enable `thinking: true` for complex scripts that require reasoning about character motivations.
+If the script is complex, ambiguous, or in a language you don't fully understand, use Seed 2.1 multimodal understanding to analyze the script. Use a currently supported multimodal understanding tool with source audio/video and the script. Script-only interpretation can propose a mapping but cannot verify audible speaker turns. Resolve model and supported parameters from the live tool schema.
 
 ```
 Analyze this drama dialogue script about [brief context].
@@ -73,7 +75,7 @@ and who is speaking. There are [N] distinct speakers.
 For EACH line, tell me: line number, who is speaking, and a brief reason why.
 ```
 
-If the speaker count is unknown, say "an unknown number of distinct speakers" and ask the model to count them and identify each one.
+If the speaker count is unknown, request an audible-turn count from the source and retain uncertain mappings for review. Do not treat a script-only count as verified.
 
 This is especially useful for:
 - Scripts with many characters (5+)

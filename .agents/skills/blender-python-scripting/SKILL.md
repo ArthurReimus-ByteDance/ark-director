@@ -24,7 +24,7 @@ Prefer the **connected Blender MCP server** for executing scripts, inspecting da
 
 **Workflow:** inspect with `blender_get_scene_info` / `blender_get_object_info` → mutate via `blender_execute_blender_code` → verify with `blender_get_viewport_screenshot`. Keep code blocks small and idempotent so failures are easy to localize.
 
-Setup: see [docs/blender-mcp-setup.md](../../../docs/blender-mcp-setup.md).
+Setup: see [docs/blender-mcp-setup.md](../../contracts/blender-mcp-setup.md).
 
 ## Task Decision Tree
 

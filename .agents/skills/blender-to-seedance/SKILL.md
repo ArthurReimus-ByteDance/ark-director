@@ -59,7 +59,7 @@ Do **not** use when:
 ### 1. Build the blockout (via the Blender MCP tools)
 
 Build via the Blender MCP tools (`blender_execute_blender_code` etc.; see
-`docs/blender-mcp-setup.md`). Conventions:
+[Blender setup](../../contracts/blender-mcp-setup.md)). Conventions:
 
 - **Primitives are subjects.** A cube = a person; a monolith = the hero; a
   cylinder = a can; spheres = fruit; boxes = props.
@@ -98,14 +98,20 @@ to dress the world, never to re-choreograph it.
 
 ### 5. Submit, poll, save
 
-1. `media_upload` the previz; record `object_key` in `projects/<project>/ref_cache.json`.
+1. Persist the exact prompt snapshot and reviewed prepared operation in
+   `task_ids.json` before submission. `media_upload` the previz; record
+   `object_key` in `projects/<project>/ref_cache.json`.
 2. `seedance_2_5_create_task` with:
    - `omni_reference_task_type=edit` (full-duration re-skin),
    - `@Video 1` = presigned previz URL,
    - `resolution` (default `720p` for iteration; `1080p` for finals),
-   - `duration` = previz duration (4-30s),
+   - verify previz duration against the live edit limit; omit auto-locked
+     `duration` and `ratio` parameters,
    - `return_last_frame=true` when chaining.
 3. Record the task in `task_ids.json`, poll `seedance_get_task` until terminal.
+   A local timeout without acceptance evidence enters `submission_unknown`;
+   reconcile the existing operation and never automatically resubmit. Explicit
+   blockout conditioning needs user-selected inputs and live mode support.
 4. Save the output beside the shot and write `shot.md` (see below) + the
    immutable prompt file `prompt_<asset>.md`.
 
@@ -157,3 +163,12 @@ references: 4
 6. Dialogue is timestamped and never adds coverage; off-screen stays off-screen.
 7. The submitted reference array matches the prompt bindings 1:1, same order.
 8. `previz_sha256`, `object_key`, `task_id`, and manifest fields are recorded.
+
+## Intentional conditioning representation
+
+A sketch or blockout stays `control_only: true` while it is analysis-only. To
+use intentional conditioning, first obtain explicit selection of a derived
+composition or motion reference. Record its exact selected manifest, current
+SHA-256, `reference_image` or `reference_video` role, and `control_only: false`.
+Confirm live model/mode support. Flipping the flag alone never grants approval;
+the caller applies the [production policy](../../contracts/production-policy.md).

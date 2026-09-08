@@ -1,0 +1,69 @@
+{
+  "skill_name": "brief-intake",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A bright noir comedy in a bakery. The audience should enjoy seeing the baker conceal a missing pastry from an inspector. Give one compact direction.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "Derives direction from audience complicity and concealment, preserving bright comedy.",
+        "Does not impose neon, fear acting, or first-listed genre defaults.",
+        "Returns one proposal without an unwanted alternatives exercise."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Explore two ways to make first-time community-dinner guests feel welcome.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "Provides two distinct central ideas or viewpoints, not palette swaps.",
+        "Connects each treatment to welcome and a concrete visible moment.",
+        "Explains a practical tradeoff without selecting or approving either."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Only change our camera to a static wide shot. Keep the approved warm daylight, native ambience, and playful tone.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "Changes the camera scope only and preserves accepted light, audio, and tone.",
+        "Does not demand reconfirmation of unrelated axes."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A static poster of an open doorway. Viewers should feel invited. Genre undecided.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "Uses visible design and invitation as its rationale.",
+        "Does not block on genre or require acting, camera movement, or narrative tactics."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Give me the full Q&A for a short film where a quiet reunion feels awkward rather than sentimental.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "Offers the opt-in detailed treatment while deriving choices from awkwardness.",
+        "Allows stillness and restrained performance rather than automatic escalation.",
+        "Recommendations remain proposed until accepted."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write one chat-only creative direction for a silent six-second lamp reveal. Keep the supplied product shape.",
+      "expected_output": "An intent-led, proportionate creative proposal preserving requested scope.",
+      "files": [],
+      "expectations": [
+        "No project file creation or mandatory audio/acting axis.",
+        "Proposes a feasible visible reveal tied to product fidelity.",
+        "States consequential missing information only if needed, without invented locks."
+      ]
+    }
+  ]
+}

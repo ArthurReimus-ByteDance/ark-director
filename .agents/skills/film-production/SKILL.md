@@ -68,7 +68,8 @@ between modalities.
 
 If the needed lifecycle role does not exist, keep the work at its current stage
 and record the gap. Do not disguise a generic prompt as a completed production
-department workflow. See `specs/SPEC_FILMMAKING_LIFECYCLE_SKILLS.md` for planned
+department workflow. The local-only `specs/SPEC_FILMMAKING_LIFECYCLE_SKILLS.md`
+is optional future-planning context, not a required runtime dependency. It records planned
 coverage.
 
 ## Run one stage at a time
@@ -124,3 +125,11 @@ tasks still running, costs when known, unresolved risks, and the next production
 decision. A production run is complete only when its active stage exit contract
 is satisfied; the whole film is complete only after explicit final-delivery
 approval.
+
+## Submission recovery
+
+Persist each exact prompt snapshot and reviewed prepared request in the project
+registry before submitting. Record the provider task ID as soon as available.
+An ambiguous timeout leaves `submission_unknown`: reconcile that operation or
+resume its known task; never repeat submission automatically or switch transport
+to submit a duplicate. Any new authorized take gets a new operation record.

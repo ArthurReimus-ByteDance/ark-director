@@ -1,737 +1,218 @@
 # AGENTS.md — ai-director
 
-> Guidance for AI coding agents and human contributors working in this workspace.
+This is the single workspace entrypoint for agents and contributors. The public
+README uses the existing `ark-director` display name; the checkout is
+`ai-director`. Do not rename the project as incidental maintenance.
 
-## What this workspace is
+## Scope and authority
 
-`ai-director` is a workspace for producing **AI-generated content (AIGC)** using BytePlus / Volcano Engine generative models. It behaves like an "AI director": it orchestrates multiple BytePlus model families — **Seedance** (video), **Seedream** (images), and **Seed Audio** (audio) — to turn prompts and references into finished content assets.
+This workspace produces AI-generated image, video, audio and 3D content using
+BytePlus tools and independent skills. Follow current user instructions and
+preserve authorization already given for the task. Task scope does not expand
+into unrelated global configuration, external publishing, or production edits.
 
-The primary integration mechanism is **MCP (Model Context Protocol) servers** plus **agent skills**:
+Keep project-specific instructions and tooling in `.agents/`. Personal global
+rules may add preferences but a clean checkout must contain its own operational
+contracts. Do not create a second competing `.agents/AGENTS.md`.
 
-- **MCP servers** wrap the BytePlus ModelArk REST API and expose narrowly-scoped, composable tools.
-- **Agent skills** are higher-level content-creation recipes that compose those MCP tools into end-to-end pipelines (e.g. "short ad spot", "storyboard to video", "podcast intro").
+Before editing, inspect relevant files, plans and existing Git changes. Never
+revert, overwrite or clean up work you did not create for this task. When a plan
+is supplied, reference it during implementation. Substantial independent work
+may use sub-agents with explicit, non-overlapping file ownership.
 
-AI coding agents working here should treat MCP tools as the canonical way to invoke BytePlus models, and skills as the canonical way to package reusable content recipes. Do not call the Ark REST API directly from skills — go through the MCP tools.
+Ask for missing information when it materially affects the intended result.
+Continue reversible work whose requirements are already clear. Do not repeat an
+approval request when existing user instructions authorize the same action.
 
-**Always save generated files locally.** Every asset produced via MCP (video, image, audio) must be downloaded and saved to the appropriate path under `projects/<project>/scenes/` (or `library/` for reusable assets) inside this workspace — never rely solely on a remote URL or ephemeral link. Remote URLs expire; the local project tree is the durable source of truth for generated content.
+## Operational contracts
 
-## Model catalog
+Load only the contract relevant to the current stage:
 
-Models are accessed through **BytePlus ModelArk** and the BytePlus Seed Speech
-surface. Resolve credentials from the environment at runtime:
-`BYTEPLUS_MODELARK_API_KEY` for Seedream and Seedance, and
-`BYTEPLUS_SEED_AUDIO_API_KEY` for Seed Audio. Compatibility aliases may exist
-in individual tools, but project documentation and new integrations should use
-the canonical names.
+| Need | Tracked source |
+| --- | --- |
+| Production stages, approval, review, durable submission and QA | [Production policy](.agents/contracts/production-policy.md) |
+| MCP, Ark CLI, Lumina and capability routing | [Routing](.agents/contracts/routing.md) |
+| Canon, props, screens and control references | [Element identification](.agents/contracts/element-identification.md) |
+| File prefixes and numbering | [Asset naming](.agents/contracts/asset-naming.md) |
+| Requested dialogue synchronization and assembly | [Audio-video alignment](.agents/contracts/audio-video-alignment.md) |
+| Requested camera, lens, lighting, acting and other axes | [Directorial axes](.agents/contracts/seedance-reference.md) |
+| Vendored Blender adapter/setup | [Blender setup](.agents/contracts/blender-mcp-setup.md) |
 
-| Family | Model(s) | Modality | Key capabilities | Ark API surface |
-|---|---|---|---|---|
-| Seedance | **Seedance 2.5** (`dreamina-seedance-2-5-260628`, default) — up to 30s per pass, up to 1080p output, multi-round extensions, 30 images / 10 videos / 10 audio refs, timestamp-level editing. Seedance 2.0 Standard (`dreamina-seedance-2-0-260128`) available as fallback (for 4K output or Fast/Mini); configured Fast/Mini bindings | Video | Text-to-video, first/last-frame generation, multimodal references, editing, extension, native audio+video | `POST /contents/generations/tasks` (async task + poll) |
-| Seedream | Seedream 5.0 Pro (`dola-seedream-5-0-pro-260628`); configured Lite/4.x bindings | Image | Text-to-image, reference-based generation/editing, multi-reference fusion, sequential/multi-image output | `POST /images/generations` (OpenAI-compatible) |
-| Seed Audio | Seed Audio 1.0 (`seed-audio-1.0`) | Audio | Voice + music + SFX + ambience in one pass, multi-character dialogue, voice references, cross-lingual generation, up to ~2 min/clip | BytePlus Seed Speech audio generation API |
-| Seed / Doubao | `seed-2-0-lite-260228` and siblings | Text | Prompt expansion, scene scripting, structured output for pipelines | `POST /responses` (OpenAI-compatible) |
+Stable validation rule IDs live in `.agents/contracts/rules.json`. Request,
+registry and review schemas live in `.agents/contracts/schemas/`.
 
-**Region base URLs** (read from environment, never hard-coded):
-- `ap-southeast-1` (default): `https://ark.ap-southeast.bytepluses.com/api/v3`
-- `eu-west-1`: `https://ark.eu-west.bytepluses.com/api/v3`
-- Volcano Engine (China domestic): `https://ark.cn-beijing.volces.com/api/v3`
+## Routing and capability boundaries
 
-**SDKs** (install via package manager — do not hand-edit lockfiles):
-- Python: `pip install 'byteplus-python-sdk-v2[ark]'` or `pip install openai`
-- Go: `github.com/byteplus-sdk/byteplus-go-sdk-v2`
-- Java: `com.byteplus:byteplus-java-sdk-v2-ark-runtime`
+Use Ark CLI for platform administration and interactive generation. Prefer
+ModelArk MCP for in-agent durable generation. If MCP is unavailable before
+submission, use an equivalent available CLI surface with the same review,
+reference and persistence contracts. An ambiguous timeout is a reconciliation
+case, never a reason to submit through a second transport.
 
-## Architecture
+Skills never call the Ark REST API directly. Resolve tool availability and
+current model bindings before selecting parameters. Seedance 2.5 remains the
+workspace default; a verified requested capability may require another model.
+Do not force 4K, switch models because a face is present, or assume a workflow
+exception makes unsupported mixed reference roles valid.
 
-```mermaid
-flowchart LR
-  A[Agent / Skill] -->|MCP tool call| B[MCP Server]
-  B -->|HTTPS + ARK_API_KEY| C[BytePlus ModelArk API]
-  C --> D[Seedance - video]
-  C --> E[Seedream - image]
-  C --> F[Seed Audio - audio]
-  F -.->|reference_audio input (optional)| D
-  B -->|submit task_id| C
-  B -->|poll task_id| C
-  C -->|asset URL| B
-  B -->|download| G[(projects/<project>/scenes/ - local production state)]
-  A -->|expand prompt / script| H[Seed LLM]
+Lumina is opt-in. When the user explicitly works in Lumina, deliver prompts in
+chat without MCP/CLI generation or production file writes unless requested.
+Prompt-only work may deliver drafts without generating assets or demanding
+production locks. Software/system diagrams use Mermaid; cinematic blocking
+uses the blocking-map capability.
+
+## Skills and orchestration
+
+One skill provides one capability. Leaf skills remain independently usable;
+composition hints are prose, not directives to load siblings. Declared
+orchestrators own cross-skill sequencing, generation gates and delegation.
+`film-production` manages multi-scene production using its stage/handoff
+contracts. Load only specialists needed for the current stage or requested axis.
+
+Vendored Remotion, Mediabunny, Blender and FFmpeg bundles are exempt from local
+skill-isolation remediation. Preserve upstream design, record local overlays,
+and review changes before re-vendoring. Do not remove a skill because it is
+currently unused. All installed bundles and `skills-lock.json` belong in Git.
+
+Keep skill metadata concise and valid YAML. Move substantial conditional modes
+and examples into focused same-skill references with explicit loading guidance.
+A reference file must ship with the bundle or be a declared workspace adapter.
+
+When a skill is added, renamed, removed or its description changes, update the
+README skill entry and catalog together. Each skill appears once. Preserve
+source-specific lock hash semantics; bundle integrity also covers scripts,
+references and UI metadata. Do not refresh hashes to hide unexplained changes.
+
+## Production invariants
+
+- Draft breakdown may precede canon. Dependent production generation requires
+  the relevant approved recurring, branded or story-critical elements.
+- Identify all visible props; only threshold-qualified props require separate
+  sheets. Incidental generic props may be described. Keep canonical held props
+  separate from character sheets and distinguish always-worn/variant wearables.
+- Elements define identity; derivative boards require current source hashes and
+  explicit selection before video use. Control-only diagrams stay analysis-only
+  by default. Automated recommendations cannot set selected_variant or approved.
+- Static assets use visible-design criteria. Narrative shots need action and
+  intent. Audio uses its requested sound arc. Do not apply narrative tactics to
+  every static sheet or ambience prompt.
+- Lock exact screen copy/layout with a reference before video. Inspect the
+  result; references do not guarantee pixel-perfect text. Use deterministic
+  finishing when exact fidelity is required.
+- Preserve exact canonical descriptors where applicable. Prefer positive,
+  observable direction; necessary edit-scope exclusions are allowed.
+- Run prompt-review for every generation-bound prompt. Resolve CRITICAL/MAJOR
+  findings. Missing reviewer output is incomplete. Documentation/manifest-only
+  edits do not trigger paid generation; changed worked examples are reviewed
+  offline.
+- Freeze the exact prompt beside its intended output before submission. Verify
+  request hash, current reference hashes, ordered roles/bindings, explicit
+  selections and supported parameters. Changed inputs invalidate review.
+- Persist a prepared operation in the project task registry before submission;
+  save an acknowledged task ID immediately. Resume existing tasks after poll
+  timeouts. Unknown acceptance holds for reconciliation or explicit retry scope.
+- Save every generated modality locally and record artifact/task IDs, bytes,
+  SHA-256, actual media properties and separate estimated/confirmed costs.
+- Provider success sets review, not approved. User choice alone approves a
+  variant. Preserve other variants and prior history unless explicitly changed.
+- Default image selection sets contain three stochastic samples with identical
+  prompt, references and effective parameters except supported seed variation.
+  Explicit requested count or creative alternatives override this default.
+- Use the lowest suitable cost/resolution within the request. Set watermark
+  false only when the tool supports that parameter, unless the user requests it.
+- Separate lip-sync audio is opt-in. Generate scenes at natural supported
+  duration, then chain supported modes or assemble. Continuous native extension
+  is exceptional and requires seam inspection.
+- Moderation rejection is evidence to diagnose, not proof of a false positive.
+  Revisions remain legitimate and authorized; task cleanup requires explicit
+  scope rather than being inferred from provider completion.
+
+## Local production state and naming
+
+`projects/<project-name>/` is the durable local source of truth, never a default
+Git staging target. Keep existing production assets and manifests untouched by
+repository maintenance unless explicitly scoped.
+
+| Location | Contents |
+| --- | --- |
+| `projects/<project>/project.md` | Brief, proposed/confirmed axes, project state |
+| `projects/<project>/task_ids.json` | Single provider-operation registry |
+| `projects/<project>/ref_cache.json` | Content hashes and storage-scoped object keys |
+| `projects/<project>/elements/<element-id>/` | Reusable identity/location/prop manifests and references |
+| `projects/<project>/scenes/scene-NN/` | Scene manifest, keyframes and scene renders |
+| `projects/<project>/scenes/scene-NN/sNN_shNNN/` | Shot manifest, exact prompt snapshots, takes and dialogue |
+| `projects/<project>/library/` | Reusable non-shot music, SFX and ambience |
+
+Folders and IDs use lowercase kebab-case. Scene IDs use two digits; shot/panel
+numbers use three digits with gaps of ten. Asset prefixes distinguish modality;
+see the naming contract. Prompt snapshots use `prompt_<asset-stem>.md` beside
+the media and are immutable after submission. Manifest `prompt_file` and
+`prompt_sha256` identify the canonical snapshot rather than duplicating it.
+
+Provider state, local submission state and editorial approval are distinct.
+New records use versioned schemas. Read legacy metadata conservatively and
+propose migration previews rather than inventing missing IDs, approval or cost.
+Reference caches key reuse by content hash plus storage scope; expiring signed
+URLs are transport data. Selection manifests are authoritative; derived JSON
+and browser state must agree with validated committed selections.
+
+`docs/`, `plans/` and `specs/` contain local research, implementation plans and
+exploratory specifications. Never stage their contents or `projects/` by default.
+Plans use `PLAN_<NAME>.md` and include concrete implementation details.
+Reusable operational contracts, schemas, scripts, tests and maintenance runtime
+configuration are an explicit tracked exception to the local-document rule.
+Do not leave ad hoc research files at the workspace root.
+
+## Portable security and change boundaries
+
+Resolve credentials and base URLs from runtime configuration. Canonical names
+are `BYTEPLUS_MODELARK_API_KEY` and `BYTEPLUS_SEED_AUDIO_API_KEY`; transport
+compatibility aliases may exist. Never output or commit credentials, `.env`
+files, signed URLs, account secrets or sensitive production input in fixtures.
+
+Validate external data before use. Use subprocess argument arrays rather than
+evaluated command strings; confine project paths including symlinks. Use
+parameterized data access. Keep review servers on loopback with bounded,
+validated state-changing requests and owned temporary files.
+
+Lark/shared artifacts must be self-contained and link only to audience-accessible
+resources. Do not publish local paths, private vault context or tooling noise.
+External messages require explicit authorization. Do not infer approval to
+publish from approval to draft or generate.
+
+Never commit or push repository changes unless requested. When authorized,
+stage only task-owned files. Clean up only your own temporary fixtures/scripts;
+retain durable local production state, user edits, secrets and required caches.
+
+## Verification and maintenance commands
+
+Install dependencies with `uv sync --locked`; use the package manager for new
+dependencies. Consult current primary documentation and audit dependencies.
+Keep code simple, explicit and small; match neighboring conventions. Do not add
+code comments unless requested or leave debug output in committed code.
+
+Run the applicable checks from the repository root:
+
+```bash
+uv run python .agents/scripts/validate_workspace.py --offline
+uv run python -m unittest discover -s tests -v
+uv run ruff check .agents/scripts tests
+uv run mypy .agents/scripts
+PYTHONPYCACHEPREFIX=/tmp/ai-director-pycache uv run python -m compileall -q .agents/scripts
+uv run pip-audit
+git diff --check
 ```
 
-- MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/scenes/...` path inside this workspace, and return both the local file path and the asset URL. Always save locally — remote URLs expire, the local project tree is the durable source of truth.
-- Generated assets are written to project-scoped `scenes/` directories (see
-  [Project & asset directory structure](#project--asset-directory-structure)).
-  The `projects/` tree is intentionally not gitignored; treat it as local
-  production state and do not stage it unless the user explicitly requests a
-  specific project artifact.
-- The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
-
-For end-to-end film work, use the project-local `film-production` skill as the
-manager. It advances one production stage at a time, delegates modality-specific
-work to the existing specialist skills, and preserves explicit human approval at
-creative locks and generation handoffs.
-
-## Production gates
-
-Treat expensive media generation as a gated production workflow:
-
-1. **Brief and creative locks** — record approved identities, environments,
-   props, tone, forbidden behavior, target resolution, duration, and audio mode.
-2. **Reference preflight** — classify each asset as visible identity, visible
-   environment, motion/camera reference, or control-only. Control-only images
-   can leak into output; translate them to text and omit them by default.
-   The ordered reference array you submit must match the `references:` list in
-   `shot.md` exactly — same files, same order, same `@Image N` / `@Video N` /
-   `@Audio N` bindings. Submit only what the prompt actually binds; if the
-   prompt does not bind an asset, do not include it in the request.
-3. **Spatial and temporal preflight** — for movement-heavy scenes, record start,
-   travel axis, subject order, boundary behavior, end state, and forbidden
-   transitions. Resolve contradictions between the brief, references, and
-   prompt before generation.
-4. **Audio for dialogue (optional)** — when the user explicitly requests
-   lip-synced dialogue audio, generate the Seed Audio dialogue track before
-   submitting the Seedance video task. Verify the audio duration fits within
-   the planned video duration, then use the audio as a `reference_audio`
-   input to Seedance. This is opt-in, not the default for every dialogue
-   scene. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes).
-5. **Low-cost prototype** — validate motion, geography, anatomy, camera,
-   boundary behavior, and audio at the lowest suitable resolution and variant.
-6. **Creative review** — preserve user-approved decisions and write the single
-   requested delta plus observable acceptance criteria for the next take.
-7. **Final candidate** — increase resolution only after the important creative
-   behavior is approved.
-8. **Technical and semantic QA** — inspect actual streams, decode integrity,
-   contact sheets, key story transitions, and audio before requesting approval.
-   Use `showcase-html` (`--quick` for ad-hoc file comparison, or full
-   `showcase.json` for project-wide review) as the canonical review surface —
-   it provides synchronized playback, ffprobe metadata, auto-generated contact
-   sheets, and in-browser variant selection.
-
-**Generate per scene at its natural duration (4–30s), not per 30-second block.**
-Do not overload one generation with too many cuts, action beats, close
-encounters, and location changes. Right-size each scene to the duration it
-actually needs using the `duration` parameter (4–30s for 2.5, ≤15s for 2.0),
-then chain approved scenes via `return_last_frame` / `first_frame` + a shared
-reference bundle and assemble in post. Reserve 30s single-pass or native
-extension for when you explicitly need continuous, seamless motion across scene
-boundaries.
-
-## Directing principles
-
-Four rules govern every prompt this workspace writes. They are non-negotiable
-and apply to every modality — Seedream image prompts, Seed Audio prompts, and
-Seedance video prompts.
-
-1. **Assets first.** Not one shot until every character, location, and prop is
-   named, versioned, and locked. Build and approve the canonical Elements under
-   `elements/` before any scene or shot is written, and reference them by their
-   locked `@tag`. **The model has no memory — describe everything, every time.**
-   Descriptors, voice locks, and spatial maps go into every prompt **word for
-   word**: never summarize, shorten, or imply a locked descriptor; copy the
-       exact canonical phrasing into each prompt that touches that element.
-
-    Objects a character holds, carries, aims, or operates on camera — devices,
-    weapons, tools, bags — are canonical props and **never appear in the
-    character sheet**. Author a dedicated `prop_` sheet for each one before
-    storyboarding or video, and bind it as an `@Image N` reference. Wearables
-    that are always part of the outfit in every scene — a hat, a helmet,
-    always-worn eyewear, jewelry — stay in the character sheet as part of the
-    look. But a **scene-variant wearable** (e.g. sunglasses the character wears
-    in some scenes and removes in others) must be **excluded from the character
-    sheet** and generated as a `prop_` sheet instead. A text-only prop renders
-    as the wrong object: a pen-shaped device comes back as a laser, eyewear as
-    the wrong frame.
-
-    **Element identification checklist** and the **prop threshold test** — see
-    [docs/element-identification.md](docs/element-identification.md). The rules
-    in short: any element the model must render consistently but cannot infer
-    from text alone needs a generated reference image; each category
-    (character, location, prop, screen, card, audio, costume variant) maps to a
-    `char_`/`loc_`/`prop_`/`screen_`/`card_`/`library/` element; an element in
-    2+ shots or story-critical is a locked Element, otherwise a scene-level
-    keyframe; a prop needs a `prop_` sheet only for branded, recurring, or
-    story-critical objects.
-
-2. **Say what you want, not what you avoid.** The words you write are the words you
-   summon — including the ones inside a "no". A prohibition still names and
-   summons the thing it forbids. Instead of listing what to avoid, write the
-   positive, specific instruction that produces the intended result.
-
-3. **Direct, don't describe.** Write the scene event, motive, goal, obstacle,
-   and tactic — not just what things look like. The director's craft is the one
-   part the model can't invent for you yet: action beats, character intent,
-   staging, and blocking are your contribution. If a prompt reads like a static
-   description with no event or intent, it is not yet a shot.
-
-4. **Screens and text first.** When a shot shows a phone app screen, computer
-   or TV monitor, tablet or wearable UI, signage, document, chat thread, or any
-   text-heavy or UI-heavy surface, generate that screen content with Seedream
-   **before** submitting the Seedance video task. Lock the exact layout, copy,
-   and typography as an image — a `prop_` sheet for a reusable device screen, or
-   a scene-level keyframe for a one-off screen — approve it, then pass it as a
-   `reference_image` to Seedance and bind it with `@Image N` in the prompt.
-   Never leave screen text to the video model: video models hallucinate and warp
-   text and UI, while Seedream locks them pixel-for-pixel. Record the screen
-   asset path and binding in `shot.md` like any other reference.
-
-### Prompt review gate
-
-After writing or updating any model prompt — Seedance 2.5/2.0, Seedance VFX,
-Filipino dialogue, Seed Audio, Seedream image, character/location/prop sheets,
-or storyboards — the main agent **must** run the `prompt-review` skill (or the
-`/prompt-review` command) before submitting any generation task. This is a
-mandatory quality gate, not an optional check. The review spawns a sub-agent
-per prompt type against the applicable checklist plus the universal directing
-principles, and CRITICAL/MAJOR findings must be fixed before submission.
-
-This gate covers prompts only — it does not apply to `project.md`, `scene.md`,
-or `shot.md` manifest edits, and frozen prompt snapshots are exempt unless the
-user explicitly asks to re-review one.
-
-## Project & asset directory structure
-
-The entire `projects/` tree is **local-only working state — never commit it to
-git.** Project files (manifests, prompts, references, generated assets, scripts)
-are large, frequently changing, and not meant to live in version control. They
-are the workspace's durable local source of truth, not the remote's. Do not
-`git add` anything under `projects/`. Generated media under `projects/` is
-gitignored by pattern; everything else in the tree is held out of git by
-convention — individual tracked files (e.g. a project template or doc) *could*
-be added explicitly if ever needed, but the default is: hands off.
-
-This workspace hosts many projects (films, ad campaigns, series, etc.). Each project lives under `projects/<project-name>/` and follows the same internal layout. The structure leans on **structured file naming** (token prefixes like `s01_sh010_t01_v01.mp4`, `char_gloria_turnaround_v01.png`) to self-describe assets, minimizing folder nesting:
-
-- **Higgsfield-style "Elements"** — reusable characters, locations, and props are authored once under `elements/` and referenced by many scenes (mirroring Higgsfield Cinema Studio's Elements + SOUL ID character-consistency model).
-- **VFX pipeline shot/versioning** — scenes break into numbered shots with gaps for insertions, and every generated file carries structured, padded, versioned tokens.
-- **Naming over nesting** — file prefixes (`char_`, `loc_`, `prop_`, `ref_`, `dlg_`, `mus_`, `sfx_`, `amb_`, `mix_`, `prompt_`) already encode type, scene, shot, take, and version. Folders don't need to repeat that information.
-
-The core separation: **`elements/` holds reusable assets** (referenced across scenes), **`scenes/` holds scene/shot definitions and all generated outputs** co-located with their shot, and **`library/` holds reusable non-shot-specific assets** (music, SFX, ambience).
-
-### Directory tree
-
-```
-projects/
-  <project-name>/                     # kebab-case, e.g. midnight-run
-    project.md                        # brief, cast, locations, model & credit defaults, status
-    task_ids.json                     # project-level task registry (provider task IDs)
-    library/                          # reusable, non-shot-specific assets
-      mus_tension-build_v01.wav       # music beds
-      sfx_door-slam_v01.wav           # sound effects
-      amb_s01_rain_v01.wav            # ambience
-      prompt_mus_tension-build_v01.md # prompt snapshots beside library assets
-    elements/                         # reusable Elements (flat, no type subfolders)
-      gloria/                         # folder = element id; type is in manifest + file prefix
-        character.md                  # role, traits, voice, consistency model & notes
-        ref_01_front.png              # ref_ prefix = reference seed image
-        ref_02_side.png
-        ref_03_fullbody.png
-        char_gloria_turnaround_v01.png      # char_ prefix = character sheet
-        prompt_char_gloria_turnaround_v01.md # prompt snapshot beside the sheet
-      neon-alley/
-        location.md
-        ref_01_wide.png
-        loc_neon-alley_wide_v01.png
-        prompt_loc_neon-alley_wide_v01.md
-      red-motorcycle/
-        prop.md
-        ref_01_side.png
-        prop_red-motorcycle_side_v01.png
-        prompt_prop_red-motorcycle_side_v01.md
-    scenes/
-      scene-01/                       # scene-NN (2-digit, 10-gap)
-        scene.md                      # script, cast, location, props, camera, style, status
-        s01_kf01_v01.png              # scene-level keyframe (from storyboard or direct)
-        prompt_s01_kf01_v01.md        # prompt snapshot beside asset
-        s01_render_v01.mp4            # scene render / final deliverable
-        s01_sh010/                    # shot folder (gaps of 10 so shots can be inserted later)
-          shot.md                     # shot prompt, camera move, refs, model, params, seed, cost
-          s01_sh010_t01_v01.mp4       # video take
-          prompt_s01_sh010_t01_v01.md # immutable prompt snapshot
-          dlg_s01_sh010_gloria_t01_v01.wav  # dialogue audio
-          prompt_dlg_s01_sh010_gloria_t01_v01.md
-        s01_sh020/
-          shot.md
-          s01_sh020_t01_v01.mp4
-          prompt_s01_sh020_t01_v01.md
-```
-
-- The `assets/` tree is eliminated. Generated outputs live **co-located with their shot** in `scenes/scene-NN/sNN_shNNN/`. Scene-level outputs (storyboard keyframes, renders) live directly in the scene folder.
-- **`library/`** holds reusable, non-shot-specific assets (music, SFX, ambience). Shot-specific dialogue audio stays in the shot folder.
-- Elements (characters, locations, props) and their sheets live under `elements/`, never under `scenes/` or `library/`, because they are reusable references, not scene outputs.
-- **Prompt snapshots live beside the media asset they produced, nowhere else.** Do not duplicate prompts in shot folders, scene folders, or any other location. The `shot.md` manifest references the asset-level prompt via `prompt_file` in frontmatter. See [Prompt files](#prompt-files).
-
-### Production flow
-
-```mermaid
-flowchart TD
-  E[elements/ - canonical characters, locations, props] -->|reference| S
-  S[scenes/scene-N - scene definition] -->|break into| SH[scenes/scene-N/sNN_shNNN - shot definition]
-  E -->|identity, geometry, prop references| IMG1[scene folder - storyboard keyframe]
-  SH -->|panel plan| IMG1
-  IMG1 -->|review and explicit approval| KF[approved video keyframe]
-  SH -.->|generate audio first (optional, when user requests lip-sync)| AUD[shot folder - dialogue audio]
-  AUD -.->|reference_audio + shot timestamps| VID
-  SH -->|generate video at natural duration 4-30s| VID[shot folder - video take]
-  KF -->|I2V, FLF2V, or R2V composition anchor| VID
-  SH -->|direct R2V or text-to-video, no storyboard| VID
-  VID -->|return_last_frame / first_frame chain| NEXT[approved scene boundary frame]
-  NEXT -->|first_frame anchor| VID2[next scene - video take]
-  VID -->|assemble| R[scene folder - render]
-  VID2 -->|assemble| R
-  AUD -->|mix| R
-  E -->|R2V canonical references| VID
-  E -->|R2V canonical references| VID2
-  LIB[library/ - reusable music, SFX, ambience] -->|mix| R
-```
-
-### Storyboard-to-video handoff
-
-**Storyboarding is optional.** Use the project-local `seedream-storyboard`
-skill to create or revise storyboard panels when a video depends on visualized
-composition, blocking, or continuity that must be reviewed before spending
-video credits. For simple shots, well-defined Elements, or rapid iteration,
-skip the storyboard and generate video directly from canonical Element
-references (R2V) or text-to-video. Coordination belongs in this project
-contract; the storyboard skill remains independently usable.
-
-Treat references in this order:
-
-1. **Elements are canonical** — approved character, location, and prop assets
-   define identity, geometry, materials, and persistent design.
-2. **Storyboard panels are derivative** — they combine canonical Elements with
-   shot composition, staging, lighting, and visible state. When used, they
-   serve as composition and continuity anchors, not as identity sources.
-3. **Video keyframes are approved promotions** — only a panel that has passed
-   storyboard and visual-anchor review may become a video input. This
-   constraint applies only when storyboard panels exist; a direct path with no
-   storyboard has no panel to promote.
-
-Choose one Seedance image mode per generation:
-
-| Need | Mode | Image bundle |
-|---|---|---|
-| Lock the exact opening composition | I2V | One approved keyframe as `first_frame` |
-| Lock exact opening and ending states | FLF2V | Two approved keyframes as `first_frame` and `last_frame` |
-| Keep canonical assets explicit while using storyboard composition | R2V | Approved panel plus the smallest sufficient character, location, and prop set as `reference_image` inputs |
-| Generate video without storyboarding | R2V or T2V | Canonical Elements as `reference_image` inputs (R2V) or text-only prompt (T2V) |
-
-Do not mix I2V/FLF2V frame roles with an R2V reference bundle unless the live
-model and tool explicitly support that combination. In R2V, assign stable
-`@Image N` indices and repeat each applicable binding inside the relevant shot.
-
-Before video submission (when storyboard panels are used):
-
-- require explicit approval or `selected_variant` for every storyboard panel
-  used as a video input;
-- verify the panel's recorded source asset paths, selected variants, and hashes
-  still match the current approved Elements;
-- return the panel to `review` if any source Element changed after generation;
-- omit rough or control-only boards from the request and translate their
-  choreography into text;
-- record the chosen mode, ordered image roles, panel path/hash, canonical
-  Element paths/hashes, and approval status in `shot.md`;
-- respect the live reference-count and face-input restrictions.
-
-When storyboarding is skipped, still record the chosen mode, ordered Element
-reference roles, paths, hashes, and approval status in `shot.md` before
-submitting the video task.
-
-For the Seedance prompt itself, use `seedance-prompt-25` (2.5, default) or
-`seedance-prompt-20` (2.0, for 4K output or Fast/Mini variants).
-
-**Compose directorial axes from the preset skills when the user names them.**
-Each preset skill resolves one axis (camera, lens, lighting, grade, acting,
-structure, blocking, pacing, medium, music video) into canonical phrasing that
-drops into the six-part formula. The full axis→skill table and composition
-rules live in [docs/seedance-reference.md](docs/seedance-reference.md). Use a
-preset skill only when the user names a concrete axis; for ordinary shots
-`seedance-prompt-25` alone is sufficient, and never let two skills fight —
-exactly one grade, one dominant lighting direction, and 1–2 camera moves per
-clip. Record the chosen axes in `shot.md`.
-
-### Audio-video alignment (dialogue scenes)
-
-When the user explicitly requests lip-synced dialogue audio, **generate the
-Seed Audio dialogue track first** and pass it as a `reference_audio` input to
-Seedance — the audio drives the video. This is **opt-in**; without a lip-sync
-request, generate video directly and let Seedance's native audio handle
-dialogue. The full pipeline, contract, and submission checklist live in
-[docs/audio-video-alignment.md](docs/audio-video-alignment.md):
-
-1. **Same dialogue text in both prompts** — verbatim, inside `{curly braces}` in Seedance.
-2. **Audio duration ≤ video duration** — trim the audio prompt, never pad the video.
-3. **Shot timestamps align to audio** — inspect/`speech_to_text` the audio, then adjust.
-4. **Audio as `reference_audio`** — bind `@Audio N` in every shot using it.
-5. **Single source of truth** — record path, SHA-256, duration, and timestamp mapping in `scene.md` and `shot.md`.
-
-### Scene generation strategy
-
-**Default: generate per scene at its natural duration (4–30s), then chain and
-assemble.** Each scene gets the model's full attention on one moment, iteration
-is cheaper (regenerate one scene, not a whole 30s block), and audio alignment is
-self-contained per scene. Use the `duration` parameter to right-size each scene
-— 30s is the ceiling, not the target.
-
-- **Right-size each scene.** Set `duration` to the natural length the scene
-  needs (e.g. 7s for a single beat, 12s for a short dialogue exchange, 20s for a
-  multi-stage action sequence). Do not pad scenes to fill 30s.
-- **Chain scenes via keyframes.** Use `return_last_frame: true` on a scene to
-  capture its final frame, then pass that frame as `first_frame` on the next
-  scene. This preserves visual continuity across scene boundaries without
-  forcing everything into one generation.
-- **Shared reference bundle.** Pass the same canonical Elements (characters,
-  locations, props) as `reference_image` inputs to every scene so identity stays
-  consistent across the chain.
-- **Frame-role exception.** Keyframe chaining (`first_frame` from the previous
-  scene's `return_last_frame`) combined with a canonical Element
-  `reference_image` bundle is the one intended exception to the "do not mix
-  I2V/FLF2V frame roles with an R2V reference bundle" rule in
-  [Storyboard-to-video handoff](#storyboard-to-video-handoff). The chained frame
-  anchors continuity; the Element bundle anchors identity.
-- **Per-scene audio (optional).** When the user requests lip-synced dialogue,
-  generate Seed Audio for each scene's dialogue at the scene's own duration.
-  Verify `audio_duration ≤ video_duration` per scene, then pass the audio as
-  `reference_audio` to that scene's Seedance task. No need to slice a master
-  audio file. Skip this when the user does not request lip-synced audio.
-- **Assemble in post.** Concatenate approved scene takes into the final render
-  in the scene folder. Mix per-scene dialogue with library music, SFX, and
-  ambience at the project level.
-
-### When to use 30s single-pass or native extension (exception)
-
-Native extension (up to 180s, beta) and full 30s single-pass are the **exception**,
-not the default. Use them only when you explicitly need continuous, seamless
-motion across what would otherwise be scene boundaries:
-
-- **Single continuous take** — a one-shot with no cuts where seamless motion
-  across 30s+ matters more than per-scene iteration control.
-- **Minimal scene variation** — same location, same characters, gradual change
-  that the model handles well in one pass.
-- **Audio-driven long dialogue** — one long dialogue block where lip-sync must
-  be continuous across scene boundaries; extension keeps it seamless. Only
-  when the user has explicitly requested lip-synced audio.
-
-If using extension: generate a 30s base take, then extend forward (and/or
-backward) in rounds to reach the target runtime. Scene changes happen naturally
-wherever the story needs them; you do **not** have to align to 30s boundaries.
-When the user has requested lip-synced dialogue audio, generate a Seed Audio
-master aligned to the **full** timeline (up to ~2 min per call) and pass it as
-`reference_audio`, so dialogue and sound arc stay continuous across the
-extension. The alignment contract above applies to the whole timeline. Caveats:
-extension boundaries are **not pixel-identical** — inspect both sides of each
-seam (boundary image, motion trend, audio continuity). Multi-round extension is
-**beta**; validate each seam before committing. Extension locks the input
-video's aspect ratio.
-
-### Folder & project naming
-
-All folders and project/scene/element names are **lowercase kebab-case**, no spaces, no capitals.
-
-| Entity | Rule | Example |
-|---|---|---|
-| Project | kebab-case, descriptive slug | `midnight-run`, `spring-campaign-2026` |
-| Scene | `scene-NN` (2-digit, 10-gap) | `scene-01`, `scene-02` |
-| Character id | kebab-case, short, human | `gloria`, `villain-marcus` |
-| Location id | kebab-case | `neon-alley`, `rooftop-night` |
-| Prop id | kebab-case | `red-motorcycle`, `antique-key` |
-
-Element ids double as `@tags` in scene/shot prompts (e.g. `@gloria`, `@neon-alley`), mirroring Higgsfield's element-referencing model so the same identity stays consistent across generations.
-
-### Asset file naming
-
-Structured token prefixes (`s01_sh010_t01_v01.mp4`, `char_gloria_turnaround_v01.png`)
-make generated files self-describing, sortable, and parseable. The full
-numbering rules and token tables live in
-[docs/asset-naming.md](docs/asset-naming.md). Quick reference: scenes `sNN`;
-shots `shNNN` (increments of 10); panels `pNNN` (increments of 10); takes
-`tNN`; versions `vNN` (approved/final suffix `final`); type prefixes `char_`,
-`loc_`, `prop_`, `ref_`, `screen_`, `card_`, `kf`, `dlg_`, `mus_`, `sfx_`,
-`amb_`, `mix_`, `prompt_`.
-
-### Metadata & manifests
-
-Every project, element, scene, and shot carries a Markdown file (`project.md`, `character.md`, `scene.md`, `shot.md`) with YAML frontmatter so generations are **reproducible** — model, prompt, references, seed, params, cost, and status are recorded alongside the asset. Reproducibility is a first-class requirement: a later agent must be able to re-create any asset from its manifest alone.
-
-Use these generation lifecycle states:
-
-`draft → ready → submitted → queued/running → review → approved/rejected`
-
-Use `failed`, `cancelled`, or `expired` for terminal failures. Save the
-provider task ID immediately after submission so polling can resume after a
-timeout or client restart. A local polling timeout does not authorize a second
-generation; continue the existing task unless it has reached a terminal state.
-
-Reserve `selected_variant` and `approved` for an explicit user choice. While a
-take is awaiting review, record it under `outputs` or `generated_output`.
-
-The `showcase-html` review page writes `selection.json` (current variant picks)
-and `selection.log` (timestamped audit of select/save actions) into the project
-root during `--serve` review. These are review-state artifacts, local-only like
-`task_ids.json` and `ref_cache.json`, and are not committed. The `--serve` mode
-also supports pick-winner selection for video takes — clicking "Pick winner" on
-a take writes `selected_variant` back into the shot's `shot.md` manifest via
-the same `/api/select` endpoint as element variants.
-
-Minimal `shot.md` frontmatter:
-
-```yaml
----
-project: midnight-run
-scene: s01
-shot: s01_sh010
-model: dreamina-seedance-2-5-260628
-prompt: "A cinematic action scene of @gloria riding @red-motorcycle at speed down @neon-alley"
-prompt_file: scenes/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md
-prompt_sha256: "a1b2c3d4..."
-references:
-  - elements/gloria/ref_01_front.png
-  - elements/red-motorcycle/ref_01_side.png
-  - elements/neon-alley/ref_01_wide.png
-seed: 8842
-params:
-  resolution: "720p"
-  duration: 5
-  audio: true
-take: t01
-version: v01
-status: review
-cost_usd: 0.14
----
-```
-
-For generated video and audio, also record when available:
-
-- Prompt file and SHA-256
-- Provider task and artifact IDs
-- Submitted request parameters
-- Estimated cost, confirmed cost, and usage as separate fields
-- Output path, byte size, and SHA-256
-- Actual media properties from inspection
-- The exact ordered reference inputs submitted (count + paths), verified 1:1
-  against the `references:` list in `shot.md` and the `@Image N` / `@Video N` /
-  `@Audio N` bindings in the prompt snapshot
-- Locked decisions, requested delta, acceptance criteria, and known rejections
-
-### Prompt files
-
-Save an immutable snapshot of the exact submitted prompt **beside the media
-asset it produced, nowhere else.** The prompt file is the single source of
-truth for what was submitted to the model. Do not duplicate prompts in shot
-folders, scene folders, or any other location.
-
-**Naming:** Use the `prompt_` prefix followed by the media asset name (without
-extension), e.g. `prompt_s01_sh010_t01_v01.md` beside `s01_sh010_t01_v01.mp4`.
-This groups all prompts together when sorted and makes them immediately
-identifiable.
-
-**Manifest linkage:** The `shot.md` frontmatter references the prompt file via
-`prompt_file` (relative path from project root) and `prompt_sha256`. An agent
-or tool can locate the prompt for any shot by reading these two fields — no
-guessing, no searching.
-
-**Element sheets:** Prompt snapshots for character/location/prop sheets live
-beside the sheet image under `elements/<id>/`, using the same
-`prompt_` prefix convention (e.g. `prompt_char_gloria_turnaround_v01.md`
-beside `char_gloria_turnaround_v01.png`).
-
-**Working prompts vs. snapshots:** The editable working prompt may be developed
-inline in `shot.md` or `scene.md` during the drafting phase. Once a generation
-is submitted, the exact submitted text is frozen as the asset-side snapshot and
-the working copy is superseded — the snapshot is canonical from that point on.
-
-## Workspace-level directories
-
-In addition to the `projects/` tree, the workspace root has three top-level directories for documentation and planning artifacts. Like `projects/`, `docs/`, `plans/`, and `specs/` are **local-only working state — never commit them to git.** The remote tracks only a `.gitkeep` placeholder per directory; do not `git add` the files inside them.
-
-| Directory | Purpose | Naming convention |
-|---|---|---|
-| `docs/` | Project-level and cross-project documentation — architecture guides, model references, workflow docs, how-tos, and any written reference that isn't a plan or spec | `kebab-case.md`; prefix with topic area when useful (e.g. `modelark-mcp-guide.md`, `seedance-25-reference.md`) |
-| `plans/` | Implementation plans — concrete, actionable plans for features, projects, or pipelines. Plans should contain actual implementation details (code structures, API signatures, data models, file organization), not just task steps | `PLAN_<NAME>.md` (uppercase) or `<project>-<feature>-plan.md` (kebab-case) |
-| `specs/` | Specifications — proposed or potential features, formats, and contracts that may or may not be implemented yet. Specs are exploratory and aspirational; they describe what something *could* be before it becomes a plan | `SPEC_<NAME>.md` (uppercase) or `<project>-<feature>-spec.md` (kebab-case) |
-
-**Lifecycle:** An idea typically flows `specs/ → plans/ → implementation`. A spec matures into a plan when the user approves the direction; a plan is consumed during implementation and may be archived or deleted after the work ships.
-
-**No loose files at workspace root.** All documentation, research, and reference files must live in `docs/`, `plans/`, or `specs/` — never loose at the workspace root. If a file doesn't fit one of those three purposes, it belongs inside a `projects/<project>/` subdirectory. The `tmp/` directory at the workspace root is the one exception, reserved for transient scratch.
-
-**Skills and `.agents/`:** `.agents/skills/` and `skills-lock.json` are committed
-to git (project-authored and vendored skills alike). Local-only working state is
-limited to `projects/`, `docs/`, `plans/`, and `specs/` described above; do not
-leave `skills-lock.json` entries describing untracked skill files.
-
-**Vendored skills (isolation exemption):** vendored SKILL.md files — the
-`remotion-*` set, `mediabunny` (`remotion-dev/skills`), the `blender-*` set
-(`ra100/blender-claude-plugin`), and `ffmpeg`
-(`digitalsamba/claude-code-video-toolkit`) — are upstream-owned and excluded from
-the skill-isolation remediation. They are overwritten on re-vendor, so their
-cross-skill directives (e.g. `remotion-best-practices` routing to vendored
-sibling copies inside its own directory, `remotion-interactivity` linking to
-`../remotion-markup/video-editing.md`, `ffmpeg` routing to the local scene/fade
-skills) are treated as upstream design, not workspace violations. Project-local
-skills must still follow the global "Skill Independence & Orchestration" rule.
-
-
-### Task ID tracking
-
-Keep a single project-level task registry at `projects/<project>/task_ids.json`. This file maps provider task IDs to shot/asset metadata and is the canonical place to resume polling after a timeout or restart. Do not scatter per-scene `task_ids.json` files or freeform submission JSONs across scene/shot folders.
-
-```json
-{
-  "tasks": [
-    {
-      "task_id": "cv3-abc123",
-      "shot": "s01_sh010",
-      "take": "t01",
-      "version": "v01",
-      "model": "dreamina-seedance-2-5-260628",
-      "status": "succeeded",
-      "asset_path": "scenes/scene-01/s01_sh010/s01_sh010_t01_v01.mp4",
-      "references": 2,
-      "submitted_at": "2026-08-07T10:30:00Z"
-    }
-  ]
-}
-```
-
-### Reference object-key registry
-
-Every asset uploaded to object storage via `media_upload` must record its
-`object_key` so later sessions can mint fresh presigned URLs with
-`media_presign` instead of re-uploading. Keep one registry per project at
-`projects/<project>/ref_cache.json`:
-
-```json
-{
-  "project": "<project>",
-  "region": "ap-southeast-1",
-  "references": [
-    {
-      "object_key": "references/<project>/image/<uuid>",
-      "local_path": "elements/<id>/<file>.png",
-      "role": "@Image 1 — <what it defines>",
-      "media_type": "image",
-      "mime_type": "image/png",
-      "bytes": 4381580,
-      "uploaded_at": "2026-08-17T10:11:47Z"
-    }
-  ]
-}
-```
-
-Rules:
-- Upload once, record the `object_key`, then call `media_presign` on demand.
-  Never re-upload the same file — presigned URLs expire in ~10 minutes.
-- Before a shot submission, presign all needed keys in one batch and submit
-  the task immediately while the URLs are still valid.
-
-## Conventions
-
-### Secrets
-- Load `BYTEPLUS_MODELARK_API_KEY`, `BYTEPLUS_SEED_AUDIO_API_KEY`, base URL, and region from environment variables or a local `.env` (gitignored). Never hard-code keys or base URLs.
-- Keep a `.env.example` with placeholder values only. Never commit real credentials.
-- Other security rules — input validation/sanitization, least-privilege access, and dependency auditing — are inherited from the global AGENTS.md.
-
-### Adding a new model tool (MCP)
-1. Define the tool with a clear, verb-noun name (e.g. `seedance_submit_video_task`), a JSON Schema for inputs, and a single responsibility.
-2. Resolve key/region/base URL from env at runtime.
-3. Submit the Ark task, then poll for completion (video/audio are async). Always download the resulting asset and save it locally to the correct project path inside this workspace. Return both the local file path and the asset URL; never return only a remote URL.
-4. Validate all prompt/reference inputs before calling the API.
-5. Normalize Ark error responses into actionable messages; surface `task_id` and retry guidance on failure.
-6. Persist the task ID before polling and support resuming the same task after a timeout or restart.
-7. On success, record provider metadata and inspect the saved media instead of trusting incomplete response settings.
-
-### Adding a new content skill
-- Compose existing MCP tools; do not call Ark directly.
-- Prefer deterministic, parameterized recipes over free-form prompts.
-- Document inputs, outputs, expected cost, latency, and failure modes.
-
-### Maintaining README.md
-- **`README.md` is the public-facing entry point for this repository.** Keep it
-  in sync with the workspace.
-- **When a skill is added, removed, renamed, or its description changes**, update
-  the **Skills** section of `README.md` in the same change. Each skill appears in
-  exactly one category table with a concise one-line description matching its
-  `SKILL.md` frontmatter description.
-- **When `skills-lock.json` changes** (new vendored skill, source change, or hash
-  update), verify the README's **Skill sources** table still reflects the correct
-  source for every skill.
-- **When the model catalog, architecture, or directory structure changes**, update
-  the corresponding README section to match `AGENTS.md`.
-- **README is a mirror, not the source of truth.** `AGENTS.md` is the canonical
-  contract; `README.md` is the public summary. Never put information in README that
-  contradicts `AGENTS.md`. When they diverge, fix README to match AGENTS.md (or
-  update both together if the canonical information itself is changing).
-- Do not commit README changes separately from the skill change that prompted them;
-  keep them in the same commit so the public doc never lags behind the actual
-  skill state.
-
-### Lumina (web workspace) workflow
-- **Default workflow is local, not Lumina.** Unless the user explicitly says they are working in Lumina, assume the normal MCP-driven, local workflow. Lumina mode is opt-in only.
-- Lumina is BytePlus's all-in-one AI creative workspace at `https://ai.byteplus.com/lumina` (image page: `https://ai.byteplus.com/lumina/en/model/image?mode=image`), where a human drives Seedream/Seedance generation directly in the browser rather than via the API/MCP.
-- When the user indicates they are working in Lumina (e.g. "I'm in Lumina", "use Lumina", "paste this into Lumina", or they share a `ai.byteplus.com/lumina/...` URL), do NOT call MCP/Ark generation tools or write local project files. Instead, write the ready-to-use prompt(s) directly in chat so the user can copy-paste them into Lumina's prompt box.
-- Deliver clean, final, copy-pasteable prompts as plain text or fenced code blocks. Offer multiple variants (e.g. v01/v02/v03) as separate blocks when useful.
-- This is an explicit exception to the "MCP is canonical" rule: in Lumina mode the human runs the model; the assistant only authors prompts.
-- If the user later asks to programmatically generate or download assets, resume the normal MCP-driven workflow.
-
-### Code style
-- Match the conventions of neighboring files; keep functions small and single-purpose.
-- No comments unless explicitly requested; prefer clear names.
-- No debug `console.log` / `print` statements left in committed code.
-
-## Costs & guardrails
-- These models bill **per generation**. Default to the lowest-cost / fast variant for development and tests; gate expensive runs behind explicit flags.
-- **Version selection**: Seedance 2.5 (`dreamina-seedance-2-5-260628`) is the default — up to 30s per pass, 30/10/10 refs, structured editing, native extension, up to 1080p output. Fall back to Seedance 2.0 (`dreamina-seedance-2-0-260128`) when you need 4K output, Fast/Mini speed variants, or lower cost per generation.
-- Video and audio generation are **asynchronous** and can take tens of seconds to minutes. Always poll or stream — never block synchronously on a UI thread.
-- Default to a small `size`/short duration and low `n` for iterations; bump only for final renders.
-- For Seedance, BytePlus recommends prompts under 1,000 words for focus; this is not a hard rejection limit. The current local tool ceiling is 32,000 characters. Prefer concise, prioritized direction and validate against the live tool when limits change.
-- Treat preflight cost figures as estimates. Keep estimated cost, confirmed billing, and provider usage separate.
-- **Watermark:** Always set `watermark: false` by default for all image, video, and audio generation. Enable the AIGC watermark only when the user explicitly requests it.
-- **Sampling variations by default:** When generating multiple variations of an
-  image, audio clip, or video in one request, use the exact same submitted
-  prompt, ordered reference inputs and roles, model, and generation parameters
-  for every variation. Only the stochastic sample may differ: use distinct
-  seeds when the tool exposes seed control; otherwise submit independent tasks
-  with identical inputs. Do not silently introduce per-variation prompts,
-  reference bundles, or parameter changes. Use different prompts or references
-  only when the user explicitly requests creative alternatives or a controlled
-  experiment. In that case, identify the changed variable and persist each
-  variation's exact prompt, references, parameters, and provenance separately.
-- **Default variant count:** When generating character sheets, location sheets,
-  prop sheets, concept art, or storyboard keyframes, generate **at least 3
-  distinct sampling variants (v01, v02, v03)** by default so the user has
-  options to choose from. This applies to Seedream image generations in the
-  Elements pipeline and concept/storyboard pipelines. Increase or decrease only
-  when the user explicitly requests it.
-- **Persisting variant selection:** After presenting the variants, prompt the user to choose their preferred one. Once the user selects a variant, **persist the choice by updating the status field in the element's manifest** (e.g., `character.md`, `location.md`, `prop.md`, `scene.md`, or `shot.md`) — set the chosen variant to `approved` and mark the others as `rejected`, or add a `selected_variant` field pointing to the chosen file. This ensures the selection is durable and reproducible. For visual review, the `showcase-html` skill offers an in-browser variant-locking path: run its `--serve` mode and click a variant to write `selected_variant` / `selected_variants.<key>` back into the manifest, recording the choice in `selection.json` and appending a timestamped audit line to `selection.log`. Either mechanism is acceptable; the invariant is that the winner is recorded in the manifest, not left only in chat.
-- Respect content-safety and moderation requirements. Do not generate content depicting identifiable real people without rights, or otherwise restricted content.
-- **Content-safety false positives on output (copyright).** Seedance can reject an
-  otherwise-innocuous prompt with `OutputVideoSensitiveContentDetected.PolicyViolation`
-  ("copyright restrictions") when the *generated output* resembles a film/photo
-  cliché — interrogation rooms, a figure arguing in the rain, well-known movie
-  setups. This is an output-level false positive, not a prompt error. Mitigate by
-  softening the trope wording (e.g. `arguing` → `talking into his phone`; a
-  `bare-bulb interrogation` room → a neutral desk scene), resubmitting once, and
-  recording the failed task in `task_ids.json` with a note. Never retry the
-  identical prompt unchanged.
-
-## Verification
-- Every MCP tool needs: (a) a **smoke test** against the live Ark API using the fast/low-cost variant, and (b) mocked unit tests for input validation, the task-polling state machine, and error handling.
-- Skills must assert end-to-end that an asset is produced, saved, hashed, and associated with its exact submitted prompt.
-- For video, record `ffprobe` output, run a full decode check, and inspect contact sheets covering the opening, major transitions, and ending. Use `showcase-html --quick <file paths> --contact-sheets` to generate the review page with auto-populated ffprobe metadata and 4-frame contact sheets in one command.
-- For native audio, confirm the audio stream exists and evaluate the requested sound arc. Loudness measurements support but do not replace listening.
-- **Assembly A/V sync.** Before concatenating or crossfading takes, verify each take's audio duration equals its video duration (ffprobe both streams). Generated clips often carry audio slightly shorter than video; pad each audio track to the video duration (`apad`) before crossfading, otherwise audio and video drift apart cumulatively across boundaries. The exact recipe lives in the `ffmpeg` skill's "Crossfade assembly — A/V sync pitfall" section.
-- **Single-person video references.** The 3-panel character sheet is a design deliverable, not a video identity reference — feeding it directly to Seedance can clone the character into two. For video generation, run the `seedream-character-sheet-cleanup` skill to remove the head from the full-body panels (keeping only the close-up panel as the face anchor), then use the cleaned sheet as the reference. Do not derive a separate single front-view identity image. Add an "exactly one, never a second" guard in the prompt. After cleanup, verify the cleaned sheet with `seed_understand` before using it — the full-body panels must be headless and the close-up face panel must be intact. **Gender drift warning:** removing the head from the full-body panel can cause the model to lose gender cues (hair, jawline, facial structure) and render the character as the wrong gender. If this happens, fall back to the uncleaned original sheet — gender accuracy outweighs the identity-cloning benefit of cleanup. Reinforce gender explicitly in the video prompt ("Maya, a young Filipina woman — she is female").
-- **Video call screen references.** When a shot shows a video call on a phone or laptop screen, generate the video call UI as a Seedream screen reference image (e.g., full-screen single video feed, no selfie PiP) and pass it as `@Image N`. The model has strong priors about video call UI and will render a selfie camera PiP by default — negative prompt instructions ("no selfie PiP") cannot suppress this. Only a reference image showing the exact layout will override it. Do not provide character sheet references for people visible only through the video call screen — this makes them render as static images. Describe them in text and give them scripted dialogue lines.
-- Technical success sets a take to `review`; only explicit user approval sets it to `approved`. Present takes for review using `showcase-html` (`--quick` for ad-hoc comparison, or full `showcase.json` for project review with synchronized playback, contact sheets, and pick-winner selection that writes back to `shot.md`). The `media-review` skill is a thin CLI fallback for environments without a browser.
-- Preserve high-quality masters. Generate separately named review proxies when a codec or pixel format is unreliable in the review surface. The `showcase-html` page handles common codecs natively via the browser's `<video>` element.
-- Run the project's linter and type checker before finalizing any change. Record the exact commands in `AGENTS.md` (Conventions) or a note under `docs/` once the runtime is established.
-
-## References
-- BytePlus ModelArk quick start — https://docs.byteplus.com/en/docs/ModelArk/1399008
-- Seedance video generation API — https://docs.byteplus.com/en/docs/ModelArk/1520757
-- Dreamina Seedance 2.0 prompt guide — https://docs.byteplus.com/en/docs/ModelArk/2222480
-- Seedance 2.5 announcement — https://seed.bytedance.com/en/blog/one-take-creation-flexible-referencing-introducing-seedance-2-5
-- Seedance 2.5 prompt guide (Lark) — https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh
-- Seed Audio 1.0 API reference — https://docs.byteplus.com/en/docs/byteplusvoice/seedaudio-01
-- ModelArk model list — https://docs.byteplus.com/en/docs/ModelArk/1330310
-- Region availability — https://docs.byteplus.com/en/docs/ModelArk/2191806
-- ByteDance Seed (Seed Audio 1.0) — https://seed.bytedance.com
+Whitespace checks also apply to new files. `pip-audit` needs network access;
+report unavailable evidence accurately. The offline validator never generates
+media or sends messages. Use a supplied tracked-file inventory to validate an
+uncommitted change as a prospective clean checkout without staging it.
+
+Documentation changes need metadata/link/schema and scoped lint checks. Helper
+changes additionally need meaningful unit tests and synthetic-media/browser
+smoke tests. Provider adapters use mocked contract tests; live paid checks need
+appropriate explicit generation scope. Report pass/fail/not-applicable for
+unit, smoke, lint, type, build/syntax, diff and secrets checks. A missing runtime
+or unavailable tool is not a passing test.
+
+For reviewed skill changes, preview `uv run python .agents/scripts/sync_catalog.py --refresh-integrity`; add `--write` only after inspecting the listed source changes. Catalog summaries determine README rows. This command preserves upstream hash semantics and does not stage or commit files.

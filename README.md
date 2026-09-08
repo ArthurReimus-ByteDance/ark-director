@@ -9,7 +9,7 @@
 - **MCP servers** wrap the BytePlus ModelArk REST API and expose narrowly-scoped, composable tools.
 - **Agent skills** are higher-level content-creation recipes that compose those MCP tools into end-to-end pipelines (e.g. "short ad spot", "storyboard to video", "podcast intro").
 
-AI coding agents working here treat MCP tools as the canonical way to invoke BytePlus models, and skills as the canonical way to package reusable content recipes. Skills never call the Ark REST API directly — they go through the MCP tools.
+Agents prefer MCP for durable generation and Ark CLI for platform administration or interactive generation. Equivalent CLI fallback preserves the same review, persistence, and reconciliation contract. Skills never call the Ark REST API directly.
 
 ---
 
@@ -44,7 +44,7 @@ flowchart LR
 ```
 
 - MCP tools submit an Ark task, poll until completion, download the resulting asset to the relevant `projects/<project>/scenes/...` path, and return both the local file path and the asset URL.
-- **Always save generated files locally.** Remote URLs expire; the local project tree is the durable source of truth.
+- **Always save generated files locally.** Element assets live under `elements/`, shot outputs under `scenes/`, and reusable non-shot media under `library/`. Provider URIs supplement the local copy.
 - The Seed LLM is used inside skills for prompt expansion and scene scripting, not as a content generator itself.
 
 ---
@@ -101,14 +101,13 @@ ai-director/
 
 ---
 
-## Four directing principles
+## Production rules
 
-These rules govern every prompt this workspace writes, across all modalities:
+Draft breakdown identifies required canon. Approve recurring, branded, or story-critical references before dependent generation. Static sheets use visible-design checks; narrative shots use action and intent. Reference images anchor screen layout, with actual output checked for text fidelity.
 
-1. **Assets first.** Not one shot until every character, location, and prop is named, versioned, and locked. The model has no memory — describe everything, every time.
-2. **Say what you want, not what you avoid.** A prohibition still names and summons the thing it forbids. Write the positive, specific instruction instead.
-3. **Direct, don't describe.** Write the scene event, motive, goal, obstacle, and tactic — not just what things look like.
-4. **Screens and text first.** When a shot shows a UI or text-heavy surface, generate it with Seedream first, lock it as an image, then pass it as a `reference_image` to Seedance. Never leave screen text to the video model.
+Only explicit user choice selects or approves an asset. Freeze exact requests before submission, retain provider IDs, and reconcile unknown acceptance rather than retrying automatically. Default image selection sets retain three equivalent stochastic samples.
+
+The tracked [production policy](.agents/contracts/production-policy.md), [routing](.agents/contracts/routing.md), [element contract](.agents/contracts/element-identification.md), and [naming rules](.agents/contracts/asset-naming.md) contain the operational details. Root [AGENTS.md](AGENTS.md) is the entrypoint.
 
 ---
 
@@ -149,27 +148,27 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **film-production** | Master orchestrator for multi-scene, multi-modality productions. Advances one production stage at a time (brief → development → canon → storyboard → audio → shot generation → review → assembly → delivery), delegates modality-specific work to specialist skills, and preserves explicit human approval at creative locks and handoffs. |
-| **template-factory** | Pinterest-inspired template factory that reverse-engineers a reference video ("pin") into reproducible AIGC output. Orchestrates pin intake, `seed_understand` breakdown, keyframe extraction, a deep motion review, a dynamic monochrome-sketch storyboard (passed to Seedance as `@Image 1`), optional Seedream element sheets, and a Seedance 2.5 video — every prompt passing the mandatory `prompt-review` gate. |
-| **brief-intake** | Two-mode brief intake that proposes genre-appropriate defaults for every directorial axis (structure, acting, camera, lens, lighting, grade, pacing, staging, medium, audio) and confirms them with the user. Fast mode (default) accepts the proposed set; full Q&A mode walks every axis. |
-| **prompt-review** | Mandatory quality gate that spawns sub-agents to review written prompts against the applicable skill's validation checklist and the universal directing principles. CRITICAL/MAJOR findings must be fixed before generation submission. Covers Seedance, Seed Audio, Seedream, character sheets, storyboards, and VFX prompts. |
-| **media-review** | Thin CLI fallback for opening generated media on macOS when no browser is available. For all normal review workflows, prefer `showcase-html` (`--quick` for ad-hoc file comparison, or full `showcase.json` for project review with synchronized playback, contact sheets, and variant selection). |
-| **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 clip, uploads it, and submits a video-to-video task where the previz is the locked motion/camera master and the prompt only dresses the world. Orchestrator: delegates the build to the `blender-*` skills, the grammar to `seedance-prompt-25` blockout mode, and submission to `modelark-mcp` (plus `seedance-vfx-pipeline`'s save/manifest pattern). |
+| **template-factory** | Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. |
+| **brief-intake** | Shape intent-led briefs and distinct exploratory treatments; derive applicable directing choices and preserve confirmed decisions. |
+| **prompt-review** | Review and fix prompts written for BytePlus generative models (Seedance, Seed Audio, Seedream) against the repo's skill best practices using a sub-agent review pipeline. |
+| **media-review** | Thin CLI fallback for opening generated media (images and videos) for the user to visually review on macOS when no browser is available. |
+| **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. |
 
 ### Seedance — Video Prompting
 
 | Skill | Description |
 |---|---|
-| **seedance-prompt-25** | Core skill for writing production-grade Seedance 2.5 video prompts. Provides the flexible six-part formula, 50-material multimodal referencing (`@Image N` / `@Video N` / `@Audio N`), variable-duration scene staging (4–30s), timestamp pacing, structured video editing, forward/backward extension, keyframe sequences, storyboard grids, blockout references, seamless transitions, audio bracket syntax, and camera language. **This is the default prompt skill.** |
+| **seedance-prompt-25** | Write production-grade Seedance 2.5 video prompts with the flexible six-part formula, 50-material multimodal referencing, variable-duration scene staging (4-30s), timestamp pacing, structured video editing (subject replacement, background replacement, audio editing), forward and backward video extension, keyframe sequences, storyboard grids,. |
 | **seedance-prompt-20** | Legacy Seedance 2.0 prompt skill. Use when you need 4K output (unsupported by 2.5), Fast/Mini speed variants, or lower cost per generation. Provides reference-role classification, subject definitions, spatial continuity, shot sequencing, and native audio direction. |
-| **seedance-prompt-25-filipino** | Partner skill to `seedance-prompt-25` for Tagalog/Filipino dialogue. Provides vocabulary simplification, phonetic annotation, intonation direction, Taglish code-switching guidance, and an optional audio-first pipeline (Seed Audio generates Tagalog dialogue → Seedance uses it as `reference_audio`). Compensates for Tagalog not being in Seedance 2.5's officially supported languages. |
+| **seedance-prompt-25-filipino** | Write Filipino and Taglish dialogue direction while preserving exact words and register; use evidence-based pronunciation hypotheses and opt-in separate lip-sync audio. |
 | **seedance-camera-presets** | Turns a named camera move (dolly, pan, tilt, orbit, crane, tracking, handheld, FPV, aerial, bullet time, dolly zoom, crash zoom, whip pan, one-take, static) into a canonical, drop-in Camera block for the six-part prompt formula. |
 | **seedance-lens-presets** | Translates a lens, focal length, aperture, or sensor request into a canonical visible-result phrase for Seedance prompts or Seedream style. Covers 35mm, 50mm, 85mm, wide angle, telephoto, anamorphic, fisheye, macro, f-stop, depth of field, bokeh. |
 | **seedance-lighting-presets** | Translates a named lighting setup (rim light, backlight, golden hour, soft/hard light, three-point, Rembrandt, practical lights, silhouette, contre-jour) into a canonical Seedream `Lighting:` recipe and a matching Seedance visual-style lighting phrase. Ensures the same lighting intent works for both images and video. |
 | **seedance-pacing-presets** | Turns a named pacing or rhythm preset (speed ramp, slow motion, bullet time, ramp up, flash in/out, impact moment, montage, cut rhythm, speed up) into a canonical, timestamped motion, cut, and pacing block for the Seedance prompt. |
-| **seedance-acting-console** | Converts a directing directive into a production-grade acting block. Two layers: scene-level acting analysis (motive, goal, obstacle, tactic, eye-work as purposeful action) and cue encoding (maps the tactic's visible footprint to observable physical cues at three intensity levels using a six-emotion bank). |
+| **seedance-acting-console** | Turn playable motives and tactics into observable acting cues appropriate to framing, visibility and intensity. |
 | **seedance-animation-styles** | Writes Seedance animation prompts for claymation, needle felt, wood puppets, toy miniatures, vintage rubber hose, painterly 2D, cubist ink, stylized 3D, silicone creatures, wax crayon, and custom animation media. Preserves handcrafted texture and material-specific motion. |
-| **seedance-motion-design** | Writes production-grade Seedance 2.5 motion-design and motion-graphics prompts for marketing deliverables — launch videos, motion-on-footage explainers, hypermotion product ads, 3D flythroughs, 2D explainers, editorial explainers, logo reveals, kinetic type, and data-driven explainers. Every on-screen word, number, chart, logo, or UI screen is authored as a Seedream reference image first, then animated as a plate by Seedance. |
-| **seedance-music-video** | Writes production-grade music-video prompts: picks a video format (performance, narrative, conceptual, lyric, visualizer, hybrid), maps song sections to a visual plan, directs beat-synced cuts and camera, drives native audio or audio-first lip-sync, and locks a per-genre visual style. Orchestrator for the music-video layer: delegates every other directorial axis to its owning preset skill (see `docs/seedance-reference.md`). |
+| **seedance-motion-design** | Write production-grade Seedance 2.5 motion-design and motion-graphics prompts for marketing deliverables — launch videos, motion-on-footage explainers, hypermotion product ads, 3D flythroughs, 2D explainers, editorial explainers, logo reveals, kinetic type, product motion, and data-driven explainers. |
+| **seedance-music-video** | Develop track-informed music-video treatments with intentional escalation, restraint, repetition or counterpoint and optional evidence-based synchronization. |
 | **seedance-graybox-world** | Writes Seedance 2.5 prompts for the Blender gray look — an untextured gray graybox/blockout 3D world with matcap-style shading, ambient-occlusion depth, and a neutral gray viewport background, like Blender's Solid viewport. Use when gray IS the desired final look, not just a previs reference. |
 | **seedance-restoration** | Write Seedance 2.5 video-to-video restoration prompts that remove film grain, noise, scratch lines, dust, and flicker from aged or archival footage while preserving the shot. |
 
@@ -177,18 +176,18 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 
 | Skill | Description |
 |---|---|
-| **seedance-vfx-prompt** | Writes structured or compact Seedance 2.0 video-to-video VFX prompts using the `@Video N` / `@Image N` reference grammar. Covers the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting, layered space, timing triggers, camera moves synced to dialogue, diegetic audio, 4K face protection, photoreal creature integration, and source-clip inspection. Also covers Seedance 2.5 structured editing. |
-| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance VFX shot production. Composes `seedance-vfx-prompt`, the modelark MCP tools, and `ffmpeg-side-by-side-comparison` to take a source clip and a change description through to a saved, manifested asset. Supports both 2.0 and 2.5; defaults to 2.5 for full-duration edits. |
+| **seedance-vfx-prompt** | Write structured or compact Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar (or the compact @source / @creature shorthand), the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers,. |
+| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. |
 
 ### Seedream — Image Prompting
 
 | Skill | Description |
 |---|---|
-| **seedream-prompt** | Core skill for structured Seedream 5.0 Pro/Lite image generation prompts. Covers input reference labeling, subject definitions, style and composition control, interactive image editing (local edits, sketch rendering, layer separation, multi-image fusion, color/material replacement), high-density infographics, sequential generation, and constraints. |
+| **seedream-prompt** | Write structured Seedream 5.0 Pro/Lite image generation prompts with input reference labeling, subject definitions, style and composition control, interactive image editing (local edits, sketch rendering, layer separation, multi-image fusion, color/material replacement), high-density infographics, sequential generation, and constraints. |
 | **seedream-character-sheet** | Writes structured Seedream prompts for three-panel character sheets and identity references. Produces the canonical character turnarounds that Seedance uses as face anchors. |
-| **seedream-character-sheet-cleanup** | Cleans Seedream character sheets by removing the head from the full-body panels so only the close-up panel keeps a readable face. Invoke immediately after generating a multi-panel character sheet for Seedance use — prevents the model from cloning a character into two. |
+| **seedream-character-sheet-cleanup** | Cleans Seedream character sheets by removing the head from the full-body panels so only the close-up panel keeps a readable face. |
 | **seedream-location-asset** | Writes structured Seedream prompts for cinematic location assets and reusable environment sheets. Use for creating locations, interiors, exteriors, set references, or establishing stills. |
-| **seedream-storyboard** | Creates, revises, and optionally generates production-ready cinematic storyboards — from one hero panel with alternatives to a multi-panel continuity sequence. Supports single-image grid (default) and separate-images delivery modes. |
+| **seedream-storyboard** | Create, revise, and optionally generate production-ready cinematic storyboards—from one hero panel with alternatives to a multi-panel continuity sequence—with BytePlus Seedream. |
 | **seedream-edit** | Guide for using the `seedream_edit_image` MCP tool for interactive image editing with Seedream 5.0 Pro. Use for point-based and bounding-box precision editing — replace objects, change regions, add elements at specific positions. |
 
 ### Color & Look
@@ -201,36 +200,36 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 
 | Skill | Description |
 |---|---|
-| **seed-audio-prompt** | Writes structured Seed Audio 1.0 prompts for full-soundscape audio generation including dialogue, music, SFX, and ambience in one pass. Supports text-to-audio (T2A) and text-plus-audio-to-audio (TA2A) with voice cloning. |
-| **seed-audio-commercial** | Produces dramatic, story-driven audio commercials with Seed Audio 1.0. Composes full-soundscape T2A prompts, manages the generation and verification lifecycle, and saves durable project assets. |
-| **audio-dubbing** | Dubs video or audio from one language to another using Seed Audio 1.0 voice cloning (TA2A). Takes a source audio/video file and a target-language script, clones all speaker voices from the original, preserves timing and pauses, and overlays the new audio onto the original video. Works with any supported language pair. |
-| **audio-split** | Splits an audio file into segments for Seed Audio reference preparation. Supports explicit cut points, max-duration mode (e.g. to honor the 30s reference clip limit), and a target segment count. Use when preparing reference audio for voice cloning or dubbing. |
+| **seed-audio-prompt** | Write structured Seed Audio 1.0 prompts for full-soundscape audio generation including dialogue, music, SFX, and ambience. |
+| **seed-audio-commercial** | Produce dramatic, story-driven audio commercials with BytePlus Seed Audio 1.0. |
+| **audio-dubbing** | Dubs video or audio from one language to another using Seed Audio 1.0 voice cloning (TA2A). |
+| **audio-split** | Splits an audio file into segments for Seed Audio reference preparation. |
 
 ### Scene Craft & Directing
 
 | Skill | Description |
 |---|---|
 | **tig-scene-engine** | Writes and audits screenplay scenes and sequences using a five-element dramatic engine — Goal, Obstacle, Tactic, Reversal, Value Shift — with custom definitions. Use to write new scenes, draft options, develop sequences, or audit/test/diagnose existing scenes for structural strength. Default scene-craft skill for thriller and psychological drama. |
-| **tig-blocking-map** | Creates a color-coded outline schematic — a "staging reference" / blocking map — that gives Seedance / Higgsfield characters precise spatial disposition. Figures are bound to letters (A, B, C, D…) in prompt text only; no letters are drawn on the map. The map is geometry only — it never bleeds style, colors, wardrobe, or location into the shot. Use for precise multi-character staging or when characters swap places between shot sizes. |
+| **tig-blocking-map** | Tigran's project-agnostic method for giving Seedance / Higgsfield character DISPOSITION via a color-coded outline schematic — a "staging reference" (blocking map). |
 
 ### UGC & Advertising
 
 | Skill | Description |
 |---|---|
-| **ugc-ad-modes** | Writes production-grade Seedance 2.5 video prompts for 9 ad modes: UGC, UGC How-To, UGC Unboxing, Product Showcase, Product Review, TV Spot, Wild Card, UGC Virtual Try-On, and Pro Virtual Try-On. Each mode encodes its own visual texture, narrative beat structure, hook formula, camera style, audio direction, and CTA pattern. Partners with `seedance-prompt-25` and `seed-audio-prompt`. |
+| **ugc-ad-modes** | Write hooks, scripts and Seedance prompts for nine ad modes using supplied product facts, audience objections, supported claims and accurate CTAs. |
 
 ### MCP Integration
 
 | Skill | Description |
 |---|---|
-| **modelark-mcp** | Guide for using the ModelArk Seed MCP server to generate or edit images, audio, and video (including Seedance 2.5, BytePlus VOD AI MediaKit enhancement, video transcoding, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance tasks, upload reference media, and fetch persisted artifacts. |
+| **modelark-mcp** | Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, video, and 3D models (including Seedance 2.5, Hyper3D, Hitem3d, BytePlus VOD AI MediaKit enhancement, video transcoding, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance and 3D. |
 
 ### FFmpeg & Media Processing
 
 | Skill | Description |
 |---|---|
 | **ffmpeg** | Video and audio processing with FFmpeg. Use for format conversion, resizing, compression, audio extraction, and preparing assets for Remotion. Covers converting GIF to MP4, resizing video, extracting audio, compressing files, and any media transformation task. |
-| **ffmpeg-scene-transitions** | Assembles multiple video clips into one film with crossfade scene transitions and correct audio/video sync. Use to combine scenes into a single video, stitch clips with dissolves, crossfade between shots, add fade in/out, join AI-generated scenes, or fix A/V drift in an assembled film. |
+| **ffmpeg-scene-transitions** | Assembles multiple video clips into one film with crossfade scene transitions and correct audio/video sync. Handles clips of mixed durations and clips whose audio is shorter or longer than their video, plus fade in/out, hard cuts, boundary contact-sheet verification, and A/V drift fixes. Use to combine scenes, stitch clips with dissolves, crossfade between shots, compile locked videos into a highlight film, or fix A/V drift in an assembled film. |
 | **ffmpeg-side-by-side-comparison** | Assembles two or more videos into a single side-by-side (or N-up) comparison clip — before/after, A/B, or a review grid. Handles uniform scaling, pixel-aspect alignment, duration sync, optional labels, and audio. Use for before-and-after split screens, A/B comparisons of takes, or compare/review grids. |
 | **mediabunny** | Multimedia handling with the Mediabunny library, used alongside Remotion for media processing tasks. |
 
@@ -265,8 +264,8 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 
 | Skill | Description |
 |---|---|
-| **lark-showcase-aigc** | Orchestrates `lark-demo-doc-builder`, `lark-doc`, `lark-wiki`, `lark-drive`, and `design-doc-mermaid` to build enterprise-facing Lark/Feishu documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. Invoke when the user wants a standalone customer guide or showcase article in Lark. |
-| **showcase-html** | Builds a self-contained local HTML review page for a project's generated media — color-coded element/video cards, an "elements used" list per video, before/after comparison tables, a combined grid/side-by-side view, click-to-zoom lightbox, and in-browser variant locking (via `--serve`) that writes selections back to element manifests with a timestamped activity log. Data-driven: a `showcase.json` manifest + an embedded template render into one portable `index.html`. Use when the user wants an HTML review page, media gallery, comparison page, or to pick winning variants. |
+| **lark-showcase-aigc** | Orchestrates ffmpeg-scene-transitions, lark-demo-doc-builder, lark-doc, lark-wiki, lark-drive, and design-doc-mermaid to build enterprise-facing Lark documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. |
+| **showcase-html** | Build a self-contained local HTML review page for a project's generated media. |
 
 ---
 
@@ -320,3 +319,20 @@ sibling hints, and explicitly-marked orchestrators.
 ## License
 
 This is an internal workspace. See the repository for license details.
+
+## Offline maintenance checks
+
+Install the locked Python tooling with `uv sync --locked`. Run `uv run python .agents/scripts/validate_workspace.py --offline`, `uv run python -m unittest discover -s tests -v`, and the scoped lint/type commands in AGENTS.md. These checks never submit provider generations.
+
+For uncommitted changes, supply `--inventory <prospective-files.json>` to validate the exact intended tracked file set without staging it. The validator otherwise uses `git ls-files`, so missing/untracked runtime dependencies fail rather than relying on local-only documents. Browser/media smoke tests use synthetic fixtures; paid provider checks are separate and explicitly scoped.
+
+Catalog descriptions and installed bundle hashes live in `.agents/catalog/`. Review source changes before refreshing integrity. Upstream commit revisions missing from legacy lock entries remain explicitly unknown.
+
+### Creative-quality evaluation
+
+For skill-quality comparisons, use the semantic protocol in
+[Creative Quality](.agents/skills/prompt-review/references/creative-quality.md).
+The offline `evaluate_skill_quality.py` helper anonymizes paired writer outputs
+and aggregates complete, evidence-backed judgments. It does not generate media
+or infer quality from matching headings. Preserve ties, regressions and the
+distinction between prompt judgments and observed media results.

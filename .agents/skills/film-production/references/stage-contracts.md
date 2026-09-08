@@ -19,12 +19,15 @@ enough to break down.
 
 ## 2. Scene and production breakdown
 
-Entry: an accepted brief and available story or script material.
+Entry: an accepted brief and available story or script material. Draft scene
+and shot breakdown may precede canonical asset generation; it identifies which
+assets are required and does not make a prompt ready for production submission.
 
 Required output: scene list, cast, locations, props, dialogue, sound needs,
 continuity states, delivery assumptions, and scene-level acceptance criteria.
 
-Exit: every planned scene has observable action and required production inputs.
+Exit: every planned scene has observable action and an inventory of required
+production inputs, with missing approvals recorded as unresolved.
 
 ## 3. Canon and elements
 
@@ -34,20 +37,25 @@ Required output: one flat `elements/<element-id>/` folder per reusable element,
 manifest, reference files, prompt snapshots, hashes, variants, and lifecycle
 states. **Before locking the element list**, walk every beat of every
 scene/shot against the Element identification checklist in AGENTS.md — verify
-that every visible character (including screen-within-screen), every location
-(including transitional spaces), every prop (including product packaging
-distinct from the product), every screen/UI surface, every brand/title card,
-and every recurring audio asset has been identified and assigned an Element
-type. Missing elements discovered at this stage are cheaper to generate now
-than after video tasks are submitted.
+that visible characters, settings, props, screen/UI surfaces, brand/title cards,
+and recurring audio have been identified and assigned the appropriate treatment
+under the tracked element-identification contract. Recurring/identity-critical
+on-camera characters and recurring/geography-critical spaces need canonical
+references; incidental people/settings may use descriptors or scene direction.
+Screen-only callers use a locked UI with text-directed movement/dialogue, not
+character sheets as static screen content. Apply the prop threshold rather than
+turning every visible object into a generation requirement. Record missing
+required references before dependent tasks are submitted.
 
-Exit: every visible recurring element has an approved selected variant, or the
+Exit: every required canonical element has an approved selected variant, or the
 dependent scene is explicitly marked unresolved. The element list has been
 cross-checked against the Element identification checklist and no gaps remain.
 
 ## 4. Storyboard and visual plan
 
-Entry: scene objective, geography, continuity state, and required canon exist.
+Entry: scene objective, geography, continuity state, and approved relevant canon
+exist before dependent panel generation. A text-only visual plan may be drafted
+earlier and stays draft until its input requirements are satisfied.
 
 Required output: beat/panel plan, bound references, prompts, generated panels or
 prompt package, continuity review, provenance, and video-handoff eligibility.

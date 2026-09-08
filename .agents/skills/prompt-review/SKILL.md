@@ -1,19 +1,14 @@
 ---
 name: prompt-review
-description: >
-  Review and fix prompts written for BytePlus generative models (Seedance, Seed Audio,
-  Seedream) against the repo's skill best practices using a sub-agent review pipeline.
-  After the main agent writes or updates any prompt, a sub-agent reviews each prompt
-  against the applicable skill's validation checklist and returns structured findings;
-  the main agent then fixes any issues before the prompt is finalized or submitted for
-  generation. Invoke after creating or updating prompts for Seedance 2.5, Seedance 2.0,
-  Seed Audio, Seedream image generation, character sheets, location assets, storyboards,
-  VFX shots, or Filipino dialogue prompts. Also invoke when the user asks to "review
-  prompts", "check prompts", "QA prompts", "validate prompts", "lint prompts", or when
-  the agent has finished writing prompts for a scene and is about to submit generation
-  tasks. Do not use for non-prompt assets (manifests, scene definitions) or for
-  reviewing generated media output (use `showcase-html` instead —
-  run `generate_showcase.py --quick <file paths>` for ad-hoc review).
+description: >-
+  Review BytePlus Seedance, Seedream, and Seed Audio prompts with a sub-agent
+  review pipeline and explicit model, operation, change contract, and request
+  hash. Return rule findings and complete or incomplete status; fix and re-review
+  changed prompts before generation. Use for video, VFX, Filipino dialogue,
+  image/character/location/prop/UI/card/storyboard prompts, music, SFX, or ambience.
+  Trigger when asked to review, QA, validate, or lint prompts, or before submitting
+  newly authored generation prompts. Exclude manifest-only edits, generated-media
+  review, and frozen snapshots unless re-review is explicitly requested.
 ---
 
 # Prompt Review
@@ -46,17 +41,40 @@ Do not trigger for:
 - Prompts that have already been frozen as prompt snapshots unless the user explicitly
   asks to re-review a frozen snapshot.
 
+## Creative-quality comparisons
+
+For requested skill evaluation or alternative-draft assessment, read
+[Creative Quality](references/creative-quality.md). Use brief-specific semantic
+rubrics and evidence-backed blind comparisons. This offline assessment is
+separate from production approval and does not require provider submission.
+
+## Explicit review input
+
+Collect `prompt_type`, `model`, `operation`, `language`, `requested_axes`,
+`may_change`, `must_preserve`, and `request_sha256` alongside the complete prompt,
+ordered reference roles/hashes, and capability evidence. The request hash covers
+the semantic submitted request, not just its prompt. Missing dispatch or request
+evidence leaves a production review `incomplete`; request it from the caller.
+Filename/content inference is a draft-only fallback with an explicit warning.
+
+For the same request, use generation rules for generate, 2.5 edit rules for a
+2.5 edit, legacy VFX rules for a supported 2.0 edit, and extension rules for
+extend. Language and named-axis checklists are additive only when applicable.
+A localized change contract overrides generic preservation heuristics for items
+under `may_change`; keep all `must_preserve` items unchanged.
+
 ## Prompt type detection
 
-Match each prompt to its checklist source by file naming convention and content:
+Use explicit input first; filenames below are fallback hints, not authority:
 
 | Prompt type | File prefix | Checklist source |
 |---|---|---|
 | Seedance 2.5 video | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-prompt-25` |
 | Seedance 2.0 video (4K/Fast/Mini) | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-prompt-20` |
-| Seedance VFX (video-to-video edit) | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-vfx-prompt` |
+| Seedance 2.5 edit | explicit model + edit operation | Seedance 2.5 edit section |
+| Seedance VFX (video-to-video edit, legacy path) | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-vfx-prompt` |
 | Seedance Filipino dialogue | `prompt_sNN_shNNN_tNN_vNN.md` | `seedance-prompt-25` + `seedance-prompt-25-filipino` |
-| Seed Audio (dialogue/music/SFX/ambience) | `prompt_dlg_*`, `prompt_mus_*`, `prompt_amb_*`, `prompt_mix_*` | `seed-audio-prompt` |
+| Seed Audio (dialogue/music/SFX/ambience) | `prompt_dlg_*`, `prompt_mus_*`, `prompt_sfx_*`, `prompt_amb_*`, `prompt_mix_*` | `seed-audio-prompt` |
 | Seedream image generation | `prompt_concept_*`, `prompt_sNN_kf*` | `seedream-prompt` |
 | Seedream character sheet | `prompt_char_*` | `seedream-character-sheet` |
 | Seedream location asset | `prompt_loc_*` | `seedream-location-asset` |
@@ -93,14 +111,16 @@ or inline working copy.
 ### Step 2 — Detect prompt type and load checklist
 
 For each prompt:
-1. Match it to a reviewing skill using the table above.
+1. Resolve its explicit model, operation, prompt type, and requested axes; use
+   the table only for a warned draft fallback.
 2. Read the corresponding section from `references/review-checklists.md`.
 3. Also load the **universal directing principles** section (applies to all prompts).
 
 ### Step 3 — Spawn the review sub-agent
 
 Delegate the review to a sub-agent. The sub-agent receives:
-- The full text of each prompt being reviewed.
+- The full text and explicit review input for each prompt being reviewed.
+- The request hash, change contract, reference evidence, and applicable rule IDs.
 - The applicable checklist section(s) from `references/review-checklists.md`.
 - The universal directing principles.
 - Clear instructions on what to check and how to report.
@@ -138,8 +158,15 @@ Your job is to review prompt(s) against a specific checklist of best practices
 and return structured findings. You do NOT fix the prompts — you only identify
 issues and suggest fixes.
 
-## Prompt type
-<e.g., Seedance 2.5 video prompt>
+## Dispatch and request identity
+prompt_type: <explicit type>
+model: <resolved model>
+operation: <generate/edit/extend>
+language: <requested language>
+requested_axes: <named axes>
+request_sha256: <canonical request hash>
+required_rule_ids: <IDs supplied by caller>
+reference_evidence: <ordered paths, hashes, roles, and approvals>
 
 ## Change contract (may change / must preserve)
 
@@ -168,7 +195,25 @@ For each prompt, go through every item in the checklist. For each item:
 1. Determine if the prompt satisfies the requirement.
 2. If it does not, record a finding.
 
-Report your findings in this exact format:
+Return a machine-readable review record, then optional human-readable details:
+
+{
+  "schema_version": 1,
+  "request_sha256": "<same request hash>",
+  "reviewer_status": "complete",
+  "checks": [
+    {"rule_id": "revision.declared_delta", "status": "pass",
+     "evidence": "<specific preserved locks and permitted change checked>"}
+  ]
+}
+
+Use one check per required rule ID. Status is pass, fail, or not_applicable.
+Every not_applicable result needs a concrete applicability reason. Missing
+inputs, unchecked required rules, or unusable reviewer output mean incomplete.
+For failures include severity, applicability, exact evidence, and suggested fix
+in the human-readable details. Do not invent evidence from missing assets.
+
+Report any human-readable findings in this format:
 
 ### Review Findings
 
@@ -198,8 +243,8 @@ OR
 ### Severity definitions
 - CRITICAL: Will cause generation failure, safety rejection, identity drift,
   or fundamentally broken output. Must fix before submission.
-- MAJOR: Will degrade output quality, cause inconsistency, or violate a core
-  directing principle. Should fix before submission.
+- MAJOR: Will degrade output quality, cause inconsistency, or violate an
+  applicable directing rule. Must resolve before submission.
 - MINOR: Could improve quality or clarity but won't break the generation.
   Fix if time allows.
 
@@ -221,16 +266,19 @@ OR
 ### Step 5 — Receive and triage findings
 
 If a sub-agent returns an empty, truncated, or content-free result (or findings
-without explicit PASS/FAIL per prompt), retry the same batch once (max 1 retry).
+without a complete hash-bound record per prompt), record `reviewer_status:
+incomplete` and retry the same batch once (max 1 retry).
 If the retry is still unusable, run the review inline against the same
-checklists — never treat an empty sub-agent result as "passed".
+checklists. If evidence is still missing, retain incomplete status and block
+submission; never treat an empty sub-agent result as passed.
 
 When the sub-agent returns findings:
 
 1. **Read all findings** for each prompt.
 2. **Triage by severity:**
    - CRITICAL issues — must fix before any generation task is submitted.
-   - MAJOR issues — should fix unless the user explicitly waives them.
+   - MAJOR issues — must resolve before submission. A user-requested creative
+     change requires a new applicability decision and review, not a fake pass.
    - MINOR issues — fix opportunistically; surface to the user.
 3. **Deduplicate** — if multiple sub-agents found the same issue (e.g., a universal
    principle violation), merge into one finding.
@@ -298,31 +346,19 @@ This is efficient because:
 
 ## Universal directing principles
 
-The canonical universal checklist lives in
-`references/review-checklists.md` (§Universal, 10 items). The sub-agent must
-check all prompts against that full list plus the type-specific checklist. The
-three core rules below summarize the workspace's non-negotiable principles:
+The workspace policy owner is the tracked production contract, with stable
+rule IDs in `../../contracts/rules.json`. The bundled checklist provides
+modality-specific review guidance, not a competing source of workspace policy.
+Its source metadata is `references/rule-provenance.json`; bundle integrity
+validation detects unreviewed checklist changes.
 
-1. **Assets first.** Not one shot until every character, location, and prop is named,
-   versioned, and locked. The model has no memory — describe everything, every time.
-   Locked descriptors go into every prompt word for word; never summarize, shorten,
-   or imply a locked descriptor.
-
-2. **Say what you want, not what you avoid.** The words you write are the words you
-   summon — including the ones inside a "no". A prohibition still names and summons
-   the thing it forbids. Write the positive, specific instruction that produces the
-   intended result.
-
-3. **Direct, don't describe.** Write the scene event, motive, goal, obstacle, and
-   tactic — not just what things look like. If a prompt reads like a static
-   description with no event or intent, it is not yet a shot.
-
-Also check all prompts against the workspace-level conventions in AGENTS.md:
-- Watermark should be false by default (if specified in the prompt, it must be false).
-- Per-scene duration should be right-sized (4-30s), not padded to fill time.
-- Prompt snapshots must be saved beside the media asset, not duplicated elsewhere.
-- Generation parameters (duration, resolution, ratio) belong in the API, not the
-  prompt text (except where a skill explicitly includes them in the prompt structure).
+Check declared applicability before applying a heuristic: narrative shots need
+observable events and intent; static character sheets, location plates, UI,
+product references, music beds, SFX, and ambience do not need a story obstacle.
+Static assets need composition and visible-consistency checks. Prefer positive
+observable direction; concise technical exclusions and explicit preservation
+constraints are permitted. Supported parameters are checked against the selected
+tool/mode, and exact screen text remains an output-QA requirement.
 
 ## Element completeness review
 
@@ -342,16 +378,19 @@ When the sub-agent receives a set of prompts for review, it also receives:
    available).
 
 The sub-agent walks every beat of every scene/shot and checks whether every
-visible element has a corresponding Element defined and referenced:
+required visible element has a corresponding reference. Incidental objects
+do not automatically require a sheet, and generated native sound does not
+require a separate library asset. Canonical inputs may be unresolved during
+draft breakdown; dependent production submission requires their evidence:
 
 | Check | What to look for |
 |---|---|
-| On-camera characters | Does every person who appears on screen — including people visible *through* a phone/laptop screen during a video call, and any character with dialogue — have a `char_` sheet or reference? |
-| Locations / settings | Does every distinct physical space — including transitional spaces and screen-within-screen locations — have a `loc_` sheet? |
-| Props (held/operated) | Does every object a character holds, carries, aims, or operates have a `prop_` sheet? Is product packaging a separate prop from the product itself? |
+| On-camera characters | Do recurring or identity-critical on-camera characters have approved canonical references, while incidental people use approved descriptors? For screen-only callers, lock the visible call UI and describe moving callers/dialogue in text; do not attach character sheets as static screen content. |
+| Locations / settings | Do recurring or geography-critical spaces have approved canonical location references? Incidental settings may use scene-level direction or keyframes; a distinct transitional or screen-only setting alone does not require a location sheet. |
+| Props (held/operated) | Do branded, recurring, story-critical objects and scene-variant wearables have an approved `prop_` reference? Incidental objects may remain text-only; always-worn outfit items stay in the character sheet. Is independently relevant packaging accounted for? |
 | Screen / UI surfaces | Does every phone screen, laptop screen, tablet, monitor, signage, or text-heavy surface that shows specific content have a `screen_` reference? |
 | Brand / title cards | Does every ad/scene that needs a brand end card, lower third, or logo plate have a `card_` image defined? |
-| Audio assets | Does every scene that needs a music bed, ambient bed, or recurring SFX have a `library/` asset defined? |
+| Audio assets | Does every explicitly separate or reusable audio asset have a defined source? Native full-soundscape generation does not require separate sound-bed assets. |
 | Costume variants | If a character wears a different outfit in different scenes, is the variant noted or generated as a separate prop sheet? |
 
 ### Reporting element findings
@@ -363,7 +402,7 @@ The sub-agent reports element completeness findings in a separate section:
 
 #### Missing elements
 1. [CRITICAL] <Element description> — appears in <ad/scene> beat <timestamp>
-   but no Element is defined. The model will hallucinate this element.
+   but a required canonical reference is missing; fidelity cannot be verified.
    Suggested action: Generate a <char_/loc_/prop_/screen_/card_> reference.
 
 2. [MAJOR] <Element description> — referenced in <ad/scene> but not in the
@@ -380,11 +419,12 @@ The sub-agent reports element completeness findings in a separate section:
 
 ### Severity for element findings
 
-- **CRITICAL:** A visible element with no reference will cause identity drift,
-  product inaccuracy, or garbled text/UI. Must generate before video
-  submission.
-- **MAJOR:** A missing element will degrade quality (e.g. undefined background
-  character, missing music bed) but won't break the generation.
+- **CRITICAL:** A required identity/product/text reference is absent from a
+  production request, preventing its fidelity requirements from being checked.
+  Resolve the required input before dependent submission.
+- **MAJOR:** An explicitly required production input is insufficiently defined
+  to check its requested quality or continuity. Incidental people/settings and
+  native sound do not become missing-reference findings solely from visibility.
 - **MINOR:** An element could enhance the production but isn't strictly
   required (e.g. ambient SFX library for a quiet scene).
 

@@ -1,13 +1,13 @@
 ---
 name: seedream-character-sheet-cleanup
-description: Cleans Seedream character sheets by removing the head from the full-body panels so only the close-up panel keeps a readable face. Invoke immediately after generating a multi-panel character sheet for Seedance use.
+description: Cleans Seedream character sheets by removing the head from the full-body panels so only the close-up panel keeps a readable face. Invoke when a Seedance-bound sheet violates the requested single-face reference policy, or when the user requests this cleanup; inspect before editing.
 ---
 
 # Seedream Character Sheet Cleanup
 
-Use this skill immediately after generating a three-panel character sheet and
-before handing that sheet to Seedance or reusing it as a canonical identity
-reference.
+Inspect a Seedance-bound character sheet against the requested reference policy.
+Use this cleanup only when an extra readable face violates that policy or the
+user explicitly requests the edit.
 
 The purpose is simple: a character sheet with multiple readable faces can
 confuse Seedance during downstream video generation. If the front full-body
@@ -33,6 +33,7 @@ Invoke this skill when all of the following are true:
 - the sheet contains a dedicated close-up face panel
 - at least one full-body panel still shows a readable face
 - the sheet will later be used as a Seedance identity lock or character reference
+- the intended reference policy calls for one readable face
 
 Do not invoke this skill when:
 - the sheet already has only one readable face
@@ -64,29 +65,21 @@ If the back-view panel accidentally exposes too much face because of head turn
 or profile leakage, clean that panel too. The close-up face panel remains the
 only authoritative face and should stay untouched.
 
-## Gender and identity drift warning
+## Identity preservation
 
-Removing the head from the full-body panel can cause **gender identity drift**
-in Seedance video generation. When the body panel is headless, the model may
-lose gender cues (hair length, facial structure, jawline) and render the
-character as the wrong gender. This was confirmed in production: a cleaned
-female character sheet caused the model to render the character as male.
+Cleanup can alter silhouette, hair, headwear, costume, or the close-up identity
+anchor. Compare the original and edited image directly against user-approved
+visible descriptors; list the features that must remain unchanged. Do not ask a
+model to infer a person's gender identity from their appearance. A visual
+understanding tool may assist a per-panel inventory, but its answer is evidence
+to review rather than an authority over the user's stated identity.
 
-**Mitigation strategies:**
-
-1. **Test before committing.** After cleanup, run `seed_understand` on the
-   cleaned sheet and ask "Is this character male or female?" If the answer is
-   wrong, do not use the cleaned sheet for video generation.
-2. **Keep the uncleaned original as a fallback.** If the cleaned sheet causes
-   gender drift, switch back to the uncleaned sheet. The identity-consistency
-   benefit of cleanup is outweighed by the gender-accuracy risk.
-3. **Reinforce gender in the video prompt.** State the character's gender
-   explicitly and repeatedly: "Maya, a young Filipina woman — she is female."
-4. **When in doubt, skip cleanup.** The cleanup step exists to prevent
-   identity cloning (two faces competing on one sheet). If the character sheet
-   has a clear close-up panel and the full-body panels are not confusing, the
-   cleanup may not be necessary. Use cleanup only when the model is actually
-   cloning faces.
+Use one trigger: the intended downstream reference policy requires a single
+readable face and inspection finds an extra readable face in a body panel, or
+the user explicitly requests this cleanup. A failed video is not required.
+If the sheet already meets the requested policy, keep it unchanged. Any cleanup
+is a new unapproved version; preserve the original and ask the user to select
+before switching the canonical reference.
 
 ## Recommended Editing Mode
 
@@ -140,13 +133,15 @@ bbox: {x1: 454, y1: 22, x2: 549, y2: 204}
 ```
 
 That box covers the head and neck with margin and stays clear of the panel
-divider lines. Start there, widen it if `seed_understand` still reports a face
+divider lines. Inspect the actual image; widen the box if direct or assisted
+inspection confirms a remaining face
 in the center panel, and re-run the mandatory verification after every edit.
 
 ## Acceptance Check
 
-Confirm the points below with `seed_understand` (see Verification). Do not
-trust a visual glance at the sheet. The cleanup is successful when:
+Compare original and edited panels directly (see Verification). Use a visual
+understanding tool as supporting evidence where available. The cleanup is
+technically successful when:
 - the close-up panel is the only readable face on the sheet
 - the front full-body panel shows no head at all — the figure is headless and
   the studio background fills the space where the head was
@@ -158,12 +153,13 @@ trust a visual glance at the sheet. The cleanup is successful when:
 
 ## Verification (mandatory)
 
-Do not accept the cleanup until you have verified it with `seed_understand`
-(Seed 2.1 multimodal understanding). This is the only reliable way to confirm
-that the correct panel was removed and the close-up face survived the edit — a
-side-by-side glance is not enough.
+Inspect the original and edited sheets side by side at readable resolution.
+Check each panel against the approved visible descriptors and exact edit region.
+A multimodal understanding tool can assist but is not the only valid verifier.
+If no image-verification surface is available, record unresolved verification
+and retain `review`; do not promote the output to a canonical input.
 
-After producing the cleaned sheet, call `seed_understand` with the cleaned
+When using `seed_understand`, provide the original and cleaned
 image and a prompt that forces a per-panel answer. Ask for a structured,
 panel-by-panel inventory of faces and require it to:
 
@@ -172,10 +168,11 @@ panel-by-panel inventory of faces and require it to:
 - confirm the close-up panel still shows exactly one intact, readable face;
 - confirm no new face appeared in any other panel.
 
-If `seed_understand` reports that the close-up panel lost its face, or that a
-face remains in a full-body panel, the edit targeted the wrong region. Re-run
-the edit with a corrected bounding box and verify again. Do not hand the sheet
-to Seedance until the verification passes.
+If direct or assisted inspection finds damage to the close-up or a readable
+face remaining in a targeted body panel, investigate the actual edit boundary.
+Correct the bounding box or instruction as needed and verify the new version.
+Do not hand the sheet to Seedance until visual verification passes and the
+user selects that version.
 
 ### Example verification prompt
 
@@ -195,13 +192,15 @@ reaches Seedance.
 Recommended sequence:
 1. Assumes a three-panel sheet exists (e.g. from `seedream-character-sheet`).
 2. Inspect the full-body panels for duplicate readable faces.
-3. If a second face is visible, invoke this skill.
+3. If an extra face violates the requested single-face policy, apply this cleanup.
 4. Use the `seedream_edit_image` MCP tool to remove the extra face.
-5. Verify the result with `seed_understand` — full-body panel headless,
-   close-up face intact. Re-edit with a corrected bbox if verification fails.
+5. Compare original and edited panels directly against the approved visible
+   descriptors: target body panel headless, close-up intact. A visual-understanding
+   tool may assist. Unavailable visual verification stays unresolved; re-edit only
+   when inspection establishes a defect, using a corrected bbox when appropriate.
 6. Save the cleaned sheet as a **new version/file**, not as an overwrite of the
    source image.
-7. Use the cleaned sheet as the version that Seedance should trust.
+7. Present the new version for explicit selection before canonical use.
 
 ## Example From The User
 
@@ -213,8 +212,8 @@ The user provided a before-and-after pirate character-sheet example:
   the readable face is removed so the right close-up panel is the only face
   anchor left on the sheet.
 
-Use that exact before-and-after logic whenever the sheet is meant to stabilize a
-character for Seedance.
+Use the examples as inspection context, not an instruction to edit every sheet.
+The requested reference policy and selected edit determine the required result.
 
 ## Notes For Example Images
 
@@ -223,7 +222,8 @@ filenames:
 - `examples/before_duplicate-face.png`
 - `examples/after_single-face.png`
 
-Treat that pair as the canonical before-and-after reference for future agents.
+Treat that pair as illustrative before-and-after evidence, not user approval
+of a new output or a substitute for the requested visible descriptors.
 
 ### Before
 

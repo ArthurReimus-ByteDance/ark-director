@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "scope": "offline_prompt_quality",
+  "cases": [
+    {
+      "id": "portrait_texture",
+      "skill": "seedream-prompt",
+      "prompt": "Write an image-edit prompt under 100 words. Approved portrait: a 28-year-old woman with smooth unmarked skin, soft shadowless studio lighting, exact face and makeup locked. The reviewed draft has smeared texture on the forehead. Restore subtle texture only; do not add freckles, wrinkles, grain, or change lighting.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Target the specified texture defect without generic realism additions.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "catalog_soft_light",
+      "skill": "seedream-prompt",
+      "prompt": "Write a 40-word image prompt for a clean white ceramic bowl on white seamless. The client explicitly wants even diffuse shadowless catalog lighting, smooth pristine glaze, and no cinematic treatment. No output has been generated yet.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Respect deliberate clean photographic style without inventing a diagnosis.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "ugc_no_claims",
+      "skill": "ugc-ad-modes",
+      "prompt": "Write two short ad hooks with different persuasive angles for a commuter mug. Supplied facts: 350 ml, screw lid, fits the supplied standard cup-holder photo. Main objection: will it fit my commute? No leak, temperature, savings, personal trial, or numerical performance evidence is supplied. CTA: view dimensions on the product page. Write hooks only, not video generation.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Use supported facts to address the objection through different angles without invented experience.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "ugc_supported_claim",
+      "skill": "ugc-ad-modes",
+      "prompt": "Write two short ad hooks for a 220 g travel keyboard versus our previous 440 g model, using those supplied verified product weights only. Audience objection: carrying too much on the train. No testimonials or typing-speed evidence. CTA: compare specifications. Choose genuinely different angles; no generation.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Use valid supplied weight evidence without extrapolating performance or personal claims.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "acting_wide_mask",
+      "skill": "seedance-acting-console",
+      "prompt": "Write a performance cue under 100 words: wide locked-off shot, masked courier by a doorway, face unreadable. She wants the guard to open the door and conceals anxiety. No dialogue, no timestamps. Convey her tactic with behavior visible in this framing; camera and costume stay fixed.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Express playable tactic using posture, spacing or hand action visible in a masked wide shot.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "acting_closeup",
+      "skill": "seedance-acting-console",
+      "prompt": "Write a performance cue under 100 words: locked close-up of a father who sees his child emerge safely. He tries to reassure the child while hiding how frightened he was. No spoken words or timestamps. The eyes and mouth are clearly visible. Preserve framing and choose restrained observable cues.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Use readable close-up evidence driven by the reassurance tactic without over-choreography.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "music_quiet_return",
+      "skill": "seedance-music-video",
+      "prompt": "Write a short music-video treatment under 120 words using this supplied cue sheet: first chorus full drums; second chorus returns as quiet solo voice and the same lyric now means acceptance. The artist stays in the same room. Respond to the quiet return; do not invent a beat grid or claim to have listened to audio. No generation.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Let the supplied musical and lyrical change motivate restraint, repetition or counterpoint rather than compulsory escalation.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "music_continuous",
+      "skill": "seedance-music-video",
+      "prompt": "Write a music-video prompt under 120 words for one uninterrupted locked-camera performance of a sparse unmetered vocal. The singer stops moving during pauses. No edit points, speed ramps, extra actors or timestamps requested. There is no supplied audio file, only this brief.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Use only the supplied musical description; preserve unmetered pauses without fabricated listening observations or synchronization timings. No extra metadata label is required in the final creative prompt.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "audio_locked_brand",
+      "skill": "seed-audio-prompt",
+      "prompt": "Write an audio prompt under 100 words. The exact approved line is \"Discover Echonos today.\" Preserve spelling and every word. Supplied spoken guide says the brand sounds like \"echo noss\". We have not generated a take. Use a quiet conversational delivery and an optional pronunciation note; do not respell the dialogue.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Preserve canonical copy and distinguish supplied pronunciation from a guaranteed synthesis outcome.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    },
+    {
+      "id": "audio_masking",
+      "skill": "seed-audio-prompt",
+      "prompt": "Revise this audio prompt under 100 words: \"Rain, swelling strings and a horn peak while the announcer says: The next stop is Cedar Station.\" Feedback from the supplied review says Cedar Station was masked. Preserve exact dialogue and the station setting. Make the smallest sound-hierarchy change; do not invent measured loudness or redesign the soundtrack.",
+      "criteria": {
+        "intent": "Fulfills the concrete requested deliverable and audience intent.",
+        "craft": "Repair simultaneous masking with minimal relative mix/event direction and preserve exact words.",
+        "preservation": "Preserves all explicit locks; concise, usable output without unsupported facts or irrelevant expansion."
+      }
+    }
+  ],
+  "rubric_revision": "After the first pilot, removed an unnecessary missing-audio label requirement from music_continuous. Original pilot criteria and scores are preserved without rescoring."
+}

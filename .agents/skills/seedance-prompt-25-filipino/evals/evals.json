@@ -1,0 +1,65 @@
+{
+  "skill_name": "seedance-prompt-25-filipino",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The native video sounds stiff. The approved dialogue is exactly \"Nakarating ka na?\" Keep every word and native audio. Improve the performance direction only.",
+      "expected_output": "Repair delivery while preserving exact text and native mode.",
+      "files": [],
+      "expectations": [
+        "Keeps the exact approved dialogue.",
+        "Uses observable delivery or response timing relevant to the concern.",
+        "Does not simplify, translate or switch to separate audio.",
+        "Frames directions as targets requiring listening review, not pronunciation guarantees."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "This is formal testimony. The speaker must say exactly \"Nais ko lamang malaman kung nakarating ka na.\" Is the line too literary for Seedance? No generated sample is available.",
+      "expected_output": "Preserve formal testimony and locked words; identify absence of actual failure evidence.",
+      "files": [],
+      "expectations": [
+        "Does not replace the wording with casual speech.",
+        "Does not diagnose a pronunciation failure without audio.",
+        "Treats register as intentional and preserves it.",
+        "Does not claim a vocabulary tier guarantees success."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "You may suggest a shorter casual version of \"Nais ko lamang malaman kung nakarating ka na.\" Preserve its intent, and explain any shift before I choose. Do not generate.",
+      "expected_output": "Offer an explicitly proposed register-conscious rewrite with the meaning tradeoff exposed.",
+      "files": [],
+      "expectations": [
+        "Marks the rewrite as a proposal awaiting choice.",
+        "Explains indirect versus direct question force if proposing \"Nakarating ka na?\".",
+        "Does not treat the candidate as approved text or generate media.",
+        "Does not justify the rewrite through unsupported syllable-count thresholds."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Use separate audio, exactly \"Ready na ba yung report?\" The approved voice is an adult colleague talking to a peer. Write the audio and video instructions; the selected audio tool has not yet confirmed language support.",
+      "expected_output": "Honor the opt-in and exact Taglish text while exposing the unresolved capability check.",
+      "files": [],
+      "expectations": [
+        "Uses identical approved dialogue in both drafts.",
+        "Does not translate the English word, add po or impose a stereotyped accent.",
+        "Identifies missing capability evidence without claiming Filipino support.",
+        "Leaves paid submission to the caller and requests actual listening/sync review."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "A reviewer thinks the last word is stressed wrong, but supplied neither audio nor the intended word meaning. Add a pronunciation cue that guarantees correct Tagalog.",
+      "expected_output": "State the specific missing evidence and decline the guarantee while preserving the line.",
+      "files": [],
+      "expectations": [
+        "Asks for or records the exact word, meaning, speaker variety and audible evidence.",
+        "Does not invent a stress pattern, IPA transcription or universal penultimate rule.",
+        "Keeps any cue explicitly provisional until supported.",
+        "Does not guarantee generation behavior."
+      ]
+    }
+  ]
+}

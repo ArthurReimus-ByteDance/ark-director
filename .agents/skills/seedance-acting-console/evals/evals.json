@@ -7,7 +7,7 @@
       "expected_output": "A single emotional transition acting block for Joy at high intensity, with 2-4 directly observable cues and the dialogue in {} with a delivery style.",
       "files": [],
       "expectations": [
-        "The output uses the single emotional transition structure: overall shift, triggering event, immediate reaction, gradual change, final expression.",
+        "The performance connects the race win to a readable change in behavior and a resulting expression; equivalent prose structure is accepted.",
         "The output encodes high intensity with graduated observable cues, e.g. laughing, spinning in place, breathless, eyes crinkled.",
         "The output contains no degree adjectives such as 'very happy' or 'extremely joyful'.",
         "The output places the exact line 'I actually did it!' inside curly braces: {I actually did it!}.",
@@ -21,7 +21,7 @@
       "files": [],
       "expectations": [
         "The output defines at least three beats, each with an emotion, an intensity level, a trigger event, and a timestamp.",
-        "The output uses the multi-stage template ('When <character> hears or sees...') rather than the single-transition template.",
+        "The three transitions are causally connected and readable in order; exact template wording is not required.",
         "Each beat's intensity is encoded through graduated observable cues, not degree adjectives.",
         "The output keeps the character identity consistent across all three beats.",
         "The output includes a final expression or manner of speaking that resolves the arc."
@@ -30,10 +30,10 @@
     {
       "id": 3,
       "prompt": "Write the acting block for Terror at intensity 2 (medium) for @nadia. The door slams behind her. Show the terror through physical cues only. Do not use degree adjectives.",
-      "expected_output": "A Terror medium acting block built from the cue vocabulary (gaze fixed, brows lowered, tense stillness, widened pupils, heaving chest, frozen hands) with no degree adjectives.",
+      "expected_output": "A medium-intensity terror response caused by the door slam, encoded through readable physical behavior rather than a compulsory emotion-bank phrase list.",
       "files": [],
       "expectations": [
-        "The output builds Terror from directly observable cues such as gaze fixed, eyes widening, brows raised and rigid, chest heaving, hands freezing mid-motion.",
+        "The response shows readable physical consequences of the door slam without requiring a fixed brow, pupil or mouth cue inventory.",
         "The output contains no degree adjectives such as 'very scared' or 'extremely terrified'.",
         "The output uses a triggering event (the door slamming) to drive the transition.",
         "The output states a final expression through restrained or explicit outward behavior.",
@@ -65,6 +65,40 @@
         "Neither block uses degree adjectives such as 'very fearful' or 'extremely scared'.",
         "The difference between levels is attributed to cue graduation, not to any numeric intensity parameter the model reads.",
         "The dialogue line is identical in both blocks."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "A daughter tries to keep her father listening before he leaves. Write a restrained close-up acting block. Keep the line exactly: \"Stay until I finish.\" No timestamps.",
+      "expected_output": "A playable appeal with a few readable close-up consequences.",
+      "files": [],
+      "expectations": [
+        "The tactic pursues keeping the father engaged rather than performing sadness.",
+        "Two to four restrained cues are readable in close-up and caused by the tactic; no mandatory brow and mouth checklist.",
+        "The exact line and close-up remain unchanged; no invented timing or additional action arc."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "A daughter tries to keep her father listening before he leaves. Write a restrained full-body wide-shot acting block. Keep the line exactly: \"Stay until I finish.\" No timestamps.",
+      "expected_output": "The same appeal expressed through spatial and body cues.",
+      "files": [],
+      "expectations": [
+        "The tactic pursues keeping the father engaged.",
+        "Two to four cues use readable posture, spacing, hands or physical action rather than relying on pupils or subtle mouth corners.",
+        "Preserves the wide framing and exact line rather than inserting a close-up; no invented timestamps.",
+        "Checks proposed body and hand cues for camera-side visibility, occlusion and subject scale; chooses a readable shift, silhouette or spatial action when a subtle cue would be hidden or too small, without requiring any exact gesture."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "A masked guard with hidden eyes and mouth silently decides whether to let a friend through. Keep the mask and rear three-quarter framing.",
+      "expected_output": "A visible decision through stance and barrier handling.",
+      "files": [],
+      "expectations": [
+        "Preserves the mask and framing; no requirement to reveal eyes or mouth.",
+        "Gives a playable interpersonal task and readable physical consequences.",
+        "Does not add speech or force facial microexpressions."
       ]
     }
   ]

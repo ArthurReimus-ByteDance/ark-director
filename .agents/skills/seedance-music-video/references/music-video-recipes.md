@@ -172,3 +172,7 @@ Use this only when no preset matches:
 - **Style seal:** one concise closing style sentence.
 - **Relevant exclusions:** only likely contradictions.
 - **Common failure modes:** predict how the style might drift or become generic.
+
+These recipes are optional craft starting points. The supplied track and requested
+audience effect override their genre energy arcs, including contained rock
+performances, quiet choruses, repeated images and deliberate counterpoint.

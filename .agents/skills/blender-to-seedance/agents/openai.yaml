@@ -1,0 +1,3 @@
+interface:
+  display_name: "Blender to Seedance"
+  short_description: "Turn approved Blender motion into Seedance video"

@@ -1,10 +1,10 @@
 # Prompt Templates
 
-Copy-paste these templates and fill in the bracketed values. All templates are sized to fit within the 3,000-character limit for typical use cases.
+Use these structures as authoring examples, then measure the final prompt against the live character limit. Preserve approved voice descriptors verbatim in every segment. Template windows are illustrative; replace them with the actual manifest-relative dialogue timing before review and submission.
 
 ---
 
-## Template 1: Single-speaker dub (short, <60s)
+## Template 1: Single-speaker reference segment (up to 30s)
 
 ```
 @Audio1: [source description — e.g. "Original English narration audio"].
@@ -13,17 +13,17 @@ Only change the language from [source_lang] to [target_lang].
 Preserve room tone and acoustic character.
 
 Speaker — [role, age/gender, voice quality] — voice in @Audio1.
-Match every pause and rhythm of @Audio1 exactly. No music, no SFX.
+Match every pause and rhythm of @Audio1 exactly. Pure dialogue with the source room tone.
 
-[1.0s:3.5s] "[line 1]"
-[3.6s:7.2s] "[line 2]"
-[7.3s:12.0s] "[line 3]"
-[12.1s:18.0s] "[line 4]"
-[18.1s:25.0s] "[line 5]"
-[25.1s:33.0s] "[line 6]"
-[33.1s:42.0s] "[line 7]"
-[42.1s:52.0s] "[line 8]"
-[52.1s:55.0s] "[line 9]"
+[0.5s:2.5s] "[line 1]"
+[2.6s:5.2s] "[line 2]"
+[5.3s:8.0s] "[line 3]"
+[8.1s:11.0s] "[line 4]"
+[11.1s:14.0s] "[line 5]"
+[14.1s:17.0s] "[line 6]"
+[17.1s:20.0s] "[line 7]"
+[20.1s:23.0s] "[line 8]"
+[23.1s:26.0s] "[line 9]"
 
 Pronunciation: [target_lang] [key pronunciation rules, 3-5 bullet max].
 
@@ -34,7 +34,7 @@ Estimated size: ~1,000–1,500 chars for 8-10 lines.
 
 ---
 
-## Template 2: Multi-speaker dub (medium, 60-120s)
+## Template 2: Multi-speaker reference segment (up to 30s)
 
 ```
 @Audio1: [source description]. Clone all voice timbres, cadence, emotion,
@@ -47,25 +47,25 @@ A — [role] (age/gender, quality) — first [male/female] voice
 B — [role] (age/gender, quality) — [second voice description]
 C — [role] (age/gender, quality) — [third voice description]
 
-Match every pause and gap in @Audio1 exactly. No music, no SFX.
+Match every pause and gap in @Audio1 exactly. Pure dialogue with the source room tone.
 
-A says [delivery]: "[1.0s:3.5s] [line]"
-A continues: "[3.6s:7.2s] [line]"
+A says [delivery]: "[0.5s:2.5s] [line]"
+A continues: "[2.6s:5.2s] [line]"
 
-B replies [delivery]: "[7.3s:12.0s] [line]"
+B replies [delivery]: "[5.3s:8.0s] [line]"
 
-C speaks up [delivery]: "[12.1s:18.0s] [line]"
-C continues: "[18.1s:25.0s] [line]"
+C speaks up [delivery]: "[8.1s:11.0s] [line]"
+C continues: "[11.1s:14.0s] [line]"
 
-A pushes back [delivery]: "[25.1s:33.0s] [line]"
+A pushes back [delivery]: "[14.1s:17.0s] [line]"
 
-B says [delivery]: "[33.1s:42.0s] [line]"
-B continues: "[42.1s:52.0s] [line]"
+B says [delivery]: "[17.1s:20.0s] [line]"
+B continues: "[20.1s:23.0s] [line]"
 
 [Room tone beat matching gap in @Audio1 between two segments.]
 
-A advises [delivery]: "[52.1s:55.0s] [line]"
-A finishes: "[55.1s:58.0s] [line]"
+A advises [delivery]: "[23.1s:26.0s] [line]"
+A finishes: "[26.1s:28.5s] [line]"
 
 Pronunciation: [target_lang]. [key rules, 5-8 bullet max].
 Key words: [5-8 most important words with stress marks].
@@ -83,18 +83,17 @@ Each segment gets its own prompt. Use relative timestamps starting from 0 (not t
 
 ```
 @Audio1: [source description]. Clone all voices, cadence, emotion, pacing,
-pauses, and speaker order. Same characters as previous segment. Only change
+pauses, and speaker order. Use the approved speaker identities listed below. Only change
 dialogue from [source_lang] to [target_lang]. Preserve room tone of @Audio1.
 
 This is segment [M] of [TOTAL] (lines [START]-[END]).
-For segment 1, list all speakers with full descriptions (see Template 2).
-For segment 2+, list speaker roles briefly — voices carry over from @Audio1.
+List every relevant speaker with their exact approved voice descriptor in every segment. The model has no memory of another request.
 
 Speaker A — [role] — voice from @Audio1
 Speaker B — [role] — voice from @Audio1
 Speaker C — [role] — voice from @Audio1
 
-Match pauses and rhythm exactly. No music, no SFX.
+Match pauses and rhythm exactly. Pure dialogue with the source room tone.
 
 [Opening: ~Xs of room tone matching gap before segment M in original.]
 
@@ -113,10 +112,10 @@ Estimated size: ~1,500–2,500 chars per segment.
 After generating all segments, reassemble using offset-mix (not concat):
 ```bash
 # Place each segment at its absolute offset and mix
-scripts/mix_segments.sh <source_duration> <output.wav> \
-  seg1.wav:0 seg2.wav:<offset_ms> seg3.wav:<offset_ms>
+scripts/mix_segments.sh 68.074671 output.wav \
+  'seg1.wav:0' 'seg2.wav:20000' 'seg3.wav:36000' 'seg4.wav:47500'
 ```
-This preserves original gaps and room tone. See Stage 6 in SKILL.md for details.
+This preserves original gaps and room tone. See [generation and assembly](generation-assembly.md) for technical checks and recovery.
 
 ---
 
@@ -130,10 +129,9 @@ cadence, emotion, pacing, pauses, and speaker order. Same [N] characters.
 Only change dialogue from [source_lang] to [target_lang]. Preserve room
 tone of @Audio1.
 
-[If segment 1: full speaker list as in Template 2]
-[If segment 2+: brief speaker roles — voices carry over from @Audio1]
+[Full relevant speaker list and exact approved voice descriptors in every segment]
 
-Match every pause and gap in @Audio1 exactly. No music, no SFX.
+Match every pause and gap in @Audio1 exactly. Pure dialogue with the source room tone.
 
 [Room tone — match gap in @Audio1 from 0s to Xs before first line.]
 
@@ -149,15 +147,15 @@ Ending: Clean ending matching @Audio1 exactly, same tail silence.
 
 **Splitting rules:**
 - Split at natural boundaries: dialogue pauses (2s+), speaker handoffs, scene transitions
-- Each clip ≤30s, under 10MB after compression
+- Each actual encoded clip ≤30s and ≤10,000,000 bytes, including overlap and codec padding
 - Overlap by 2–3 seconds between clips for voice identity continuity
 - Record absolute offset of each clip (e.g., seg1=0ms, seg2=20000ms, seg3=36000ms)
 - Timestamps within each prompt are relative to that segment's start
 
 **Reassembly:**
 ```bash
-scripts/mix_segments.sh <source_duration> <output.wav> \
-  seg1.wav:0 seg2.wav:20000 seg3.wav:36000 seg4.wav:47500
+scripts/mix_segments.sh 68.074671 output.wav \
+  'seg1.wav:0' 'seg2.wav:20000' 'seg3.wav:36000' 'seg4.wav:47500'
 ```
 
 ---

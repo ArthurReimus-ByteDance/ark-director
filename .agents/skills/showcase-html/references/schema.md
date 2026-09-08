@@ -19,7 +19,7 @@ HTML.
 ## Section
 
 Common fields: `id`, `title`, `icon` (emoji), `iconBg` (CSS color), `count`,
-`desc`, and one of three `kind`s.
+`desc`, and one of four `kind`s.
 
 ### `kind: "grid"` (Elements / Videos)
 
@@ -58,9 +58,9 @@ Card fields:
 ### Variant selection (in-browser "lock" of a chosen version)
 
 A card is **selectable** when it carries `id` + `manifest` (+ `key` when it
-targets a `selected_variants` map). Selection is a **server-only** feature:
+targets a `selected_variants` map). Browser selection requires **server mode**; explicit CLI selection uses the same service:
 
-- **`--serve`** (the one supported save path) — runs a local HTTP server with a
+- **`--serve`** (browser save path) — runs a local HTTP server with a
   write-back endpoint. The user clicks a variant to mark it, then presses
   **Ctrl+S / ⌘S** (or the "Save" button). The page POSTs the selections to the
   server, which writes the asset's `selected_variant` (or a single
@@ -184,7 +184,7 @@ writes back to `shot.md`. Each scene becomes one takes group.
 | `manifest` | string | Relative path to `shot.md` for write-back. |
 | `filename` | string | The take's filename, written as `selected_variant` in the manifest. |
 
-**Selection:** When a take carries `id` + `manifest` + `filename`, the renderer adds a "Pick winner" button. In `--serve` mode, clicking it writes `selected_variant: <filename>` into the shot's `shot.md` frontmatter. The selection flows through the same `/api/select` endpoint as element variants — no separate API.
+**Selection:** When a take carries `id` + `manifest` + `filename`, the renderer adds a "Pick winner" button. In `--serve` mode, clicking it marks a choice; pressing Save writes `selected_variant: <filename>` into the shot's `shot.md` frontmatter. The selection flows through the same `/api/select` endpoint as element variants — no separate API.
 
 **Synchronized playback:** Each takes group has a "Play all" button that starts all videos in the group simultaneously, and a "Pause all" button. This lets you compare motion side-by-side in real time.
 
@@ -204,3 +204,30 @@ writes back to `shot.md`. Each scene becomes one takes group.
   "footer": "Generated with Seedance 2.5."
 }
 ```
+
+
+## Selection API and CLI contract
+
+The generator injects `selectableRegistry`; do not author it by hand. Each
+asset id maps to `manifest`, `field`, optional `key`, and `variants` mapping
+allowed filenames to project-relative media paths. All cards for one id must
+agree on the target field. Duplicate filenames cannot refer to different media.
+
+`GET /api/session` returns `{token, revision, selections}` from current manifests.
+`POST /api/select` takes `{selections, expected_revision}` with JSON content type,
+a same-origin `Origin`, and `X-Showcase-Token`. Success returns
+`{ok: true, applied, errors: [], selections, revision}`. Invalid input is 400,
+stale state or interrupted commit is 409, unauthorized origin/token is 403,
+and an oversized body is 413. A failed batch never reports `ok: true`.
+
+`--apply '{"asset-id":"filename.png"}'` performs the same validated batch write.
+Use `--expected-revision` when applying a previously reviewed snapshot; otherwise
+the CLI checks a fresh revision under its writer lock. This is an explicit
+selection tool, not permission to convert recommended variants into approvals.
+An omitted asset id preserves its current manifest selection. Clicking the
+current browser choice leaves it selected; clearing existing approval is not
+part of this endpoint.
+
+The audit JSONL save event includes `ts`, `event`, `applied`, `selections`,
+`total`, and `errors`. `.selection.lock` and `.selection-journal.json` are local
+recovery state; keep them out of Git along with the project itself.

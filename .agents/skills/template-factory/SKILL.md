@@ -1,6 +1,7 @@
 ---
 name: template-factory
-description: Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video — each generated prompt passing the mandatory prompt-review gate. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, media-review, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.
+description: >-
+  Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video — each generated prompt passing the mandatory prompt-review gate. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, media-review, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.
 ---
 
 # Template Factory
@@ -25,19 +26,21 @@ directly.
   sheet, or Seedance video — must pass the `prompt-review` gate first.**
 - Replicate style, composition, and grammar. Do not clone copyrighted footage or
   reproduce identifiable real people (de-identify in analysis).
-- `watermark: false` on all generations unless the user requests otherwise.
+- Default `watermark: false` only where the selected live tool supports the
+  parameter, unless the user requests otherwise.
 
 ## Pipeline (one stage at a time)
 
 ```text
 pin_uploaded → breakdown_draft → breakdown_approved → motion_reviewed
-  → storyboard_draft → storyboard_approved → elements_draft
-  → elements_approved → video_draft → video_review → approved
+  → elements_draft → elements_approved → storyboard_draft
+  → storyboard_approved → video_draft → video_review → approved
 ```
 
 1. **Pin intake** — resolve the pin (local file or URL); upload via
-   `media_upload`; record `object_key` in `ref_cache.json` (never re-upload;
-   presign on demand).
+   `media_upload`; record `object_key`, content SHA-256, and storage scope in
+   `ref_cache.json`. Re-presign unchanged cached objects on demand; re-upload
+   only if content changed or the recorded remote object is missing.
 2. **Analysis** — `seed_understand` with the template's analysis prompt
    (`references/analysis-prompt.md`) → validate `VideoBreakdown` against
    `references/breakdown-schema.json` → write `analysis.json` + `breakdown.md`.
@@ -47,14 +50,18 @@ pin_uploaded → breakdown_draft → breakdown_approved → motion_reviewed
 4. **Deep motion review** — second `seed_understand` pass (`thinking=true`) per
    `references/motion-review-prompt.md` → merge `shots[].motion` into
    `analysis.json`. This is the primary fix for "ours looks static".
-5. **Storyboard** — write a monochrome-sketch single-image grid with a **dynamic
-   panel count** (one panel per `shots[]` entry), via `seedream-storyboard`.
-   Run `prompt-review`, generate **3 variants** (same prompt, distinct seeds),
-   then apply the **selection gate** (§ Selection gate). The chosen board is
-   passed to Seedance as `@Image 1`.
-6. **Elements (optional)** — for each approved element, write Seedream sheet
-   prompts via the mapped skill, run `prompt-review`, generate 3 variants,
-   cleanup where applicable, persist `selected_variant` after user choice.
+5. **Elements** — identify required canonical inputs from the draft breakdown.
+   Use the workspace prop threshold: branded, recurring, story-critical, or
+   scene-variant wearables need a separate prop reference; incidental objects
+   may be described in text. Generate required sheets in 3 variants after
+   prompt review; persist `selected_variant` only after explicit user choice.
+6. **Storyboard** — after relevant Elements are approved, write a dynamic
+   production board via `seedream-storyboard`, one panel per shot. Review the
+   prompt and generate 3 variants with distinct seeds. A monochrome analysis
+   sketch is control-only: translate its blocking into text and omit it from
+   video inputs by default. A production panel can be promoted only after
+   explicit selection, source-hash validation, and a supported image mode.
+
 7. **Video** — compose the Seedance 2.5 six-part prompt from breakdown + board +
    motion review + element sheets (via `seedance-prompt-25`), run
    `prompt-review`, submit via `seedance_2_5_create_task`, persist the task id,
@@ -81,14 +88,18 @@ pin_uploaded → breakdown_draft → breakdown_approved → motion_reviewed
 - **Monochrome sketch only** — colorless pencil/ink; the board is a
   composition/order anchor, never a color source.
 - **3 variants** — identical prompt + references + params, distinct seeds.
-- **Passed to Seedance** as `@Image 1` (`reference_image`) with the
-  storyboard-grid role contract.
+- **Video eligibility** — production panels need explicit user selection and
+  current canonical source hashes. Control sketches are omitted by default;
+  an intentional conditioning exception requires explicit selection, supported
+  tool inputs, and artifact-specific QA. Bind only eligible inputs.
 
 ## Selection gate (human review by default)
 
-Storyboard variant selection requires **human review by default** (template
-`storyboard.review: true`). When a template sets `review: false`, auto-select
-and record `selected_variant: auto` — never `approved`.
+Storyboard variant selection requires explicit user choice. `storyboard.review:
+false` disables the review UI only. Store an automatic suggestion under
+`recommended_variant`, keep `status: review`, and wait for explicit selection
+before video promotion. Neither a recommendation nor technical success writes
+`selected_variant` or `approved`.
 
 ## Prompt review gates (mandatory)
 
@@ -138,3 +149,20 @@ projects/<project>/
 ├── elements/<id>/
 └── scenes/scene-01/...
 ```
+
+## Submission recovery
+
+Persist each exact prompt snapshot and reviewed prepared request in the project
+registry before submitting. Record the provider task ID as soon as available.
+An ambiguous timeout leaves `submission_unknown`: reconcile that operation or
+resume its known task; never repeat submission automatically or switch transport
+to submit a duplicate. Any new authorized take gets a new operation record.
+
+## Intentional conditioning representation
+
+A sketch or blockout stays `control_only: true` while it is analysis-only. To
+use intentional conditioning, first obtain explicit selection of a derived
+composition or motion reference. Record its exact selected manifest, current
+SHA-256, `reference_image` or `reference_video` role, and `control_only: false`.
+Confirm live model/mode support. Flipping the flag alone never grants approval;
+the caller applies the [production policy](../../contracts/production-policy.md).

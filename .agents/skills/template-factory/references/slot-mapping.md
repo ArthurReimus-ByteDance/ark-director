@@ -16,10 +16,12 @@ This keeps the mapping reproducible and prevents slot drift.
 
 ## Reference binding order (Seedance)
 
-1. `@Image 1` — sketch storyboard grid (shot order + composition; do not use
-   grid lines/panel numbers/dividers)
-2. `@Image 2..N` — element sheets (character → location → prop), each bound to
-   its role.
+1. Build the eligible input set: current approved Element references and any
+   explicitly selected production panel. Omit analysis sketches by default;
+   translate their choreography into text.
+2. Assign `@Image N` in the exact submitted order, with one role per input.
+   Intentional control-image conditioning requires explicit selection, live
+   model/mode support, and output QA; disabling review never grants eligibility.
 
 The ordered `images[]` array must match `shot.md` `references:` exactly.
 
@@ -40,4 +42,5 @@ Bind the source keyframe as `@Image 1` (I2I) where the breakdown flags one.
 - Render = monochrome sketch (pencil/ink), never full color.
 - Delivery = single-image grid; smallest grid that fits the count.
 - 3 variants (same prompt, distinct seeds), selection gate: human review by
-  default (`storyboard.review: true`), auto when `false`.
+  default (`storyboard.review: true`). When false, recommendations stay under
+  `recommended_variant` with review status; explicit selection is still required.

@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "operation_id",
+    "asset_id",
+    "transport",
+    "model",
+    "operation",
+    "prompt_file",
+    "prompt_sha256",
+    "request_sha256",
+    "references",
+    "params",
+    "submission_status",
+    "provider_task_id",
+    "provider_status",
+    "review_status",
+    "cost"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transport": {
+      "enum": [
+        "modelark-mcp",
+        "arkcli"
+      ]
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "role",
+          "binding",
+          "approval_evidence"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "role": {
+            "enum": [
+              "reference_image",
+              "first_frame",
+              "last_frame",
+              "reference_video",
+              "reference_audio"
+            ]
+          },
+          "binding": {
+            "type": "string",
+            "pattern": "^@(Image|Video|Audio) [1-9][0-9]*$"
+          },
+          "approval_evidence": {
+            "type": "object",
+            "required": [
+              "manifest",
+              "field"
+            ],
+            "properties": {
+              "manifest": {
+                "type": "string",
+                "minLength": 1
+              },
+              "field": {
+                "enum": [
+                  "selected_variant",
+                  "selected_variants"
+                ]
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "field": {
+                      "const": "selected_variants"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "key"
+                  ]
+                }
+              }
+            ]
+          },
+          "control_only": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "params": {
+      "type": "object"
+    },
+    "submission_status": {
+      "enum": [
+        "prepared",
+        "submitting",
+        "submission_unknown",
+        "acknowledged",
+        "terminal"
+      ]
+    },
+    "provider_task_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider_status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "review_status": {
+      "enum": [
+        "not_started",
+        "review",
+        "approved",
+        "rejected"
+      ]
+    },
+    "cost": {
+      "type": "object",
+      "required": [
+        "estimated",
+        "confirmed",
+        "currency"
+      ],
+      "properties": {
+        "estimated": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "confirmed": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "usage": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "submission_status": {
+            "const": "acknowledged"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provider_task_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

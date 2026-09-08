@@ -4,14 +4,14 @@
     {
       "id": 1,
       "prompt": "Write a 30-second Seedance 2.5 prompt for a flower shop order-packing process. Two characters — a Florist and a Store Assistant — arrange, wrap, and hand off a bouquet across three stages. I have reference images for both characters and the shop interior.",
-      "expected_output": "A stage-based 30-second prompt with a Generation Goal, three stages each having one primary event and a clear end state, and a Maintain Consistency block, plus reference role definitions for the characters and scene.",
+      "expected_output": "A clear three-stage flower-shop action with reference roles, coherent handoffs and observable end states; any readable format is acceptable.",
       "files": [],
       "expectations": [
-        "The output uses the [Generation Goal] header with a story summary.",
-        "The output divides the 30 seconds into at least 3 consecutive stages.",
-        "Each stage has an initial state or continuation note, one primary event, and a clear end state.",
-        "The output includes a [Maintain Consistency] block listing identity, clothing, prop ownership, and spatial direction.",
-        "The output defines reference roles using @Image N defines syntax with exclusions."
+        "The central flower-shop objective is clear without requiring a named heading.",
+        "The three requested stages form a causal sequence with plausible actions for the requested duration.",
+        "Each stage makes the active person, physical action and resulting state clear.",
+        "Identity, clothing, prop ownership and travel direction remain coherent across stages.",
+        "Reference bindings identify the intended person or location; exclusions appear only for a plausible leakage risk."
       ]
     },
     {
@@ -20,12 +20,12 @@
       "expected_output": "A multi-reference prompt that follows the 5-step workflow: define roles, map subjects individually, group by type, build subject profiles, and select references by scene.",
       "files": [],
       "expectations": [
-        "The output maps each subject to its reference individually using 'corresponds to @Image N' syntax.",
-        "The output groups references by type: [Characters], [Props], [Scenes], [Motion and Audio].",
-        "The output includes a 'Do not interchange' clause for character appearances.",
-        "The output builds at least one subject profile for a recurring character.",
-        "The output selects references scene by scene, naming only the assets each scene uses.",
-        "Each scene includes a Use line, an Event line, and an End state line."
+        "Each supplied reference has an unambiguous subject or motion/audio role.",
+        "The mapping remains readable with eight images and the motion/audio references; no specific grouping headings are required.",
+        "Different characters remain distinguishable without indiscriminate repetition of negative clauses.",
+        "Recurring identities preserve their relevant established details.",
+        "Scene-specific input choices include only relevant assets.",
+        "Actions and end states remain clear across changes in scene."
       ]
     },
     {
@@ -35,7 +35,7 @@
       "files": [],
       "expectations": [
         "The output defines @Video 1 as the sole editing master.",
-        "The output uses [Target Reference Role] to define the white lamp from @Image 1 with exclusions.",
+        "The white-lamp reference controls the target lamp while preserving unrelated subjects and the existing shot.",
         "The output includes a [Timeline Inheritance] section stating the target inherits every appearance, motion, occlusion, and exit of the original.",
         "The output specifies edit scope as replacing only the yellow lamp and preserving all other content.",
         "The output notes that aspect ratio and duration are auto-locked to the input video."
@@ -51,7 +51,7 @@
         "The output describes the preceding action before the source video begins.",
         "The output defines the last frame of the extension as connecting to the first frame of @Video 1 with specific pose, prop, and background matching.",
         "The output includes a continuity maintenance clause for identity, clothing, key props, and axis of action.",
-        "The output includes the 'keep each subject as the same continuous instance' clause."
+        "The extension preserves continuous subject identity and reaches the supplied opening state without duplication or an unexplained discontinuity."
       ]
     },
     {
@@ -86,11 +86,12 @@
       "expected_output": "An emotional direction prompt using the single emotional transition template with 2-4 observable physical cues.",
       "files": [],
       "expectations": [
-        "The output uses the single emotional transition structure: overall shift, triggering event, immediate reaction, gradual change, final expression.",
+        "The tasting event causes an understandable emotional transition with a readable final state; no named template is required.",
         "The output pairs the emotion word 'disappointment' with observable cues like chewing slowing, eyebrows drawing in, shoulders dropping.",
         "The output does not use bare abstract emotion words without physical cues.",
         "The output describes the final expression through restrained or explicit outward behavior."
       ]
     }
-  ]
+  ],
+  "evaluation_note": "Judge semantic effectiveness. Exact delimiters remain checks only where the selected model grammar requires them; headings and paraphrases are not quality proxies."
 }

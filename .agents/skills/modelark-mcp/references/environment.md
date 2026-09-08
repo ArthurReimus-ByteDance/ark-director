@@ -1,0 +1,93 @@
+## Environment Essentials
+
+### Provider Credentials
+
+- `BYTEPLUS_MODELARK_API_KEY` — enables Seedream, Seedance, Seed 3D (with flag), and Seed 2.1 Understanding
+- `BYTEPLUS_SEED_SPEECH_API_KEY` — enables Seed Audio (TTS) and Speech-to-Text (ASR)
+- `BYTEPLUS_VOD_MEDIAKIT_API_KEY` — enables VOD AI MediaKit enhancement, video transcoding, and audio separation
+- `BYTEPLUS_MODELARK_BASE_URL` — override ModelArk data-plane host
+- `BYTEPLUS_SEED_AUDIO_BASE_URL` — override Seed Audio host
+- `SEED_SPEECH_ASR_BASE_URL` — override ASR host
+- `BYTEPLUS_VOD_MEDIAKIT_BASE_URL` — override the VOD AI MediaKit HTTPS API base
+- `SEED_SPEECH_ASR_POLL_INTERVAL_SECONDS` — seconds between ASR query polls (default 3)
+- `SEED_SPEECH_ASR_POLL_MAX_SECONDS` — maximum total seconds to wait for ASR result (default 600)
+
+### 3D Generation
+
+- `BYTEPLUS_MODELARK_3D_ENABLED` — feature flag for Hyper3D + Hitem3d tools (default `false`; reuses ModelArk key)
+- `HYPER3D_DEFAULT_MODEL` — default Hyper3D model ID (default `hyper3d-gen2-260112`)
+- `HITEM3D_DEFAULT_MODEL` — default Hitem3d model ID (default `hitem3d-2-0-251223`)
+- `SEED3D_MODEL_BINDINGS` — JSON array of 3D model bindings
+
+### Model Selection
+
+- `SEEDREAM_DEFAULT_MODEL`
+- `SEEDANCE_DEFAULT_MODEL`
+- `SEEDREAM_MODEL_FAMILY`
+- `SEEDANCE_MODEL_FAMILY`
+- `SEEDREAM_MODEL_BINDINGS`
+- `SEEDANCE_MODEL_BINDINGS`
+- `SEED_UNDERSTANDING_DEFAULT_MODEL`
+- `SEED_UNDERSTANDING_MODEL_FAMILY`
+- `SEED_UNDERSTANDING_MODEL_BINDINGS`
+
+Use bindings when a custom model ID is not one of the built-in defaults.
+
+### Transport and Auth
+
+- `MCP_TRANSPORT` or `FASTMCP_TRANSPORT`
+- `MCP_HOST` or `FASTMCP_HOST`
+- `MCP_PORT` or `FASTMCP_PORT`
+- `MCP_ALLOWED_ORIGINS`
+- `MCP_ALLOWED_HOSTS`
+- `MCP_AUTH_MODE`
+- `MCP_JWT_JWKS_URI`
+- `MCP_JWT_ISSUER`
+- `MCP_JWT_AUDIENCE`
+- `MCP_TENANT_CLAIM`
+- `MCP_JWT_CLOCK_SKEW_SECONDS`
+- `MCP_JWT_PROVIDE_DISCOVERY`
+- `MCP_PUBLIC_BASE_URL`
+- `MCP_JWT_SCOPES_SUPPORTED`
+
+### HTTP Rate Limiting and Readiness
+
+- `RATE_LIMIT_RPM`
+- `RATE_LIMIT_BURST`
+- `RATE_LIMIT_TRUST_PROXY_HEADERS`
+- `READINESS_CHECK_PROVIDERS`
+- `READINESS_PROVIDER_TIMEOUT_SECONDS`
+
+### Persistence and Runtime
+
+- `ARTIFACT_BACKEND`
+- `ARTIFACT_DIR`
+- `ARTIFACT_TTL_SECONDS`
+- `STATE_BACKEND`
+- `ARTIFACT_SWEEP_INTERVAL_SECONDS`
+- `STATE_PRUNE_MAX_AGE_DAYS`
+- `MCP_INLINE_MEDIA_MAX_BYTES`
+- `MCP_HTTP_MAX_BODY_BYTES`
+- `PROVIDER_MAX_CONCURRENCY`
+- `PRINCIPAL_MAX_CONCURRENCY`
+- `DAILY_BUDGET_USD`
+- `PERSISTENCE_CACHE_MAX_SIZE`
+- `PERSISTENCE_CACHE_TTL_SECONDS`
+- `MODELARK_LOG_LEVEL`
+
+### Object Storage
+
+- `TOS_ACCESS_KEY`
+- `TOS_SECRET_KEY`
+- `TOS_SECURITY_TOKEN`
+- `TOS_BUCKET`
+- `TOS_REGION`
+- `TOS_ENDPOINT`
+- `TOS_PRESIGN_TTL_SECONDS`
+- `S3_ACCESS_KEY`
+- `S3_SECRET_KEY`
+- `S3_BUCKET`
+- `S3_REGION`
+- `S3_ENDPOINT`
+- `S3_PRESIGN_TTL_SECONDS`
+- `OBJECT_STORAGE_BACKEND`

@@ -17,14 +17,13 @@
     {
       "id": 2,
       "prompt": "Write a Seedance 2.5 prompt for an anamorphic widescreen opening shot of a desert highway at dusk, a lone motorcycle rider entering from the left.",
-      "expected_output": "A Seedance prompt whose camera or visual-style line renders the anamorphic request as visible markers: oval or stretched bokeh and an explicit horizontal anamorphic lens flare.",
+      "expected_output": "An anamorphic widescreen prompt that preserves the desert highway, dusk, and rider entrance, with only scene-supported optical cues.",
       "files": [],
       "expectations": [
-        "The output includes 'anamorphic' as the lens intent.",
-        "The output describes oval or stretched bokeh.",
-        "The output includes an explicit 'horizontal lens flare' or 'anamorphic lens flare' cue.",
-        "The output carries a widescreen feel, e.g. 'widescreen' or 'cinematic anamorphic' language.",
-        "The output does not combine the anamorphic intent with a second competing lens character."
+        "Keeps the requested anamorphic intent, widescreen framing, dusk and rider entering from the left.",
+        "Does not require bokeh when no defocused highlight has been established.",
+        "Does not invent a sun, headlight or flare solely to satisfy the lens label.",
+        "Preserves one coherent optical treatment without changing the requested scene."
       ]
     },
     {
@@ -56,13 +55,14 @@
     {
       "id": 5,
       "prompt": "Write a prompt for a 4K anamorphic optics look — full widescreen flare and anamorphic bokeh at 4K resolution.",
-      "expected_output": "A response that resolves the anamorphic optics but routes the 4K resolution request to Seedance 2.0, noting that Seedance 2.5 caps at 1080p and pointing to the seedance-prompt-20 skill.",
+      "expected_output": "Separates the requested 4K output from the anamorphic look, preserves the selected model, and identifies the need for current resolution capability evidence without an automatic model switch.",
       "files": [],
       "expectations": [
-        "The output notes that Seedance 2.5 outputs up to 1080p.",
-        "The output routes 4K optics requests to `seedance-prompt-20` and the 2.0 model.",
-        "The output still resolves the anamorphic look into visible markers (horizontal lens flare, oval bokeh).",
-        "The output does not silently write a 4K claim into a Seedance 2.5 prompt."
+        "Retains 4K as an output requirement separate from the prompt optics.",
+        "Does not claim a model resolution limit or supported replacement model without current tool evidence.",
+        "Does not automatically route to Seedance 2.0 or invoke another skill.",
+        "Resolves the explicitly requested flare and bokeh as visible targets, with any needed lighting or focus setup marked as a proposal rather than existing scene facts.",
+        "Does not claim that including 4K in prose sets output dimensions."
       ]
     },
     {
@@ -76,6 +76,30 @@
         "The output pairs the sensor character with the subject and scene, not isolated as a file-format claim.",
         "The output does not combine the VHS look with a second competing sensor or lens character.",
         "The output keeps the optics phrase in the visual-style or camera line."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Keep Seedance 2.5, the camera position and deep focus locked. Write an anamorphic look for an overcast courtyard with no point lights or flare. I need a 4K deliverable but the available tool schema supports only 1080p.",
+      "expected_output": "Preserves the locked look and model, reports the output gap, and offers a supported delivery choice for approval without pretending it has been selected.",
+      "files": [],
+      "expectations": [
+        "Does not switch models or claim native 4K support.",
+        "Does not add bokeh, blur, flare, sunlight or camera movement.",
+        "Keeps the 4K requirement visible as unresolved; does not silently lower it.",
+        "Any finishing or alternate model is a proposed choice, not an approved action."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Our interview camera position and medium framing are locked. I want an 85mm compression feel. The tool exposes only prompt, duration and resolution. Should focal_length and aperture go in the JSON?",
+      "expected_output": "Keeps optics as prompt authoring cues, excludes unsupported fields from the payload, and explains the framing/distance constraint without moving the locked camera.",
+      "files": [],
+      "expectations": [
+        "Does not serialize focal_length or aperture as supported API fields.",
+        "Does not invent an aperture request.",
+        "Does not move the camera or replace the medium framing with a close-up.",
+        "Treats compression as a requested visual relationship, not a guaranteed consequence of a numeric token."
       ]
     }
   ]

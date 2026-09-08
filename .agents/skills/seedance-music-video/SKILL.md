@@ -1,20 +1,13 @@
 ---
 name: seedance-music-video
-description: >
-  Write production-grade Seedance 2.5 music-video prompts: pick a video format
-  (performance, narrative, conceptual, lyric, music visualizer, hybrid), map the
-  song's sections to a visual plan, direct beat-synced cuts and camera, drive
-  native audio or an audio-first lip-sync pipeline, and lock a per-genre visual
-  style. Use whenever the user asks for a music video, a lyric video, a music or
-  audio-reactive visualizer, a K-pop or idol video, a band/performer/performance
-  clip, a song-driven scene, or a prompt whose timing and energy must follow the
-  music rather than a spoken story. For an isolated speed ramp, cut rhythm, or
-  montage pacing that is not tied to a whole song, use seedance-pacing-presets
-  instead. Compose with seedance-prompt-25 for the full six-part grammar and
-  with seed-audio-prompt when an original music master or lip-synced vocal track
-  is needed first. This skill is an orchestrator for the music-video layer: it
-  delegates every other directorial axis to its owning preset skill (see
-  docs/seedance-reference.md for the canonical axis table).
+description: >-
+  Write Seedance 2.5 music-video prompts from a song, artist brief, or requested
+  format. Map song sections, beat density, performer intent, camera, lyric timing,
+  native versus supplied audio, and natural scene duration into the six-part
+  formula. Cover rap, dance, performance, narrative, abstract, vertical, and custom
+  formats. Use for song-driven visual direction, lyric/performance videos, or
+  music-video revisions. This prompt-only leaf does not generate media; the caller
+  composes only requested specialist axes and owns review and submission.
 ---
 
 # Seedance Music Video
@@ -23,6 +16,33 @@ Write ready-to-use Seedance 2.5 prompts for music videos. The music is the
 fixed brief: every visual decision is planned backward from the track's
 sections, beats, and energy. Make the format, the song map, the beat contract,
 and the genre lock visible in the prompt, not just the scene content.
+
+
+## Input and output contract
+
+Input: song structure, desired format, performer locks, beat contract, and audio intent.
+
+Output: a music-video direction block or complete video prompt.
+
+## Procedure and reference loading
+
+Use output-templates for the requested deliverable, specialized-formats for rap/vertical/custom format details, and the core workflow below for song/beat/audio decisions.
+
+Read only the mode-specific resources needed for the request. Reference paths
+mentioned in prose are relative to this skill directory unless a link says otherwise.
+
+- [Output Templates](references/output-templates.md) — Output formats.
+- [Specialized Formats](references/specialized-formats.md) — Format-specific rules; Custom-format procedure.
+- [Hypothetical repairs](references/music-repairs.md) — Read when pacing, lyric timing or a revision fails the intended musical relationship.
+
+## Submission boundary and failure behavior
+
+The caller owns production authorization, the exact request preflight, and the
+complete hash-bound prompt review. A leaf returns its prompt package without
+loading sibling skills. An explicitly declared orchestrator may coordinate the
+review and submission stages. Missing required inputs remain unresolved; a draft
+or technical success does not establish user approval. Preserve optional timing,
+the three-image sampling default where applicable, and the requested delta.
 
 ## Source basis
 
@@ -95,31 +115,41 @@ which shots matter, and where the performer sits in the frame:
   The model renders provisional captions; exact text is set in post.
 - **Visualizer** — abstract, audio-reactive imagery with no performer and no
   lyrics; the visuals "image the sound" (waveforms, particles, geometry).
-- **Hybrid** — the most common commercial structure: performance carries the
-  choruses, narrative or concept carries the verses.
+- **Hybrid** — combines performance with narrative or concept. One possible
+  arrangement places performance in choruses and narrative in verses; choose
+  their allocation from the actual song and intended audience effect.
 
-Default to `hybrid` when the user does not specify. A ballad usually wants
-narrative or conceptual; a high-energy single wants performance or a hard
-hybrid.
+When the format is unspecified, recommend one from the intended audience effect
+and supplied track evidence, with a brief reason. Mark the recommendation
+provisional when these inputs are missing. Narrative intimacy, a held conceptual
+image, performance energy and a hybrid are alternatives, not genre assignments;
+choose only what serves this brief.
 
 ### 2. Map the song to a visual plan
 
-Plan section by section, backward from the track. Give each section one
-primary visual assignment and a visible end state. Use the standard energy arc
-and scale it to the actual section lengths and BPM:
+Start with the available evidence: listen to the supplied track when accessible,
+using a supported media tool; otherwise use the user's section map and label it
+as supplied. If neither exists, provide a **provisional treatment**, not invented
+BPM, timestamps, lyrics or claims of having heard the song. Ask for audio only
+when exact synchronization depends on it; continue untimed creative work.
 
-| Section | Energy | Visual assignment | Cut density (relative) |
-|---|---|---|---|
-| Intro | low | establish the visual world, wider shots | lowest |
-| Verse | low–medium | situation, character, longer takes | low |
-| Pre-chorus | building | cut frequency rises, shot length compresses | rising |
-| Chorus / hook | peak | hero shots, close-ups, fastest cuts; **repeats escalate** | highest |
-| Bridge | departure | new angle, location, wardrobe, or image not yet shown | pullback |
-| Drop / instrumental | peak | highest cut density or one deliberately held shot | peak |
-| Outro | resolve | callback, wide, slow | lowest |
+Record audible changes (density, vocal delivery, texture, silence, accents and
+phrase boundaries) separately from proposed visual choices. A genre or section
+name does not establish its energy. A chorus may become quieter; a through-composed
+track may have no chorus at all.
 
-Repeat the same hook in each chorus with rising visual energy — a second chorus
-that does not escalate reads flat. Use the bridge for the creative risk.
+| Relationship | When it serves the brief | Visual choice |
+| --- | --- | --- |
+| Escalation | Audible build or requested release | Increase scale, movement or cut density on the supported change |
+| Restraint | Intimacy, quiet refrain or sustained tension | Hold framing; let a small performance change carry the section |
+| Repetition | Ritual, obsession or a deliberately stable hook | Repeat the composition or action with intentional continuity |
+| Counterpoint | Requested emotional tension between image and sound | Hold calm imagery against dense sound, with a clear intended effect |
+| Departure | Actual texture change or requested structural contrast | Change one visual rule without inventing a bridge |
+
+Give each section one primary assignment and an end state. Choose its relationship
+from the audible evidence and the audience effect; keep repeated hooks unchanged
+when repetition is the point. Recipe energy arcs are **creative heuristics**, not
+API rules or requirements for every song. Preserve a requested continuous take.
 
 ### 3. Set the audio contract
 
@@ -180,7 +210,9 @@ fidelity, use `generate_audio: false` and re-mux the master.
 
 When `generate_audio` is enabled with a reference audio, the model
 **re-performs** the track — it does not copy the reference bit-for-bit.
-This means:
+Treat the generated soundtrack as a candidate to inspect, not an exact copy.
+Retain the supplied master for deterministic assembly when exact fidelity matters.
+These observations are historical local evidence, not a capability guarantee.
 
 ### 3b. Timestamped lyric timeline (for performance videos with lip-sync)
 
@@ -219,8 +251,14 @@ No line may be skipped, shortened, mumbled, or reordered.
    bar changes)
 4. For each line, take the first word's start time and the last word's end
    time
-5. Round each line's start/end to the nearest beat (or clean second)
-6. Use those as the `[X-Ys] { line }` slots in the prompt
+5. Preserve the raw word/line timings as evidence without rounding. Check ASR
+   against listening; uncertain words or boundaries remain marked uncertain.
+6. If simpler prompt windows help, derive a separate display interval that contains
+   the verified phrase (for example floor the start and ceil the end). Do not
+   snap offbeat vocals to a grid or replace evidence with rounded timings.
+7. Use verified exact intervals or the separately labeled simplified windows as
+   `[X-Ys] { line }` slots. Untimed drafts may use ordered lyric cues; do not invent
+   measured timings without the audio.
 
 Example ASR-to-timeline conversion:
 
@@ -230,7 +268,8 @@ Example ASR-to-timeline conversion:
 "charge" start=18170ms  "like" start=18530ms  "a" start=18690ms
 "wiring" start=18890ms  "fee" start=19450ms end=19730ms
 
-# Group into a lyric line:
+# Verified phrase interval: 17.170–19.730s; retain as evidence.
+# Separate simplified prompt window:
 [17-20 seconds] { ever really took charge like a wiring fee, }
 ```
 
@@ -259,8 +298,8 @@ Rap is the highest-risk vocal mode for lyric dropout:
 - ASR verification (section 3c) is essential after generation
 
 Specific guidance for rap:
-- **Always** use the timestamped lyric timeline (section 3b) — never large
-  `{...}` blocks
+- Use per-line timing when complete timed coverage is requested and audio evidence
+  exists; otherwise supply ordered lyric cues and mark timing unresolved
 - Set the "no line may be skipped, shortened, mumbled, or reordered" mandate
 - Run ASR on the output to verify coverage
 - Consider splitting very long verses (>15 lines) into multiple clips
@@ -282,13 +321,14 @@ At 5 seconds the camera crash-zooms on the kick.
 The chorus cuts land on the beat; the final pose holds on the last hit.
 ```
 
-Post-sync rules to carry into assembly: cut on the downbeat (beat 1 of each
-bar), not "by feel"; cut ~1–2 frames early because eyes are faster than ears;
-prefer whole-bar shot lengths (1, 2, or 4 bars) — half-bar cuts are fine in
-fast sections but less forgiving; match cut density to section energy; trim a
-slightly-too-long clip so its head lands on a downbeat marker instead of
-generating an exact arbitrary length. Sung one-take lip-sync drifts more than
-spoken dialogue — budget extra margin and re-check the mouth in review.
+For assembly, place markers at the **actual chosen audible events**: a breath,
+snare, silence, phrase ending or downbeat. Whole-bar cuts are an optional regular-grid
+technique, not suitable for every track. There is no universal early-frame offset:
+review synchronization against the master and adjust for the intended perception.
+Counterpoint may deliberately hold across an accent; label that relationship.
+Irregular meter, rubato and continuous takes do not require grid-aligned cuts.
+Use verified timestamps only where precision is requested; event-relative cues
+remain valid. Re-check mouth timing for any lip-synced performance.
 
 ### 5. Right-size the scenes
 
@@ -339,7 +379,7 @@ from drifting across the section chain and during later shots.
 
 This skill owns the music-video layer: format, song map, beat contract, audio
 contract, and genre lock. Other axes belong to their owning preset skills — see
-the canonical axis→skill table in `docs/seedance-reference.md` (including
+the canonical axis→skill table in `.agents/contracts/seedance-reference.md` (including
 `seed-audio-prompt` / `seed-audio-commercial` for an original music or vocal
 master, and `seedream-storyboard` / `film-production` for storyboard and
 multi-scene production). Never let two skills fight:
@@ -350,129 +390,16 @@ owning preset skill and keep exactly one grade, one dominant lighting direction,
 and at most two camera moves per clip. Do not stack a second grade or camera
 treatment on top of a genre recipe.
 
-## Output formats
-
-### Music-video block
-
-Use when the user only wants the directing layer:
-
-```text
-[Music-Video Format]
-<Format name, direct or indirect address, and performance-to-atmosphere ratio.>
-
-[Song Map]
-Section 1 (<time range>): <visual assignment, energy, end state>.
-Section 2 (<time range>): <visual assignment, energy, end state>.
-Final Section (<time range>): <closing assignment and final visible state>.
-
-[Beat & Cut Contract]
-<Which audio events the cuts and camera land on; cut density per section.>
-
-[Audio Treatment]
-<Native audio brackets, or the @Audio N timing-authority binding for audio-first.>
-
-[Genre Lock]
-<Palette, lighting, camera grammar, motion cadence, and tone.>
-
-[Style Seal]
-<Compact closing sentence and relevant exclusions.>
-```
-
-### Full Seedance prompt
-
-Use when the user asks for a complete prompt:
-
-```text
-[Audio First] (only when lip-synced vocals are requested)
-@Audio 1 is the exact soundtrack and timing authority. Preserve its music,
-vocals, and pauses; do not add dialogue, narration, music, subtitles, or
-captions. Match <performer>'s visible mouth only to <performer>'s voice in
-@Audio 1.
-
-[Reference Roles] (only when references exist)
-@Image 1 defines <performer>'s <appearance, wardrobe, or identity>.
-@Image 2 defines <scene or venue>. Do not use <unwanted content>.
-
-<Subject performs the primary action in <scene>.>
-The visuals feature <genre lock: palette, lighting, lens, grade, look>.
-Use <shot sizes, camera moves, and cuts>, with <beat contract>.
-Audio includes <(music)> <{sung lines}> <sound effects>.
-Audio: <@Audio N timing binding, or native brackets>. For rap or fast vocals,
-       use a timestamped lyric timeline: <[X-Ys] { line }> per line with a
-       "no line skipped" mandate (see section 3b).
-
-[Shot Plan] or [Stage Plan]
-Shot 1 (<time range>): <one event and visible end state>.
-Shot 2 (<time range>): <one event and visible end state>.
-Final Shot (<time range>): <closing event and final visible state>.
-
-[Maintain Consistency]
-Keep <performer identity, wardrobe, venue, camera grammar, and audio>
-consistent across the section chain.
-
-[Style Seal]
-<Compact genre, palette, motion cadence, beat contract, and tone.>
-```
-
-Return the prompt directly. Do not add production workflow, tool selection,
-asset management, approval gates, or generation instructions unless the user
-explicitly asks for them.
-
-## Format-specific rules
-
-- **Performance**: keep the performer on screen and the mouth in frame for
-  lip-sync; vary shot size between close-ups (intimacy) and full-body (dance);
-  a direct-address close-up reads as intimacy, a 3/4 angle as outward
-  performance.
-- **Narrative**: indirect address — characters never acknowledge the camera;
-  keep the song as score and let the lyric relation be a deliberate choice
-  (literal, amplified, or disjunct).
-- **Conceptual**: choose one governing visual rule that encodes the track, then
-  execute it with mechanical rigor; do not add a plot unless the rule needs it.
-- **Lyric**: keep imagery simple and legible; the type is the star. Use `【 】`
-  for provisional captions and set exact lyrics in post. Direct word-level
-  pops on the beat (`【word】` on each accent), hold every word long enough to
-  read, keep to one or two fonts, and dim the background so the text stays
-  readable — kinetic type is faster and tighter in the chorus, looser in the
-  verses.
-- **Visualizer**: no performer, no story, no lyrics; audio-reactive shapes,
-  waveforms, particles, or geometry that shift with the sections.
-- **Hybrid**: state which sections carry performance and which carry the
-  narrative/concept; do not let either strand crowd the other.
-
-### Vertical vs landscape
-
-- **9:16 (vertical)** is the discovery default for TikTok / Reels / Shorts:
-  center the subject, prefer close and medium shots, plan fast cuts (roughly
-  1–3s), open with the hook, and use vertical motion (reveals, tilts, drops)
-  over horizontal pans. Native 9:16 composition beats cropping 16:9.
-- **16:9 (landscape)** is the YouTube master: allow richer backgrounds,
-  multi-subject staging, and continuity. Render one purpose-built 9:16 cut
-  rather than stretching a 16:9 master.
-- State the aspect ratio as a generation parameter, never inside the prompt.
-
 ## Rights and safety
 
 - Use **original music only**. Never reproduce a real artist's copyrighted song
   in a prompt or as a reference; never write artist-name or copycat prompts.
 - Voice-cloning a real, named artist's voice requires written consent from the
   artist or estate.
-- Keep `watermark: false` by default; enable the AIGC watermark only when the
+- Keep `watermark: false` where the tool supports it; enable the AIGC watermark only when the
   user explicitly requests it.
 - Generate the music master with Seed Audio (or another original source) so the
   release stays distribution-clean.
-
-## Custom-format procedure
-
-For an unlisted format or genre:
-
-1. Identify the format's address mode (direct, indirect, or none).
-2. Define the song map: which sections carry what visual energy.
-3. Choose the audio treatment (native vs audio-first) and the beat contract.
-4. Name the genre lock: palette, lighting, camera grammar, and motion cadence.
-5. Define the performance-to-atmosphere ratio per section.
-6. Write a format-first opening and a compact style seal.
-7. Add only exclusions that prevent likely drift or genre leakage.
 
 ## Exclusion rules
 
@@ -494,16 +421,16 @@ Before returning the prompt, verify:
 1. The format is named and its address mode is respected.
 2. The song map assigns one primary event and a visible end state per section.
 3. The beat contract names the audio events and their visual relationship.
-4. Chorus repeats are set to escalate, and the bridge departs tonally.
+4. Restraint, repetition, counterpoint or escalation is justified by the supplied
+   track/brief; no chorus, bridge or energy change is invented.
 5. The audio treatment is explicit: native brackets, `@Audio N` timing authority,
    or hybrid — never ambiguous.
 6. Lip-sync lines appear verbatim in `{...}` and match the audio-first master.
-7. **If the vocal delivery is rap or fast-paced:** the timestamped lyric timeline
-   (section 3b) is used with per-line `[X-Ys] { line }` slots and a "no line
-   skipped" mandate — not large `{...}` blocks.
+7. Dense vocal coverage uses per-line cues; required timing is verified from audio
+   or explicitly unresolved. Raw evidence and simplified prompt windows stay separate.
 8. **If `generate_audio` is true:** the prompt accounts for re-performance risk
    (section 3a) and the timestamped timeline is used when coverage is critical.
-9. Each generation is right-sized (4–30s) with one section per pass, or is an
+9. Each proposed generation uses a live-supported natural duration, or is an
    explicit continuous one-take.
 10. The genre lock is a single recipe, not a mixture.
 11. The style seal is compact and does not contradict the format or genre.

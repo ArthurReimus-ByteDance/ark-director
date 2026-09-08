@@ -101,14 +101,57 @@ Decide which mode the request calls for. If unclear, ask one short question.
 
 ---
 
+## Evidence-grounded audit contract
+
+Preserve the five bespoke definitions above exactly. Apply them to evidence,
+not an invented version of the screenplay. For every claimed causal link,
+identify a line, beat, stage direction, or supplied context that supports it.
+
+| Evidence state | Meaning | How to report |
+| --- | --- | --- |
+| **Established** | Explicitly shown or stated in the supplied material | Cite the beat/line and describe only what it supports |
+| **Inferred** | Plausible reading supported by clues but not explicit | Name the clues and inference; allow a competing reading |
+| **Missing** | Necessary context is absent from the supplied material | State the gap; do not invent a motive, geography, history, or failed beat |
+
+Audience before/after verdicts are interpretations: connect each to established
+behavior and label the verdict itself as inferred. A declared author intention
+may establish the intended effect but does not prove the current pages achieve it.
+Separate the character's knowledge at each tactic from facts revealed later.
+
+Build a compact beat ledger when the causal chain is unclear:
+
+| Beat/line | Observed action or new information | Character knowledge at that moment | Engine link | Evidence state |
+| --- | --- | --- | --- | --- |
+| <locator> | <what is on the page> | <known / inferred / missing> | <goal, obstacle, tactic, reversal, or value shift> | <established / inferred / missing> |
+
+For geography, establish who is where, what blocks the path, what can be seen
+or reached, and which movement changes that. Unclear staging is an evidence
+gap, not permission to add an exit, helper, prop, or power. Distinguish a weak
+causal link from a merely unstated orientation cue.
+
+Assess only the supplied scope. An excerpt that ends before a jeopardy resolves
+cannot fail the resolved-sequence reversal test on that basis. An unknown story
+goal limits the goal-link judgment; review the local obstacle/tactic evidence
+while requesting the missing context. Do not turn missing evidence into a fail.
+
+Before suggesting a repair, state the locked facts, the exact weak or missing
+link, and the smallest beat change that could repair it. Explain the causal
+consequence: what information becomes available, what tactic it now motivates,
+and what downstream beats remain intact. Proposed new facts are **hypothetical**
+until accepted; do not backfill them as existing evidence in the audit.
+
+Read [Hypothetical causal repairs](references/causal-repairs.md) only for unclear
+geography, unsupported motives, or unnatural dialogue. These examples demonstrate
+minimal repair and uncertainty handling without replacing the five definitions.
+
 ## AUDIT mode — procedure
 
 Work the chain in order. For the scene (and, for reversal/value-shift, the enclosing sequence):
 
-1. **Goal** — State the scene goal in one line. Is it a causal link toward the story goal? Apply the removal test (can the scene be cut without breaking the chain?). If you don't know the story goal, ask for it — you can't fully audit Goal without it.
+1. **Goal** — State the scene goal and its supporting beat. Is it a causal link toward the established story goal? Apply the removal test only to the supplied causal context. If the story goal is missing, mark that judgment incomplete and ask for it while reviewing the local chain.
 2. **Obstacle** — Name the strong circumstance and **exactly what it jeopardizes** and at **what scale** (stage / whole goal). If nothing is genuinely at risk → flag slack.
 3. **Tactic** — Identify the tactic(s). Is each a reasonable guess on the hero's current knowledge? Is it **forced by** the jeopardy? Does each outcome **return information** that reshapes the next move? Flag wheel-spins (zero-information failures) and unmotivated tactics.
-4. **Reversal** — Locate the reversal(s) in the sequence. Which form (action-flips / hidden-agency / general)? Confirm **≥1 per resolved sequence**. If zero → fail.
+4. **Reversal** — Locate the reversal(s) and supporting beats. Which form (action-flips / hidden-agency / general)? Confirm **≥1 per resolved sequence**. A fully supplied resolved sequence with zero fails; an incomplete excerpt receives an explicit unresolved judgment.
 5. **Value Shift** — For EACH reversal, name the audience's **before-verdict → after-verdict** on the character. If you can't → the reversal is **inert** (flag it as the priority fix). Then assess the **trajectory** across the sequence: deepening designed arc, or random flip-flop?
 
 ### Audit output (in chat — NOT a file)
@@ -116,7 +159,9 @@ Work the chain in order. For the scene (and, for reversal/value-shift, the enclo
 Use this structure:
 
 ```
-SCENE/SEQUENCE: <one-line identification>
+SCENE/SEQUENCE: <one-line identification and supplied scope>
+LOCKS: <established facts and user constraints>
+EVIDENCE: <beat/line citations with established / inferred / missing status>
 
 CHAIN CHECK
 • Goal — <verdict + one line>
@@ -125,10 +170,11 @@ CHAIN CHECK
 • Reversal — <form + present? ≥1 in sequence? verdict>
 • Value Shift — <before-verdict → after-verdict per reversal; or "INERT"; trajectory note>
 
-WEAKEST POINT: <the single element that, if fixed, recovers the most>
+WEAKEST POINT: <the single supported defect or missing causal link>
+UNCERTAINTY: <what cannot be judged from the supplied material>
 
 WHAT IF…
-1. (Minimal fix — preserve the user's version) <change ONLY the single weakest point so the rest still works>
+1. (Minimal fix — preserve the user's version) <a HYPOTHETICAL bounded repair, its causal consequence, and preserved downstream beats>
 2. (Clean fix — fully works) <a version that fully works even if it departs more from the original>
 3. (Optional — only if it genuinely adds something) <…>
 ```
@@ -144,7 +190,9 @@ Any rewritten lines or beats in a "What if" must be delivered in **Final Draft s
 
 ## WRITE / CO-WRITE mode — procedure
 
-Before writing, make sure you can name all five for the planned scene/sequence:
+Before writing, distinguish supplied facts from proposed beats. Name all five
+for the planned scene/sequence; missing foundations remain questions or explicit
+hypothetical choices rather than invented user-approved canon:
 - the scene **Goal** as a causal link toward the story goal,
 - the **Obstacle** and exactly what it jeopardizes (+ scale),
 - the **Tactic(s)** as forced, reasonable guesses that return information,

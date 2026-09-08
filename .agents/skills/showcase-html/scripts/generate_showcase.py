@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate a self-contained showcase index.html from template.html + showcase.json.
 
 Usage:
@@ -25,16 +24,27 @@ Selection contract (see references/schema.md):
   single key inside a ``selected_variants`` map in the manifest frontmatter.
 """
 import argparse
-import datetime
+import html
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
+
+from selection_service import (
+    SelectionConflict,
+    SelectionError,
+    SelectionService,
+    collect_selectable,
+    contained_path,
+    read_selection,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(HERE, "..", "template.html")
@@ -51,22 +61,7 @@ def load_json(path):
 # --------------------------------------------------------------------------- #
 
 def log_file(proj):
-    return proj / "selection.log"
-
-
-def append_log(proj, event, **fields):
-    """Append one timestamped event record to the project audit log."""
-    record = {
-        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-        "event": event,
-    }
-    record.update(fields)
-    path = log_file(proj)
-    try:
-        with path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    except OSError:
-        pass  # logging must never break the selection flow
+    return contained_path(proj, "selection.log", must_exist=False)
 
 
 def read_log(proj, limit=200):
@@ -91,162 +86,32 @@ def read_log(proj, limit=200):
 # selection write-back
 # --------------------------------------------------------------------------- #
 
-_FM_RE = re.compile(r"^(---\n)(.*?)(\n---)(.*)$", re.DOTALL)
-
-
-def _edit_frontmatter(text, apply_fn):
-    m = _FM_RE.match(text)
-    if not m:
-        return None
-    head, fm, tail, rest = m.group(1), m.group(2), m.group(3), m.group(4)
-    new_fm = apply_fn(fm)
-    if new_fm is None:
-        return None
-    return head + new_fm + tail + rest
-
-
-def _set_scalar(fm, filename):
-    if re.search(r"^selected_variant\s*:", fm, re.M):
-        return re.sub(
-            r"^selected_variant\s*:.*$",
-            f"selected_variant: {filename}",
-            fm, count=1, flags=re.M,
-        )
-    return fm + f"\nselected_variant: {filename}"
-
-
-def _set_map_key(fm, key, filename):
-    key_esc = re.escape(key)
-    if re.search(r"^selected_variants\s*:", fm, re.M):
-        existing = re.search(rf"^(?P<ind>[ \t]+){key_esc}\s*:.*$", fm, re.M)
-        if existing:
-            indent = existing.group("ind")
-            return re.sub(
-                rf"^[ \t]+{key_esc}\s*:.*$",
-                f"{indent}{key}: {filename}",
-                fm, count=1, flags=re.M,
-            )
-        return re.sub(
-            r"^(selected_variants\s*:.*)$",
-            rf"\1\n  {key}: {filename}",
-            fm, count=1, flags=re.M,
-        )
-    return fm + f"\nselected_variants:\n  {key}: {filename}"
-
-
-def update_manifest(meta, filename, proj):
-    """Set one asset's selection in its manifest frontmatter. Returns (ok, err)."""
-    if meta.get("field") == "selected_variants" and not meta.get("key"):
-        return False, "selected_variants requires a key"
-    path = proj / meta["manifest"]
-    if not path.exists():
-        return False, f"missing manifest: {meta['manifest']}"
-    text = path.read_text(encoding="utf-8")
-    if meta.get("field") == "selected_variants":
-        new = _edit_frontmatter(text, lambda fm: _set_map_key(fm, meta["key"], filename))
-    else:
-        new = _edit_frontmatter(text, lambda fm: _set_scalar(fm, filename))
-    if new is None:
-        return False, f"no frontmatter in {meta['manifest']}"
-    path.write_text(new, encoding="utf-8")
-    append_log(proj, "select", manifest=meta["manifest"],
-               field=meta.get("field", "selected_variant"),
-               key=meta.get("key"), filename=filename)
-    return True, None
-
-
-def read_selection(selectable, proj):
-    """Return {asset_id: filename} of currently-selected variants from manifests."""
-    out = {}
-    for cid, meta in selectable.items():
-        path = proj / meta["manifest"]
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        if meta.get("field") == "selected_variants":
-            key = meta.get("key")
-            if not key:
-                continue
-            m = re.search(rf"^[ \t]+{re.escape(key)}\s*:\s*(.*)$", text, re.M)
-        else:
-            m = re.search(r"^selected_variant\s*:\s*(.*)$", text, re.M)
-        if m:
-            val = m.group(1).strip()
-            if val and val != "null":
-                out[cid] = val
-    return out
-
-
-def collect_selectable(data):
-    """Map card id -> selection metadata from showcase.json.
-
-    Covers both grid sections (cards with id+manifest) and takes sections
-    (groups[].takes[] with id+manifest+filename).
-    """
-    out = {}
-    for section in data.get("sections", []):
-        if section.get("kind") == "takes":
-            for grp in section.get("groups", []):
-                for tk in grp.get("takes", []):
-                    if tk.get("id") and tk.get("manifest"):
-                        out[tk["id"]] = {
-                            "manifest": tk["manifest"],
-                            "field": "selected_variant",
-                            "key": None,
-                        }
-        else:
-            for card in section.get("cards", []):
-                if card.get("id") and card.get("manifest"):
-                    out[card["id"]] = {
-                        "manifest": card["manifest"],
-                        "field": card.get("field", "selected_variant"),
-                        "key": card.get("key"),
-                    }
-    return out
-
-
-def selection_file(proj):
-    return proj / "selection.json"
-
-
-def write_selection_json(proj, selections):
-    data = {"project": proj.name, "selections": selections}
-    selection_file(proj).write_text(
-        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-
-
 # --------------------------------------------------------------------------- #
 # validation
 # --------------------------------------------------------------------------- #
 
 def validate(data, proj):
-    missing = []
-    for section in data.get("sections", []):
-        if section.get("kind") == "table":
-            for row in section.get("rows", []):
-                m = row.get("media")
-                if m and "src" in m and not (proj / m["src"]).exists():
-                    missing.append(m["src"])
-        elif section.get("kind") == "panel":
-            m = section.get("media")
-            if m and "src" in m and not (proj / m["src"]).exists():
-                missing.append(m["src"])
-        elif section.get("kind") == "takes":
-            for grp in section.get("groups", []):
-                for tk in grp.get("takes", []):
-                    m = tk.get("media")
-                    if m and "src" in m and not (proj / m["src"]).exists():
-                        missing.append(m["src"])
-                    cs = tk.get("contactSheet")
-                    if cs and not (proj / cs).exists():
-                        missing.append(cs)
-        else:
-            for card in section.get("cards", []):
-                m = card.get("media")
-                if m and "src" in m and not (proj / m["src"]).exists():
-                    missing.append(m["src"])
-    return missing
+    errors = []
+    def inspect(value):
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key in ('src', 'contactSheet', 'promptFile', 'manifest'):
+                    try:
+                        contained_path(proj, item)
+                    except SelectionError as error:
+                        errors.append(str(error))
+                elif isinstance(item, (dict, list)):
+                    inspect(item)
+        elif isinstance(value, list):
+            for item in value:
+                inspect(item)
+    inspect(data)
+    try:
+        registry = collect_selectable(data)
+        read_selection(registry, proj)
+    except (SelectionError, TypeError, AttributeError) as error:
+        errors.append(str(error))
+    return errors
 
 
 # --------------------------------------------------------------------------- #
@@ -262,14 +127,14 @@ def _run_ffprobe(path):
                 "-show_entries", "format=duration,size:stream=codec_name,codec_type,width,height,r_frame_rate",
                 "-of", "json", str(path),
             ],
-            capture_output=True, text=True, timeout=15,
+            check=False, capture_output=True, text=True, timeout=15,
         )
         if r.returncode != 0:
             return {}
         d = json.loads(r.stdout)
         fmt = d.get("format", {})
         streams = d.get("streams", [])
-        vstream = next((s for s in streams if s.get("codec_type") == "video"), {})
+        vstream: dict[str, Any] = next((s for s in streams if s.get("codec_type") == "video"), {})
         duration = float(fmt.get("duration", 0))
         size_bytes = int(fmt.get("size", 0))
         width = vstream.get("width", 0)
@@ -287,6 +152,7 @@ def _run_ffprobe(path):
             "fps": fps,
             "codec": codec,
             "has_audio": has_audio,
+            "audio_codecs": list(dict.fromkeys(s.get("codec_name", "unknown") for s in streams if s.get("codec_type") == "audio")),
         }
     except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, ValueError, KeyError):
         return {}
@@ -320,7 +186,7 @@ def _ffprobe_chips(path):
     if info["width"] and info["height"]:
         chips.append(f"{info['width']}x{info['height']}")
     if info["codec"]:
-        audio_str = " + AAC" if info["has_audio"] else ""
+        audio_str = " + " + ", ".join(info["audio_codecs"]) if info["has_audio"] else ""
         chips.append(f"{info['codec']}{audio_str}")
     return chips
 
@@ -359,7 +225,7 @@ def generate_contact_sheet(video_path, output_path, frames=4):
                 "-map", "[out]", "-frames:v", "1",
                 "-q:v", "3", str(output_path),
             ],
-            capture_output=True, timeout=30,
+            check=False, capture_output=True, timeout=30,
         )
         return r.returncode == 0 and output_path.exists()
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -417,9 +283,19 @@ def generate(proj, data, out_name):
     with open(RENDERER, "r", encoding="utf-8") as f:
         renderer = f.read()
 
-    title = data.get("title", "Showcase")
+    # bake in current manifest selections if available
+    proj_path = Path(proj) if proj else None
+    selectable = collect_selectable(data)
+    if proj_path and selectable:
+        current_sel = read_selection(selectable, proj_path)
+        data = dict(data)
+        data["currentSelections"] = current_sel
+
+    data = dict(data)
+    data["selectableRegistry"] = selectable
+    title = html.escape(str(data.get("title", "Showcase")))
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    html = (
+    rendered_html = (
         template
         .replace("__TITLE__", title)
         .replace("__DATA__", data_json)
@@ -429,7 +305,7 @@ def generate(proj, data, out_name):
         )
     )
     out = proj / out_name
-    out.write_text(html, encoding="utf-8")
+    out.write_text(rendered_html, encoding="utf-8")
     return out
 
 
@@ -438,95 +314,145 @@ def generate(proj, data, out_name):
 # --------------------------------------------------------------------------- #
 
 class ShowcaseHandler(BaseHTTPRequestHandler):
-    selectable = {}
-    proj = None
+    service: SelectionService
+    proj: Path
+    server: HTTPServer
+    session_token: str
+    index_name = 'index.html'
+    maximum_body = 65536
+
+    def _same_host(self):
+        return self.headers.get('Host') == f'127.0.0.1:{self.server.server_port}'
 
     def _send_json(self, obj, status=200):
-        body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        body = json.dumps(obj, ensure_ascii=False).encode('utf-8')
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/api/selection":
-            self._send_json(read_selection(self.selectable, self.proj))
+        if not self._same_host():
+            self._send_json({'ok': False, 'error': 'Invalid localhost host'}, 403)
             return
-        if self.path == "/api/log":
-            self._send_json(read_log(self.proj))
+        if self.path in ('/api/session', '/api/selection', '/api/log'):
+            try:
+                if self.path == '/api/session':
+                    self._send_json({'token': self.session_token, **self.service.snapshot()})
+                elif self.path == '/api/selection':
+                    self._send_json(self.service.snapshot())
+                else:
+                    self._send_json(read_log(self.proj))
+            except (SelectionError, OSError) as error:
+                self._send_json({'ok': False, 'error': str(error)}, 409)
             return
-        # serve a static file from the project dir
         from urllib.parse import unquote
-        path = unquote(self.path.split("?", 1)[0])
-        if path == "/":
-            path = "/index.html"
-        rel = path.lstrip("/")
-        fp = (self.proj / rel).resolve()
-        proj_root = self.proj.resolve()
-        if not fp.is_relative_to(proj_root) or not fp.is_file():
+        relative = unquote(self.path.split('?', 1)[0]).lstrip('/') or self.index_name
+        if any(part.startswith('.') for part in Path(relative).parts):
             self.send_error(404)
             return
-        ctype = {
-            ".html": "text/html; charset=utf-8",
-            ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-            ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
-            ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
-            ".wav": "audio/wav", ".mp3": "audio/mpeg", ".ogg": "audio/ogg",
-            ".json": "application/json", ".js": "application/javascript",
-        }.get(fp.suffix.lower(), "application/octet-stream")
-        data = fp.read_bytes()
-        self.send_response(200)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(data)))
+        try:
+            path = contained_path(self.proj, relative)
+        except SelectionError:
+            self.send_error(404)
+            return
+        size = path.stat().st_size
+        start, end, status = 0, size - 1, 200
+        range_header = self.headers.get('Range')
+        if range_header:
+            match = re.fullmatch(r'bytes=(\d*)-(\d*)', range_header)
+            try:
+                if not match or not any(match.groups()) or not size:
+                    raise ValueError()
+                if match[1]:
+                    start = int(match[1])
+                    end = min(int(match[2]), size - 1) if match[2] else size - 1
+                else:
+                    suffix = int(match[2])
+                    if suffix <= 0:
+                        raise ValueError()
+                    start = max(0, size - suffix)
+                if start > end or start >= size:
+                    raise ValueError()
+                status = 206
+            except ValueError:
+                self.send_response(416)
+                self.send_header('Content-Range', f'bytes */{size}')
+                self.send_header('Content-Length', '0')
+                self.end_headers()
+                return
+        import mimetypes
+        content_type = mimetypes.guess_type(str(path))[0] or 'application/octet-stream'
+        self.send_response(status)
+        self.send_header('Content-Type', content_type)
+        self.send_header('Content-Length', str(max(0, end - start + 1)))
+        self.send_header('Accept-Ranges', 'bytes')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        if status == 206:
+            self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
         self.end_headers()
-        self.wfile.write(data)
+        with path.open('rb') as stream:
+            stream.seek(start)
+            remaining = end - start + 1
+            while remaining > 0:
+                chunk = stream.read(min(65536, remaining))
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                remaining -= len(chunk)
 
     def do_POST(self):
-        if self.path == "/api/select":
-            try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = json.loads(self.rfile.read(length) or b"{}")
-            except (ValueError, json.JSONDecodeError):
-                self._send_json({"ok": False, "error": "bad request"}, 400)
-                return
-            selections = body.get("selections", {})
-            write_selection_json(self.proj, selections)
-            applied, errors = [], []
-            for cid, filename in selections.items():
-                meta = self.selectable.get(cid)
-                if not meta:
-                    errors.append(f"{cid}: not a selectable asset")
-                    continue
-                if not isinstance(filename, str) or not filename.strip() or re.search(r"[\\/\r\n]", filename):
-                    errors.append(f"{cid}: invalid filename")
-                    continue
-                ok, err = update_manifest(meta, filename, self.proj)
-                if ok:
-                    applied.append(cid)
-                else:
-                    errors.append(err)
-            append_log(self.proj, "save", applied=applied,
-                       errors=errors, total=len(selections))
-            self._send_json({"ok": True, "applied": applied, "errors": errors})
+        origin = f'http://127.0.0.1:{self.server.server_port}'
+        if not self._same_host() or self.headers.get('Origin') != origin or not secrets.compare_digest(self.headers.get('X-Showcase-Token', ''), self.session_token or ''):
+            self._send_json({'ok': False, 'error': 'Same-origin session token required'}, 403)
             return
-        self._send_json({"ok": False, "error": "not found"}, 404)
+        if self.path != '/api/select':
+            self._send_json({'ok': False, 'error': 'not found'}, 404)
+            return
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+            if length <= 0 or length > self.maximum_body or self.headers.get('Transfer-Encoding'):
+                self._send_json({'ok': False, 'error': 'Invalid or oversized request body'}, 413)
+                return
+            if self.headers.get_content_type() != 'application/json':
+                raise SelectionError('Content-Type must be application/json')
+            self.connection.settimeout(10)
+            payload = self.rfile.read(length)
+            if len(payload) != length:
+                raise SelectionError('Incomplete request body')
+            body = json.loads(payload)
+            if not isinstance(body, dict) or not isinstance(body.get('expected_revision'), str) or not body['expected_revision']:
+                raise SelectionError('Expected selections and expected_revision')
+            result = self.service.apply(body.get('selections'), body['expected_revision'])
+        except SelectionConflict as error:
+            self._send_json({'ok': False, 'error': str(error)}, 409)
+        except (SelectionError, ValueError, OSError) as error:
+            self._send_json({'ok': False, 'error': str(error)}, 400)
+        else:
+            self._send_json(result)
 
     def log_message(self, *args):
         pass
 
 
-def serve(proj, data, port):
-    ShowcaseHandler.selectable = collect_selectable(data)
-    ShowcaseHandler.proj = proj
-    httpd = HTTPServer(("127.0.0.1", port), ShowcaseHandler)
-    url = f"http://127.0.0.1:{port}/index.html"
-    print(f"serving {proj} at {url}  (Ctrl+C to stop)")
+def serve(proj, data, port, index_name='index.html'):
+    handler = type('ProjectShowcaseHandler', (ShowcaseHandler,), {
+        'service': SelectionService(proj, data), 'proj': proj,
+        'session_token': secrets.token_urlsafe(32), 'index_name': index_name,
+    })
+    httpd = HTTPServer(('127.0.0.1', port), handler)
+    url = f'http://127.0.0.1:{httpd.server_port}/{index_name}'
+    print(f'serving {proj} at {url}  (Ctrl+C to stop)')
     threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nstopped")
+        print('\nstopped')
+    finally:
+        httpd.server_close()
 
 
 # --------------------------------------------------------------------------- #
@@ -567,11 +493,8 @@ def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=Fal
     if not resolved:
         sys.exit("no valid media files found")
 
-    # determine the common root (for relative paths)
-    common_root = Path(os.path.commonpath([str(p.parent) for p in resolved]))
-
     # group by type
-    videos_by_dir = {}
+    videos_by_dir: dict[str, list[Path]] = {}
     images = []
     audios = []
     for fp in resolved:
@@ -586,7 +509,7 @@ def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=Fal
         else:
             print(f"warning: unrecognized file type: {fp}")
 
-    sections = []
+    sections: list[dict[str, Any]] = []
 
     # build takes groups for videos
     if videos_by_dir:
@@ -689,7 +612,7 @@ def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=Fal
             "cards": cards,
         })
 
-    data = {
+    data: dict[str, Any] = {
         "title": "Quick Review",
         "kicker": "Ad-hoc Media Review",
         "lede": f"Auto-generated from {len(resolved)} file(s). No showcase.json required.",
@@ -730,7 +653,7 @@ def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=Fal
         renderer = f.read()
 
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    html = (
+    rendered_html = (
         template
         .replace("__TITLE__", data["title"])
         .replace("__DATA__", data_json)
@@ -739,7 +662,7 @@ def quick_review(paths, out_path=None, do_contact_sheets=False, open_browser=Fal
             "<script>\n" + renderer + "\n</script>",
         )
     )
-    out.write_text(html, encoding="utf-8")
+    out.write_text(rendered_html, encoding="utf-8")
     print(f"wrote {out} ({out.stat().st_size} bytes)")
     if open_browser:
         webbrowser.open(f"file://{out.resolve()}")
@@ -762,9 +685,14 @@ def main():
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--contact-sheets", action="store_true",
                         help="Generate contact sheet images for video takes via FFmpeg.")
+    parser.add_argument("--apply", metavar="JSON_OR_FILE",
+                        help="Apply selections from a JSON string or file path, updating manifests and selection.json.")
     parser.add_argument("--open", action="store_true",
                         help="Open the generated HTML in the default browser.")
+    parser.add_argument("--expected-revision", help="Reject --apply when current manifest hashes differ")
     args = parser.parse_args()
+    if args.check and (args.apply or args.serve or args.quick):
+        parser.error("--check cannot be combined with --apply, --serve, or --quick")
 
     # ---- quick mode ----
     if args.quick:
@@ -792,28 +720,47 @@ def main():
 
     data = load_json(manifest)
 
-    # auto-populate take chips from ffprobe + optionally generate contact sheets
-    enrich_takes(data, proj_path, generate_sheets=args.contact_sheets)
-    # write back enriched data so the manifest stays in sync
-    if args.contact_sheets:
-        with open(manifest, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print("updated showcase.json with ffprobe chips + contact sheet paths")
-
     missing = validate(data, proj_path)
     if missing:
-        for m in missing:
-            print(f"missing media: {m}")
-        if args.strict:
+        for item in missing:
+            print(f"invalid showcase: {item}")
+        if args.check or args.strict or args.apply or args.serve:
             sys.exit(1)
-
     if args.check:
-        print("OK: all media resolve" if not missing else f"{len(missing)} missing media")
+        print("OK: all media, prompts, and manifests resolve")
         return
+
+    if args.apply:
+        raw_val = args.apply.strip()
+        if os.path.isfile(raw_val):
+            apply_dict = load_json(raw_val)
+        else:
+            try:
+                apply_dict = json.loads(raw_val)
+            except json.JSONDecodeError as e:
+                sys.exit(f"invalid JSON for --apply: {e}")
+
+        if isinstance(apply_dict, dict) and "selections" in apply_dict:
+            apply_dict = apply_dict["selections"]
+
+        if not isinstance(apply_dict, dict):
+            sys.exit("expected a dict of {asset_id: filename} for --apply")
+
+        try:
+            result = SelectionService(proj_path, data).apply(apply_dict, args.expected_revision)
+        except (SelectionError, OSError) as error:
+            sys.exit(f"selection failed: {error}")
+        print(json.dumps(result))
+        return
+
+    enrich_takes(data, proj_path, generate_sheets=args.contact_sheets)
+    if args.contact_sheets:
+        from selection_service import atomic_write
+        atomic_write(proj_path / 'showcase.json', (json.dumps(data, indent=2, ensure_ascii=False) + '\n').encode('utf-8'))
 
     if args.serve:
         generate(proj_path, data, out_name)
-        serve(proj_path, data, args.port)
+        serve(proj_path, data, args.port, out_name)
         return
 
     out = generate(proj_path, data, out_name)

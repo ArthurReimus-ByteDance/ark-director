@@ -10,7 +10,7 @@ End-to-end pipeline for producing a Seedance VFX shot from a source clip
 This skill composes the `seedance-vfx-prompt` skill (prompt writing) with the
 `modelark-mcp` tools (task submission, polling, download) to produce a saved,
 manifested asset following the workspace's `projects/<project>/` directory
-conventions.
+conventions. This is an explicitly declared orchestrator.
 
 > **Version note**: This pipeline runs on **both** Seedance generations.
 > **Default to Seedance 2.5** (`dreamina-seedance-2-5-260628`,
@@ -29,6 +29,33 @@ Do **not** use this skill when the user only wants to:
 - generate text-to-video or image-to-video (see `seedance-prompt-25`; `seedance-prompt-20` for 4K/Fast/Mini)
 - generate images or audio (use Seedream / Seed Audio skills)
 
+
+## Input and output contract
+
+Input: source footage, approved change contract, output path, selected model/mode, and generation authorization.
+
+Output: a prepared operation, durable output, manifest, and technical/semantic review.
+
+## Procedure and reference loading
+
+Resolve inputs and preflight below first. Read submission before any provider call, delivery-and-manifest after acceptance, and shot-chaining only for a requested multi-shot continuation.
+
+Read only the mode-specific resources needed for the request. Reference paths
+mentioned in prose are relative to this skill directory unless a link says otherwise.
+
+- [Submission](references/submission.md) — Step 3 — Submit via MCP; Step 4 — Poll for completion.
+- [Delivery And Manifest](references/delivery-and-manifest.md) — Step 5 — Download and save the asset; Step 6 — Write the shot.md manifest; Step 7 — Verify the prepared standalone prompt file; Step 8 — Report results.
+- [Shot Chaining](references/shot-chaining.md) — Shot chaining workflow.
+
+## Submission boundary and failure behavior
+
+The caller owns production authorization, the exact request preflight, and the
+complete hash-bound prompt review. A leaf returns its prompt package without
+loading sibling skills. An explicitly declared orchestrator may coordinate the
+review and submission stages. Missing required inputs remain unresolved; a draft
+or technical success does not establish user approval. Preserve optional timing,
+the three-image sampling default where applicable, and the requested delta.
+
 ## Prerequisites
 
 - `ARK_API_KEY` (or `BYTEPLUS_MODELARK_API_KEY`) set in environment or `.env`
@@ -42,14 +69,15 @@ Do **not** use this skill when the user only wants to:
 flowchart TD
     IN[Inputs: source clip, change description, project context] --> PROMPT
     PROMPT[1. Write VFX prompt via seedance-vfx-prompt] --> VALIDATE
-    VALIDATE[2. Validate inputs and references] --> SUBMIT
-    SUBMIT[3. Submit via seedance_create_task MCP] --> POLL
+    VALIDATE[2. Validate inputs and references] --> PREPARE
+    PREPARE[Persist exact prompt and reviewed request] --> SUBMIT
+    SUBMIT[3. Submit via resolved model and operation tool] --> POLL
     POLL[4. Poll via seedance_get_task until terminal] --> CHECK
     CHECK{status?} -->|succeeded| SAVE
     CHECK -->|failed/cancelled/expired| ERROR[Report error + retry guidance]
     SAVE[5. Download asset to scene shot directory] --> MANIFEST
     MANIFEST[6. Write shot.md manifest] --> PROMPTFILE
-    PROMPTFILE[7. Write standalone prompt .md] --> REPORT
+    PROMPTFILE[7. Verify prepared prompt hash] --> REPORT
     REPORT[8. Report cost, latency, paths, last-frame]
 ```
 
@@ -60,7 +88,8 @@ The workspace's recurring pattern for a text-only before/after VFX demo:
 1. BEFORE — Seedance 2.5 T2V, `720p`, `16:9`, natural duration (4–30s), no
    references. Save + manifest.
 2. `media_upload` the BEFORE clip; record its `object_key` in the project
-   `ref_cache.json`. Presign on demand; never re-upload.
+   `ref_cache.json` with content SHA-256 and storage scope. Re-presign unchanged
+   objects on demand; re-upload only for changed content or a missing object.
 3. AFTER — `seedance_2_5_create_task`, `omni_reference_task_type=edit`, `1080p`,
    `@Video 1` = the BEFORE URL; `duration` and `ratio` auto-lock. Write the
    prompt with `seedance-vfx-prompt` (2.5 editing section).
@@ -82,16 +111,17 @@ The workspace's recurring pattern for a text-only before/after VFX demo:
 | `scene` | Yes | Scene ID (e.g. `scene-01`) |
 | `shot` | Yes | Shot ID (e.g. `s01_sh010`) |
 | `element_refs` | No | List of element reference paths (characters, locations, props) |
-| `resolution` | No | Default `1080p` (2.5 default); `4k` only on the 2.0 path |
-| `duration` | No | Default: match source clip duration (max 30s for 2.5; 15s for 2.0) |
-| `ratio` | No | Default `16:9` |
+| `resolution` | No | Lowest suitable supported value; normally 720p prototype, 1080p final on 2.5; 4K only on a supported selected legacy path |
+| `duration` | No | For 2.5 edit, validate source length and omit auto-locked duration; legacy limits require live operation evidence |
+| `ratio` | No | Inherit the source in edit modes where ratio auto-locks; use supported explicit values only |
 | `return_last_frame` | No | Default `true` (enables shot chaining) |
 | `safety_identifier` | No | Default `<project>-<scene>-<shot>` |
 
 ## Step 1 — Write the VFX prompt
 
-Compose the prompt with the `seedance-vfx-prompt` skill. The prompt must follow
-the natural-language heading structure with all applicable sections:
+Compose the prompt with `seedance-vfx-prompt` after resolving the model and
+operation. The default 2.5 edit uses its structured edit-goal grammar. The
+legacy 2.0 branch uses the following natural-language heading structure:
 
 ```text
 Asset preparation:
@@ -113,7 +143,7 @@ Timing: [if applicable]
 Audio: [diegetic only]
 
 Quality and constraints:
-Quality: photoreal, 4K, [look/grade]
+Quality: photoreal, [look/grade], [observable detail criteria]
 Constraints: [NON-IP, face protection, no-warp, camera-motion lock]
 ```
 
@@ -130,307 +160,37 @@ Before submitting, verify:
 2. **Element references exist** — for each path in `element_refs`, confirm the
    file exists under `projects/<project>/elements/`. Each reference should be
    a character sheet, location sheet, or prop sheet image.
-3. **Prompt is complete** — run through the VFX prompt checklist from
-   `seedance-vfx-prompt` (all applicable sections present, `Asset preparation:`
-   first with `@Video 1` source clip, face protection in constraints if faces
-   are present).
-4. **4K check** — if the source clip contains a human face, `resolution` must
-   be `4k`. Only allow `1080p` for pure landscape/environment shots with no
-   human faces.
+3. **Prompt is complete** — use the selected model/operation checklist.
+   Apply 2.5 edit-goal grammar to 2.5 edits and legacy heading rules only to
+   the legacy path. Include observable face-fidelity criteria when relevant.
+4. **Model and operation** — resolve the model, transport tool, edit operation,
+   and reference mode before choosing a checklist. Default 2.5 edit uses
+   `seedance_2_5_create_task` with `omni_reference_task_type: edit`; 4K requires
+   an explicitly chosen legacy path supported by live tool evidence. Faces
+   require fidelity QA, not a model switch.
+5. **Duration and mode compatibility** — for 2.5 edit, validate source length
+   against live edit limits and omit auto-locked `duration` and `ratio` fields.
+   On a 2.0 path, validate its operation-specific limits. A generation maximum
+   is not evidence of edit support. Mixed first/last-frame and reference bundles
+   require explicit capability evidence even when chaining is requested.
 
-> **2.5 guard**: Seedance 2.5 supports 480p/720p/1080p. If using the 2.5 model (`dreamina-seedance-2-5-260628`), set `resolution` to `"720p"` or `"1080p"` — `"4k"` is invalid and will be rejected.
 
-5. **Duration** — 1 to 15 seconds. The API also accepts `-1` (auto/match-source),
-   but for VFX prefer an explicit duration matching the source clip. If the
-   source clip is longer than 15s, split it into multiple chained shots.
-
-For Seedance 2.5, single-pass duration extends to 30s, and native forward/backward extension can replace the manual `return_last_frame` chaining workflow.
 
 6. **Project/scene/shot directory exists** — create it if missing:
    - `projects/<project>/scenes/scene-NN/sNN_shNNN/`
-
-## Step 3 — Submit via MCP
-
-Call `seedance_create_task` on the `modelark-seed` MCP server.
-
-**MCP request structure:**
-
-```json
-{
-  "server_name": "modelark-seed",
-  "tool_name": "seedance_create_task",
-  "args": {
-    "input": {
-      "prompt": "<full VFX prompt text from Step 1>",
-      "videos": [
-        {
-          "kind": "url",
-          "url": "<source video URL or local path>",
-          "role": "reference_video"
-        }
-      ],
-      "images": [
-        {
-          "kind": "base64",
-          "data": "<base64-encoded character/location sheet>",
-          "mime_type": "image/png",
-          "role": "reference_image"
-        }
-      ],
-      "model": "{{model_id}}",  # default: dreamina-seedance-2-5-260628 (2.5); use dreamina-seedance-2-0-260128 for 4K/Fast/Mini
-      "resolution": "1080p",
-      "ratio": "16:9",
-      "duration": 5,
-      "generate_audio": true,
-      "watermark": false,
-      "return_last_frame": true,
-      "execution_expires_after": 3600,
-      "priority": 0,
-      "safety_identifier": "<project>-<scene>-<shot>"
-    }
-  }
-}
-```
-
-Key parameters for VFX:
-
-**Seedance 2.5 (default for full-duration edits):** use `seedance_2_5_create_task`
-instead, with `"omni_reference_task_type": "edit"` (2.5 accepts
-`auto|reference|edit|extend`; `edit_video` is 2.0-only and will be rejected).
-Omit `ratio` and `duration` — they auto-lock to the source. 2.5 caps at 1080p.
-2.0 (`edit_video`) caps output at ~5s, so use 2.5 for any edit longer than ~5s.
-- **`videos[].role = "reference_video"`** — the source clip to edit. This is
-  what makes it a video-to-video (VFX) task rather than text-to-video.
-- **`images[].role = "reference_image"`** — element references (character
-  sheets, location sheets, prop sheets) for identity consistency.
-- **`resolution = "4k"`** — face protection; preserves skin texture, prevents
-  waxy warping.
-- **`generate_audio = true`** — Seedance 2.0 native audio. The prompt's
-  `Audio:` section guides the audio generation.
-- **`return_last_frame = true`** — returns the last frame image, enabling
-  shot chaining for multi-shot VFX sequences.
-- **`safety_identifier`** — set to `<project>-<scene>-<shot>` for
-  traceability.
-
-The tool returns a `task_id` and `polling_interval`. Immediately store the task,
-shot, take, version, model, status, intended asset path, and submission time in
-`projects/<project>/task_ids.json` before polling. A local timeout never
-authorizes a duplicate submission; resume the recorded task until terminal.
-
-## Step 4 — Poll for completion
-
-Call `seedance_get_task` repeatedly, respecting the `polling_interval` from
-creation:
-
-```json
-{
-  "server_name": "modelark-seed",
-  "tool_name": "seedance_get_task",
-  "args": {
-    "task_id": "<task_id from Step 3>",
-    "persist_output": true
-  }
-}
-```
-
-Task states transition through: `queued` → `running` → `succeeded` / `failed`
-/ `cancelled` / `expired`.
-
-Poll until the status is terminal:
-- **`succeeded`** — proceed to Step 5. The response includes `artifacts` (the
-  generated video, and optionally the last frame image if
-  `return_last_frame=true`), `usage` (token counts, cost), and `settings`.
-- **`failed`** — check the `error` field. Common causes: content safety
-  rejection, invalid reference format, prompt too long. Report the error and
-  retry guidance to the user.
-- **`cancelled`** — the task was cancelled (manually or by timeout). Report
-  and ask the user whether to resubmit.
-- **`expired`** — the `execution_expires_after` window elapsed before the task
-  completed. Resubmit with a longer expiry.
-
-## Step 5 — Download and save the asset
-
-On `succeeded`, the MCP response includes `artifacts` with the generated video
-(and optionally the last frame image). The MCP server's artifact store
-(`persist_output: true`) has already persisted the asset.
-
-Save the video in its shot directory:
-
-```
-projects/<project>/scenes/scene-NN/sNN_shNNN/sNN_shNNN_t01_v01.mp4
-```
-
-File naming follows the workspace convention:
-- `<scene>_sh<NNN>_t<NN>_v<NN>.mp4` — e.g. `s01_sh010_t01_v01.mp4`
-- If approved as final: `<scene>_sh<NNN>_final_v<NN>.mp4`
-
-If `return_last_frame=true`, save the last frame image alongside the video for
-chaining:
-
-```
-projects/<project>/scenes/scene-NN/sNN_shNNN/sNN_shNNN_t01_v01_lastframe.png
-```
-
-> **Delivery transcode (HEVC → H.264).** Seedance 2.5 edit outputs are usually
-> HEVC (`video_codec: hevc`). Lark/doc previews and many players need H.264. Keep
-> the HEVC master as the archival take and produce a browser-safe derivative:
->
-> `ffmpeg -i <take>.mp4 -c:v libx264 -pix_fmt yuv420p -profile:v high -crf 20 -c:a aac -b:a 128k -movflags +faststart <take>_lark_h264.mp4`
-
-## Step 6 — Write the shot.md manifest
-
-Write the `shot.md` file in the shot directory with full YAML frontmatter for
-reproducibility:
-
-```
-projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md
-```
-
-**Manifest template:**
-
-```yaml
----
-project: <project>
-scene: <scene>
-shot: <shot>
-model: dreamina-seedance-2-5-260628  # 2.5 default; use dreamina-seedance-2-0-260128 for 4K/Fast/Mini
-mode: V2V
-vfx_level: <1 | 2 | 3>
-references:
-  - <source video path or URL>
-  - elements/<character-id>/<character-sheet>.png
-  - elements/<location-id>/<location-sheet>.png
-prompt_file: scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md
-prompt_sha256: <sha256 of exact submitted prompt>
-seed: null
-params:
-  resolution: 1080p
-  ratio: "16:9"
-  duration: 5
-  audio: true
-  watermark: false
-  return_last_frame: true
-  submission_mode: single
-take: t01
-version: v01
-status: review
-cost_usd: <from MCP response>
-billing_tokens_total: <from MCP response>
-artifacts:
-  - take: t01
-    id: <artifact_id from MCP>
-    uri: <seed-media:// URI from MCP>
-    task_id: <task_id from MCP>
-    media_type: video
-    mime_type: video/mp4
-    bytes: <file size>
-    sha256: <hash>
-    width: 3840
-    height: 2160
-    duration: <actual duration>
-    audio_channels: 2
-    audio_sample_rate: <from MCP>
-    completion_tokens: <from MCP>
-    cost_usd: <per-take cost>
-    created_at: <ISO timestamp>
-safety_identifier: <project>-<scene>-<shot>
----
-
-# <shot> — VFX edit (<vfx_level>, 4K, audio)
-
-<Description of the VFX edit performed on the source clip.>
-
-## Source clip
-
-- **Source**: `<source video path or URL>`
-- **VFX level**: <1 — World Swap | 2 — Element Change | 3 — Handheld Showcase>
-
-## Element references
-
-- **@Image 1**: `<sheet>` — <element description>
-- **@Video 1**: `<source>` — source clip for VFX edit
-
-## Generation parameters
-
-- **Model**: `dreamina-seedance-2-0-260128` (Seedance 2.0 Standard; for 2.5 use `dreamina-seedance-2-5-260628` — note 2.5 caps at 1080p)
-- **Resolution**: 4K (3840×2160)
-- **Ratio**: 16:9
-- **Duration**: <N>s
-- **generate_audio**: `true` (native diegetic audio)
-- **watermark**: `false`
-- **return_last_frame**: `true` (for shot chaining)
-- **safety_identifier**: `<project>-<scene>-<shot>`
-
-## Cost
-
-- <N> take × $<cost>/take = **$<total> total**
-- <N> × <tokens> completion tokens = <total> total tokens
-
-## Prompt
-
-Full prompt text saved at:
-- `scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md`
-
-## Reproduction
-
-To re-create this take from this manifest alone:
-
-1. Encode the source video and element reference images.
-2. Call `seedance_create_task` on `modelark-seed` with the prompt from
-   `prompt_sNN_shNNN_t01_v01.md`, `model=dreamina-seedance-2-0-260128  # or dreamina-seedance-2-5-260628 for 2.5 (1080p max)`,
-   `resolution=4k`, `ratio=16:9`, `duration=<N>`, `generate_audio=true`,
-   `return_last_frame=true`.
-3. Poll with `seedance_get_task` until `status=succeeded`.
-4. Download via `seed_media_get_artifact` (or presign with `media_presign`).
-5. Expect ~<N>s of 4K `video/mp4` with AAC audio, cost ~$<cost>/take.
-```
-
-## Step 7 — Write the standalone prompt file
-
-Save the exact submitted prompt once, alongside the asset:
-
-```
-projects/<project>/scenes/scene-NN/sNN_shNNN/prompt_sNN_shNNN_t01_v01.md
-```
-
-The file is plain Markdown containing the full VFX prompt text (from
-`Asset preparation:` through `Quality and constraints:`), human-readable and
-shareable without parsing YAML frontmatter.
-
-## Step 8 — Report results
-
-After completion, report to the user:
-
-| Field | Source |
-|---|---|
-| **Status** | `succeeded` / `failed` |
-| **Local file path** | `projects/<project>/scenes/scene-NN/sNN_shNNN/<file>.mp4` |
-| **Artifact URI** | `seed-media://artifacts/<id>` (MCP artifact store) |
-| **Task ID** | From MCP response |
-| **Cost** | `cost_usd` from MCP response |
-| **Tokens** | `completion_tokens` from MCP response |
-| **Resolution** | Confirmed 4K (3840×2160) |
-| **Duration** | Actual output duration |
-| **Last frame** | Path to saved last-frame PNG (if `return_last_frame=true`) |
-| **Latency** | Wall-clock time from submit to succeeded |
-| **Manifest** | `projects/<project>/scenes/scene-NN/sNN_shNNN/shot.md` |
-
-If the task failed, report:
-- The `error` field from the MCP response
-- The `task_id` for support reference
-- Suggested retry action (fix prompt, change reference, resubmit)
 
 ## Error handling
 
 | Error | Cause | Action |
 |---|---|---|
-| Content safety rejection | Source clip or prompt flagged by moderation | Review source clip content; simplify the `New world:` description; remove any borderline language |
-| `OutputVideoSensitiveContentDetected.PolicyViolation` ("copyright restrictions") | Output resembles a film/photo cliché (interrogation room, a figure arguing in the rain) | Soften trope wording (e.g. "arguing" → "talking into his phone"); resubmit once; record the failed task. Never retry the identical prompt |
+| Content safety rejection | Provider rejected the request or output | Preserve code/reason and request/task evidence; review actual content and rights, then make a legitimate reviewed revision or seek provider support |
+| `OutputVideoSensitiveContentDetected.PolicyViolation` | Provider-reported policy rejection; cause may be unknown | Record the exact evidence without presuming a false positive; use support/appeal or a legitimate content correction, not wording intended to evade the filter |
 | `resource download failed` (`InvalidParameter` on the video reference) | Presigned reference URL expired or a transient fetch failure | Call `media_presign` with the recorded `object_key` for a fresh URL and resubmit |
 | Invalid reference format | Video URL unreachable, image not valid PNG/JPEG | Verify file paths; re-encode images as PNG; use `kind: "base64"` for local files |
 | Prompt too long | Exceeds 32,000 character limit (the MCP `seedance_create_task` video-generation tool accepts up to 32,000 characters) | Condense `New world:` and `Lighting:` sections; remove redundant detail |
-| Task timeout / expired | `execution_expires_after` too short | Resubmit with `execution_expires_after: 7200` (2 hours) |
-| Face warp in output | Resolution too low or face protection not in constraints | Ensure `resolution: "4k"` and face protection guard is present; resubmit |
+| Local timeout / unknown acceptance | Completion or acceptance is unresolved | Retain `submission_unknown`; reconcile the same request, poll its known task ID, and never automatically resubmit |
+| Provider terminal expired | Provider confirms expiration | Record terminal evidence; any authorized new take gets a new prepared operation and reviewed request |
+| Face warp in output | Observed fidelity defect; cause unresolved | Review source detail, motion, references, and locks; record one requested delta and select a supported resolution for any authorized new take |
 | Camera motion drift | Camera lock too vague in `Locks:` | Specify exact motion type (handheld bob, lateral sway, tracking speed) and add "frame-for-frame" lock; resubmit |
 
 Always surface the `task_id` in error reports — it is the reference for support
@@ -442,65 +202,44 @@ VFX shots using Seedance 2.0 at 4K with audio are the **most expensive**
 generation mode in the workspace. Each 4K VFX take costs significantly more than
 a 1080p text-to-video take.
 
-Seedance 2.5 at 720p is cheaper per generation but cannot produce 4K output — use 2.5 for structured editing and extension, 2.0 for 4K face protection.
+Seedance 2.5 at 720p is cheaper per generation but cannot produce 4K output — use 2.5 for structured editing and extension, 2.0 when a supported 4K output path is explicitly needed.
 
 Guidelines:
 - **Default to a single take** (`t01`) for VFX development. Generate multiple
   takes only for final selection.
-- **Use `seedance_create_task_variations`** (1–5 parallel tasks) when the user
-  wants multiple takes in one submission — but only for 1080p development
-  iterations. For 4K final takes, submit sequentially to avoid bandwidth
-  contention from large base64 payloads.
+- **Use a supported variation tool for the resolved model/operation** when the user
+  requests multiple takes and current capability evidence supports that model,
+  operation, and resolution. Prepare and track each variation independently;
+  choose concurrency within the transport limits and authorized budget.
 - **Never submit 4K VFX shots without explicit user confirmation** of the cost.
   State the expected per-take cost before submitting.
 - **Cache and reuse** — if a take is approved, mark `status: approved` in the
   manifest. Do not regenerate approved takes.
 
-## Shot chaining workflow
-
-For multi-shot VFX sequences (e.g. a character walking through multiple
-environments), chain shots using `return_last_frame`:
-
-```mermaid
-flowchart LR
-    SRC1[Source clip 1] -->|seedance_create_task| SHOT1[Shot 1: VFX edit]
-    SHOT1 -->|return_last_frame| LF1[Last frame PNG]
-    LF1 -->|first_frame for Shot 2| SRC2[Source clip 2 + last frame]
-    SRC2 -->|seedance_create_task| SHOT2[Shot 2: VFX edit]
-    SHOT2 -->|return_last_frame| LF2[Last frame PNG]
-    LF2 -->|first_frame for Shot 3| SRC3[Source clip 3 + last frame]
-```
-
-Chaining procedure:
-1. Submit Shot 1 with `return_last_frame: true`.
-2. On success, save the last-frame PNG to the shot directory.
-3. For Shot 2, submit the source clip as `reference_video` AND the last-frame
-   PNG as an image with `role: "first_frame"`.
-4. In Shot 2's prompt `Asset preparation:` section, note that the first frame
-   is inherited from Shot 1's last frame.
-5. Repeat for each subsequent shot.
-
-This ensures visual continuity across cuts — the environment and subject
-position carry forward seamlessly.
-
 ## Pipeline checklist
 
 Before declaring a VFX shot complete, verify:
 
-- [ ] **Prompt written** — full natural-language heading structure, all applicable
-      sections, VFX prompt checklist passed
-- [ ] **4K resolution** — if faces or fine detail are present
-- [ ] **`return_last_frame: true`** — if chaining to a subsequent shot
-- [ ] **`generate_audio: true`** — native diegetic audio enabled
-- [ ] **Task submitted** — `seedance_create_task` returned a `task_id`
+- [ ] **Prompt reviewed** — 2.5 edit-goal grammar and checklist for 2.5 edits;
+      legacy natural-language headings/checklist only for the supported 2.0 branch.
+      The complete review is bound to the exact prepared request hash.
+- [ ] **Supported model/mode/resolution** — face/detail fidelity included in QA
+- [ ] **Chaining inputs** — requested last-frame output and the next shot
+      reference roles are supported by the selected model/operation.
+- [ ] **Audio mode** — matches the request and uses only supported parameters.
+- [ ] **Task submitted** — the resolved tool acknowledged a task ID: normally
+      `seedance_2_5_create_task` for 2.5 edit; the verified legacy tool for 2.0.
 - [ ] **Task polled** — `seedance_get_task` returned `status: succeeded`
 - [ ] **Video saved locally** — asset in `scenes/scene-NN/sNN_shNNN/`
 - [ ] **Last frame saved** — PNG alongside the video (if chaining)
 - [ ] **`shot.md` manifest written** — full YAML frontmatter with model, prompt
       references, seed, params, cost, status, artifacts
-- [ ] **Prompt file written** — one immutable `prompt_...md` snapshot beside
-      the generated asset, linked by path and SHA-256 from `shot.md`
-- [ ] **Cost recorded** — `cost_usd` and `billing_tokens_total` in manifest
-- [ ] **Status set** — `review` (default), `approved`, or `rejected`
+- [ ] **Prepared prompt verified** — the immutable `prompt_...md` snapshot was
+      saved before submission beside the planned output and its hash still
+      matches the request and `shot.md`.
+- [ ] **Cost recorded** — estimated cost, confirmed billing, and provider usage
+      remain separate; unavailable fields are recorded as unavailable.
+- [ ] **Status set** — technical success enters `review`; only explicit user
+      choice can set `approved` or `rejected`.
 - [ ] **No secrets in manifest** — API keys, tokens, credentials never in
       frontmatter or prompt files

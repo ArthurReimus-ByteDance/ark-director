@@ -176,6 +176,31 @@ partner's eyes for trust after being humiliated — jaw tightens, eyes sharpen,
 breathing controlled" (the cues come from what the character is doing, not what
 they're feeling).
 
+### Framing and evidence
+
+The playable tactic and its visible evidence are separate. Give the character
+something to accomplish with the partner; then encode **2–4 relevant cues per
+transition** that the chosen framing can actually show. Facial cues are allowed
+as consequences of that tactic, not a substitute for it or an arbitrary sequence
+of eyebrow and mouth movements. The cue budget is a craft heuristic, not a model
+limit. Fewer cues are appropriate when the brief asks for minimal action.
+
+- **Close-up:** a purposeful gaze adjustment, a held reply, jaw release or a
+  small change in breath can carry the tactic. No mandatory brow/mouth pair.
+- **Medium/wide:** prioritize distance, weight, orientation, hand use and the
+  ongoing physical task. Do not rely on pupils or mouth corners at unreadable scale.
+  Check each cue against the actual camera side, occlusion and subject size: a
+  rear hand closing against a thigh may be hidden or too small even though it is
+  a body cue. Prefer a readable weight shift, silhouette change or spatial action
+  when a subtle hand cue cannot be seen; preserve the requested shot and restraint.
+- **Face obscured/back view:** use posture, hands, pace, proximity or audible
+  delivery if audio is requested. Preserve the framing; do not uncover the face
+  merely to satisfy an eye-work template.
+
+Keep motive and goal stable when comparing framings; translate their evidence.
+For revision diagnosis, load [hypothetical acting repairs](references/acting-repairs.md)
+only when a performance is stiff, overstated or unreadable.
+
 ### Emotion bank
 
 Six emotions, each externalized as **directly visible or audible cues** at three
@@ -211,8 +236,8 @@ emotion label is a reference point; the tactic owns the cues.
 Intensity level is a **design-level encoding choice**, not a number the model
 reads. Levels 1/2/3 differ on the same emotion through three graduated levers:
 
-1. **Number of cue channels engaged** — one or two channels at level 1 (face
-   only), more channels at level 3 (face + hands + breathing + body + voice).
+1. **Number of cue channels engaged** — one or two readable channels at level 1,
+   stronger or broader readable channels at level 3 within the shot framing.
 2. **Amplitude** — faint and contained (a flicker) vs pronounced (a shaking
    fist, tears streaming).
 3. **Movement degree** — static containment (held breath, frozen stillness) vs
@@ -232,33 +257,36 @@ more cues and more amplitude.
 Format inside a Seedance prompt:
 
 ```
-ACTING TASK — [NAME] (invested in their tactic; the work happens in the eyes):
+ACTING TASK — [NAME] (invested in their tactic through the visible physical channel):
 SCENE DIRECTION (shared, unspoken): [one line]
 MOTIVE (their fuel): [why THEY push that direction]
 GOAL: [their personal fight]
 OBSTACLE: [what presses against the line, what one crack costs]
-TACTIC: [what they do to the partner, with the eye-work as action]
-CUES: [observable physical cues derived from the tactic — gaze, brows, mouth,
-breathing, hands, body — at the appropriate intensity level]
+TACTIC: [what they do to the partner; purposeful eye-work when readable,
+otherwise the physical channel that carries the pursuit]
+CUES: [2–4 consequences readable in this framing; use gaze or face when visible,
+and posture, distance, hands or physical action when those carry the scene]
 Moment to moment:
-— "[dialogue words]" — [verb at the partner + what the eyes check]
-— "[dialogue words]" — [verb + eye-work]
+— "[dialogue words]" — [verb at the partner + readable response being checked]
+— "[dialogue words]" — [verb + visible physical channel]
 — [where the line breaks, if it breaks]
-(Safety: gaze always engaged in the task — never a frozen, glassy, unfocused
-stare; natural blink cadence, actors blink now and then to moisturize their eyes.)
+(Optional, only when eyes are visible and a frozen stare needs correction:
+gaze checks the partner for a response; natural blink cadence.)
 ```
 
 Rules:
 - Verbs directed at the partner; no adjectives of emotion as instruction
   ("sadly," "nervously").
-- No facial choreography ("brows lift," "mouth trembles") — externals only as
-  the safety line above.
+- Keep TACTIC playable and directed toward the partner. CUES may include brows,
+  mouth or gaze when readable and caused by that tactic; do not dictate a
+  mechanical face sequence unrelated to what the character is pursuing.
 - Nobody plays the emotion; everyone plays the direction. The audience
   receives the feeling through the pressure.
-- One safety line against the frozen stare is allowed and recommended (AI-model
-  necessity).
-- Every character in frame gets living eyes this way — including silent
-  listeners: a listener's task is also real (e.g., "decide if they're serious,"
+- A short gaze correction is optional when eyes are readable and the actual
+  brief or observed result calls for it. Omit it for masked, rear-view or distant
+  shots; it is a craft intervention, not a universal model requirement.
+- Every character in frame gets a readable task, including silent
+  listeners; use eyes when visible and physical action when obscured: a listener's task is also real (e.g., "decide if they're serious,"
   "wait for the punchline," "protect the mood").
 
 ### Single emotional transition (one emotion, one change)
@@ -269,13 +297,15 @@ for the transition — cue overload destabilizes the performance.
 ```
 The overall emotion shifts from <starting emotion> to <ending emotion>.
 After <triggering event>, <character> first shows <immediate observable reaction>.
-Then, <eyes, brows, mouth, breathing, gaze, or hand movement> gradually <changes>.
+Then, <the chosen framing-readable cue> gradually <changes>.
 Finally, <character> expresses <target emotion> through <restrained or explicit outward behavior>.
 ```
 
 ### Multi-stage emotion (arc over time)
 
-Use when the emotion changes several times, with trigger events and timestamps.
+Use when the emotion changes several times, with trigger events. Add timestamps
+only when requested or needed for verified audio alignment; ordered beats suffice
+for untimed drafts.
 
 ```
 When <character> hears or sees <first triggering event>, <first observable reaction>.
@@ -312,8 +342,8 @@ OBSTACLE: the locked door; the silence on the other side; the feeling pressing
 to surface.
 TACTIC: pressing the door, testing the handle, eyes hunting the frame for
 anything he left behind — checking the threshold, the mat, the hallway.
-CUES: eyes darting and searching (Fear I2); rapid breathing; biting the lip;
-hands fidgeting with the handle; weight shifting toward the door.
+CUES: gaze searches the threshold for a response; hand tests the handle once;
+weight stays toward the door while her reply catches in her breath.
 Moment to moment:
 — presses the handle — finds it locked — eyes snap to the gap under the door
 — "Get out of my way." — said at the door, voice strained, eyes still searching
@@ -359,8 +389,9 @@ dialogue-to-shot timestamp mapping in `shot.md` and `scene.md`.
 ## Edge cases and guardrails
 
 - **Intensity is not numerically controllable.** The model reads cues, not
-  numbers. Validate each intensity level with a same-seed A/B before trusting
-  it, and record the chosen level in `shot.md`.
+  numbers. When generation comparison is authorized, test the same brief at different
+  cue strengths and record the observed result. Prompt-only work does not require
+  a paid A/B; no seed guarantees identical performance.
 - **2-4 cues per single transition.** More cues overload the performance and
   destabilize it. If more beats are needed, switch to the multi-stage template.
 - **No degree adjectives.** "Very sad", "extremely angry", "super happy" are
@@ -373,12 +404,12 @@ dialogue-to-shot timestamp mapping in `shot.md` and `scene.md`.
   the Seedance `{line}` changes, change both. A mismatch causes lip-sync drift.
 - **Audio longer than video: trim audio, never pad video.** Reduce pauses,
   ambience tails, and scene description in the Seed Audio prompt; regenerate.
-- **Emotion arcs need the multi-stage template + timestamps.** A single
-  transition template cannot carry several emotion changes.
+- **Emotion arcs need ordered triggers and consequences.** Use multiple beats;
+  timestamps are optional unless requested or needed for verified audio alignment.
 - **`reference_audio` forces lip-sync, not acting fidelity.** It locks the voice
   and mouth timing to the audio emotion. Whether Seedance visibly acts the
   emotion needs an empirical A/B: same prompt, neutral voice vs angry voice.
-- **`watermark: false` by default** for all image, video, and audio generation.
+- **`watermark: false` where supported** by the selected tool.
   Enable the AIGC watermark only when explicitly requested.
 - **Cost.** Audio and video bill per generation. Prototype at the lowest
   suitable resolution and duration; confirm duration fits before submitting the
@@ -395,7 +426,8 @@ Before finalizing an acting block or plan, verify:
 - [ ] The whole scene dialogue was read before building any character's task.
 - [ ] The scene direction is shared, unspoken, and belongs to all characters.
 - [ ] Each character has a distinct motive, goal, obstacle, and tactic.
-- [ ] The tactic names eye-work as purposeful action — not facial choreography.
+- [ ] The tactic is purposeful action; 2–4 cue choices fit the visible framing
+      and do not replace the tactic with mechanical face choreography.
 - [ ] No emotion adjectives as direction ("sadly," "nervously," "angrily").
 - [ ] The cues are derived from the tactic, not from the emotion label.
 - [ ] Every cue is directly observable or audible — no bare abstract emotion
@@ -404,7 +436,8 @@ Before finalizing an acting block or plan, verify:
       movement degree, vocal delivery), with zero degree adjectives.
 - [ ] A single emotional transition uses 2-4 cues max; more beats use the
       multi-stage template.
-- [ ] Every arc beat carries a trigger event and a timestamp.
+- [ ] Every arc beat has a trigger and readable consequence; timestamps appear
+      only when requested or needed for verified audio alignment.
 - [ ] When dialogue is set, the line appears verbatim inside `{}` with a delivery
       style and dialogue language.
 - [ ] When audio reinforcement is used: Seed Audio voice profile composed,
@@ -414,5 +447,5 @@ Before finalizing an acting block or plan, verify:
 - [ ] `shot.md` records the audio asset path, SHA-256, verified duration, and
       the dialogue-to-shot mapping; `scene.md` carries the same single source
       of truth.
-- [ ] `watermark: false` unless the user explicitly requested the AIGC
+- [ ] Where the tool supports it, `watermark: false` unless the user requested the AIGC
       watermark.

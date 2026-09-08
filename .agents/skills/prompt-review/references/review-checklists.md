@@ -23,22 +23,31 @@ sub-agent along with the prompt text.
 
 ## Universal — all prompts
 
-These apply to every prompt regardless of model or skill. Check every prompt against
-these before checking the type-specific checklist.
+Applicability comes from explicit prompt type, model, operation, and change
+contract. Workspace invariants are owned by `../../../contracts/rules.json`;
+this section maps them into review guidance. Check applicability before each
+item and record a reason for not_applicable. Specialized heuristics do not
+change the production policy. Source metadata: `rule-provenance.json`.
 
-1. **Assets first.** Every character, location, and prop referenced in the prompt is
-   named, versioned, and locked. Descriptors are copied word for word — never
-   summarized, shortened, or implied.
+1. **Visible consistency (`asset.visible_consistency`).** Required canonical
+   inputs are named, versioned, and approved before dependent production
+   generation. Draft breakdown may identify unresolved inputs. Branded,
+   recurring, story-critical props and scene-variant wearables need separate
+   references; incidental objects can be text-only. Copy locked descriptors
+   exactly when they apply; a new element prompt is authoring canon, not
+   consuming a pre-existing approved version of itself.
 
-2. **Say what you want, not what you avoid.** Prohibitions name and summon the thing
-   they forbid. The prompt uses positive, specific instructions instead of
-   negative-only constraints.
+2. **Positive direction.** Prefer concrete desired behavior and appearance.
+   Technical exclusions, precise edit boundaries, and preservation constraints
+   are allowed when they reduce ambiguity; a negation alone is not a failure.
 
-3. **Direct, don't describe.** The prompt contains scene events, motives, goals,
-   obstacles, and tactics — not just static visual descriptions. If it reads like a
-   description with no event or intent, it fails this check.
+3. **Narrative event (`narrative.observable_event`).** Narrative shot prompts
+   contain observable action and relevant intent. Static turnarounds, location
+   plates, UI/product sheets, music beds, SFX, and ambience are not_applicable;
+   evaluate their composition, consistency, or sonic event instead.
 
-4. **Watermark.** If the prompt specifies watermark behavior, it must be `false`
+4. **Watermark.** Apply only where the selected tool supports the parameter.
+   If the request specifies watermark behavior, it defaults to `false`
    unless the user explicitly requested the AIGC watermark.
 
 5. **Duration right-sizing.** The prompt does not pad a scene to fill a maximum
@@ -115,9 +124,10 @@ Source skill: `seedance-prompt-25`
     attributes to inherit are stated. The prompt does not restate every action from
     the reference (which can conflict).
 
-13. **Control-only references.** Control-only images are preferably translated to text
-    and omitted. If kept, they are labeled as control-only with explicit extraction
-    instructions.
+13. **Control-only references (`references.control_only`).** Translate to text
+    and omit by default. Intentional conditioning requires explicit user selection,
+    current source hashes, supported tool/mode inputs, and leakage QA; labels or
+    extraction instructions alone do not grant eligibility.
 
 14. **Reference count limits.** ≤ 30 images, ≤ 10 videos, ≤ 10 audio. Recommended:
     1-8 image subjects, 1-5 video subjects (5-10s each), only directly relevant audio.
@@ -152,15 +162,19 @@ Source skill: `seedance-prompt-25`
 
 22. **Visible/audible cues.** Abstract emotions are paired with directly visible or
     audible cues (eye movement, brow tension, mouth movement, breathing, gaze, hand
-    movement). 2-4 clear cues per emotional transition.
+    movement). Select 2-4 readable cues per emotional transition, grounded in
+    the playable tactic and framing. Close-ups can use eye/mouth detail; masked
+    wide shots need posture, spacing or hand action. Blink guidance is relevant
+    only when visible and needed; do not move the camera to rescue unreadable cues.
 
 23. **No bare emotion words.** The prompt does not rely solely on emotion labels like
     "very sad" or "extremely angry" without physical externalization.
 
 ### Camera language
 
-24. **One camera movement per clip.** The prompt specifies one camera movement and
-    states which subject the camera follows, where it begins, and where it ends.
+24. **Coherent camera direction.** Use one or two clear camera movements when
+    requested, with the subject, beginning, and endpoint of each stated. Avoid
+    competing simultaneous moves; preserve a requested static camera.
 
 25. **Uncommon cinematography terms.** If used, they follow the format:
     Term + Target Subject + Visual Change + Foreground/Background Relationship +
@@ -192,7 +206,7 @@ Source skill: `seedance-prompt-25`
 
 32. **Subject & action** clearly stated.
 33. **Reference roles**: every reference states what to use and what not to use.
-34. **Subject binding**: every distinct character/product/prop named and bound to a
+34. **Subject binding**: every required canonical character/product/prop named and bound to a
     reference.
 35. **Scene selection**: references selected by scene, not forced to appear all at once.
 36. **Stage structure**: each stage has only one primary change and a clear end state.
@@ -235,8 +249,9 @@ Source skill: `seedance-prompt-25`
 
 ### Storyboard grid reference
 
-50. **Sketch board bound as @Image N with a style override.** When a storyboard
-    grid is passed as a reference, it is bound to an `@Image N` with the reading
+50. **Eligible storyboard conditioning.** Omit control sketches by default.
+    Only after explicit selection, source-hash checks, and live mode compatibility
+    may a storyboard grid be bound to an `@Image N` with the reading
     order (left-to-right, top-to-bottom) AND a positive style override — the
     prompt must state the board is used ONLY for scene order and composition and
     that the output must render in the target style, not copy the board's
@@ -299,10 +314,10 @@ whose feature is absent (no references → skip material mapping).
 
 ### Camera (only when the edit intentionally re-stages the camera)
 
-13. ≤ 2 camera moves in one take; each move numeric-anchored ("At about 0:02…")
-    plus a semantic cue; uncommon terms expanded (orbit: direction + parallax).
-    See also general Seedance 2.5 item 24 ("One camera movement per clip") —
-    two moves apply only when re-staging is intentional.
+13. One or two coherent camera moves when re-staging is intentionally requested;
+    use semantic cues and add numeric timing only for requested or critical
+    synchronization. Expand uncommon terms (orbit: direction + parallax).
+    Apply the same camera-complexity guidance as general Seedance 2.5 item 24.
 14. Camera-move items are N/A when the edit must preserve the source camera.
 
 ### Change contract
@@ -370,8 +385,8 @@ Source skill: `seedance-prompt-20`
     actions/expressions, (3) Position/spatial changes, (4) Lighting & color tone,
     (5) Audio.
 
-15. **One camera movement per shot.** Does not combine push, pull, pan, tilt in one
-    shot.
+15. **Coherent camera movement.** Use one or two clear requested movements per
+    shot, with sequence and endpoints; avoid competing simultaneous directions.
 
 16. **Complexity budget.** At most 3 major action beats or 4 tightly related shots
     for 15s generation.
@@ -561,8 +576,10 @@ Source skill: `seedance-vfx-prompt`
 27. **Face protection.** "Real human skin with pores, stubble, and catchlights — never
     waxy, smoothed, or warped."
 
-28. **4K for faces.** 4K resolution is default for any VFX shot involving faces,
-    lip-sync, or fine detail.
+28. **Supported model/mode (`model.supported_mode`).** Resolve operation and
+    model first. A 2.5 face-containing edit uses supported 480p/720p/1080p;
+    only an explicitly selected supported legacy path may use 4K. Face/detail
+    fidelity is an output-QA criterion, not a guaranteed property of resolution.
 
 ### Creature/element integration (if applicable)
 
@@ -617,89 +634,41 @@ Source skill: `seedance-prompt-25-filipino`
 Use as an additional checklist alongside Seedance 2.5 when the scene contains Tagalog,
 Filipino, or Taglish dialogue.
 
-### Vocabulary simplification
+### Words, register and scope
 
-1. **Tier 1-2 words.** Dialogue uses Tier 1 (easy: 1-3 syllables, penultimate stress,
-   common) and Tier 2 (moderate: 3-4 syllables, penultimate stress, common) words
-   predominantly.
+1. **Exact words protected.** Locked dialogue, names and approved spelling are
+   unchanged. A pronunciation request alone does not authorize simplification.
+2. **Smallest relevant repair.** Separate wording, delivery, pronunciation and
+   timing problems. Change vocabulary only when authorized and appropriate to
+   the speaker, relationship, region and period; literary language is valid.
+3. **Register grounded.** Do not impose modern Manila Taglish, contractions,
+   honorifics or a fixed sentence length on every speaker. Preserve intentional
+   code-switching and politeness.
 
-2. **Short sentences.** Sentences are 5-8 words; split if >10.
+### Pronunciation and delivery evidence
 
-3. **Contractions used.** `di`, `pwede`, `ganun`, `ayos` used where natural.
+4. **Evidence distinguished.** Identify a supplied recording, pronunciation guide
+   or competent speaker's correction. Without evidence, a predicted issue is a
+   hypothesis, not a proven mispronunciation.
+5. **No universal phonology recipe.** Do not force a default stress, flat contour,
+   consonant substitution or one regional accent across Filipino speakers.
+6. **Notes separate from speech.** Preserve exact spoken text inside braces.
+   Annotation or phonetic respelling inside dialogue requires explicit scope.
+7. **Cues serve intent.** Use concise, observable delivery rather than a dictionary
+   or a prescribed pitch sequence. Verify actual pronunciation by listening;
+   ASR text alone does not establish stress, intonation or speaker identity.
 
-4. **No literary Filipino.** Deep/literary words replaced with modern equivalents.
+### Separate audio, only when requested
 
-5. **Modern Manila Taglish.** Preferred for urban/contemporary settings.
-
-6. **Natural, not dumbed-down.** Simplification keeps it natural.
-
-### Phonetic annotation (if used)
-
-7. **Stress markers correct.** Penultimate stress = default (unwritten). Final
-   syllable stressed = **bold**. Penultimate + glottal stop = trailing `'`. Final
-   stressed + glottal stop = both.
-
-8. **Glottal stops marked.** Word-final (trailing apostrophe `gala'`), morpheme-boundary
-   (hyphen `mag-uwî`).
-
-9. **Notation format.** UPPERCASE+hyphen in standalone pronunciation blocks and Seed
-   Audio prompts (plain text). Bold+middle-dot for inline annotations in Seedance
-   prompts (markdown).
-
-### Intonation direction
-
-10. **Baseline pitch.** Very slight pitch variation; level 2 baseline, slight rise to
-    level 3 on stressed syllables, return to level 2.
-
-11. **Sentence-type contours.** Declarative (fall), yes/no question (rise), tag question
-    (rise on tag), command (level/flat, NOT falling like English), non-final phrase
-    (slight rise/suspended).
-
-12. **Plain-language arc.** Intonation arc described in plain language in the prompt.
-
-### Taglish code-switching
-
-13. **English words with Filipino phonology.** No schwa, full vowel articulation,
-    penultimate stress default, unreleased final consonants or glottal stop.
-
-14. **F/V and TH substitution.** "F"/"V" often bilabial "p"/"b". "TH" often "d"/"t".
-
-15. **Discourse markers.** `po`, `opo`, `ba`, `eh`, `na`, `na lang`, `ha?`, `naman`,
-    `kasi`, `daw`/`raw` included where natural.
-
-### Speech register
-
-16. **Register consistent.** Formal (marangal: `po`, `opo`, full words), Casual
-    (pang-araw-araw: no `po`/`opo`, contractions), or Taglish (informal: English words
-    with Filipino phonology, optional `po`). Not mixed inconsistently.
-
-17. **Register pitfalls avoided.** `opo` replaces `oo` (don't say `oo po`). `po`
-    placement after modified word. Contractions signal casualness.
-
-### Common pronunciation pitfalls
-
-18. **Mabuhay** — stress on second syllable (ma-**BU**-hay), not first.
-19. **Salamat** — stress on second syllable (sa-**LA**-mat).
-20. **Hindi** — stress on second syllable (hi-**NDI**), glottal stop on final.
-21. **Oo** — two syllables with glottal stop, stress on first syllable (**O**-'o).
-22. **Bababa** — stress on second syllable (ba-**BA**-ba).
-23. **Maynila** — stress on second syllable (Ma-**NI**-la).
-24. **Ng at word start** — single velar nasal [ŋ], not "n-g".
-25. **Ts cluster** — affricate [tʃ], like English "ch".
-
-### Audio-first pipeline (if used)
-
-26. **Vocabulary simplified first.** Before generating Seed Audio.
-27. **Dialogue language set.** "Manila Tagalog" or "Taglish" stated.
-28. **Audio verified.** Stress, glottal stops, intonation, duration, Taglish phonology
-    checked after generation.
-29. **Same dialogue in both prompts.** Seed Audio prompt and Seedance `{}` dialogue
-    match verbatim.
-30. **Timestamps aligned.** Shot timestamps in Seedance prompt match actual audio
-    timing.
-31. **Audio as reference_audio.** Passed as `@Audio N` in Seedance task.
-32. **Manifest updated.** Audio path, hash, duration, timestamp mapping recorded in
-    `shot.md`.
+8. **Native default retained.** Filipino language or an accuracy concern alone
+   does not trigger a separate Seed Audio track.
+9. **Same approved words.** When separate lip-sync audio is requested, both
+   prompts preserve exact words; simplification is not a prerequisite.
+10. **Actual evidence retained.** Audio path/hash, inspected duration and original
+    timestamp evidence remain separate from proposed prompt timing. Align only
+    the synchronization detail required by the request.
+11. **Input binding checked.** The resolved tool supports the submitted audio
+    role, and the caller records the exact ordered binding and review evidence.
 
 ---
 
@@ -896,28 +865,22 @@ Source skill: `seedream-prompt`
 
 11. **Multi-subject priority order.** Listed in order of visual priority.
 
-### Avoiding the AI look
+### Photographic treatment, when requested
 
-12. **Concrete photorealism signals.** Not just "realistic" — uses film stocks, lens
-    characteristics, camera bodies, photographic genres.
-
-13. **Lighting direction specified.** Direction, quality, color temperature, falloff,
-    environmental contamination described. No flat/shadowless lighting.
-
-14. **Skin and texture imperfections.** Visible pores, flyaway hair, slight asymmetry,
-    fabric texture included for photorealistic output.
-
-15. **Prompt order carries weight.** Subject > Setting > Style > Lighting >
-    Composition > Constraints. Most important visual directives placed high.
-
-16. **Negative constraints aggressive.** No plastic skin, no over-smoothing, no waxy
-    textures, no CG render look, no unnatural symmetry.
-
-17. **No over-description.** Observed detail over value judgment. "Windswept dark hair"
-    not "beautiful stunning gorgeous hair."
-
-18. **prompt_optimization.** Uses `standard` for photorealistic final output. `fast`
-    only for drafts.
+12. **Intent preserved.** Camera/film terminology is optional shorthand. Do not
+    require it or a cinematic treatment for every photographic image.
+13. **Lighting appropriate.** Soft, flat or shadowless light may be intentional.
+    Preserve the approved lighting unless changing it is within scope.
+14. **Identity protected.** Describe relevant existing texture; do not invent
+    freckles, age, wrinkles or material damage as a generic realism cure.
+15. **Readable hierarchy.** Lead with the requested result. Headings and ordering
+    are clarity conventions, not proven positional weighting laws.
+16. **Focused exclusions.** Use only necessary scope or demonstrated-leakage
+    exclusions; do not demand aggressive boilerplate negatives.
+17. **Diagnosis grounded.** Cite a visible symptom in a supplied output or label
+    the example hypothetical. Do not promise a prompt will produce realism.
+18. **Parameters verified.** Actual size and optimization settings belong in
+    request metadata and must be supported by the resolved live model/tool.
 
 ### Text in image
 
@@ -967,7 +930,8 @@ Source skill: `seedream-character-sheet`
 6. **Same person statement.** Explicitly states it is the same person in all panels.
 
 7. **No held props.** Nothing held, carried, aimed, or operated appears in the sheet;
-   those are authored as separate `prop_` sheets. Scene-variant wearables (e.g.
+   branded, recurring, or story-critical ones need separate `prop_` sheets,
+   while incidental objects may be text-only in scenes. Scene-variant wearables (e.g.
    sunglasses worn only in some scenes) are also excluded and made props instead.
    Only always-worn outfit elements (hat, helmet, eyewear, jewelry) may appear.
 
@@ -1002,8 +966,10 @@ Source skill: `seedream-character-sheet`
 
 ### Workflow
 
-16. **Cleanup check.** Body panels inspected for extra readable faces after generation.
-    If found, `seedream-character-sheet-cleanup` invoked.
+16. **Cleanup check.** When the requested downstream reference policy requires
+    one readable face, inspect for extra faces and return the defect to the
+    caller. Cleanup is conditional, non-destructive, and requires new selection;
+    this reviewer does not invoke an editing skill.
 
 17. **Element saved.** Saved under `elements/<character-id>/`.
 
@@ -1111,10 +1077,11 @@ Source skill: `seedream-storyboard`
    not a fixed budget. A user-specified smaller count is honored only when
    explicit, with omitted shots recorded as motion notes.
 
-3. **Monochrome sketch for Seedance handoff.** When the board will be passed to
-   Seedance as a storyboard-grid reference, it is a colorless pencil/ink sketch
-   (no color). The board locks shot order and composition; it never supplies
-   color or style.
+3. **Storyboard handoff eligibility.** Sketches guide authoring and are omitted
+   from video inputs by default. A selected production panel or intentional
+   conditioning exception needs current source hashes, explicit approval, live
+   mode compatibility, and leakage QA. A board's style is a creative choice;
+   it is not guaranteed to remain absent from the output.
 
 4. **Explicit canon.** Recurring identities, locations, props, and style are in an
    explicit canon section.
@@ -1198,20 +1165,22 @@ Source skill: `seedance-music-video`
 1. **Format declared.** Performance, narrative, conceptual, lyric, visualizer,
    or hybrid — with address mode (direct / indirect / none).
 
-2. **Genre lock is a single recipe.** Not a mixture of two genres. The prompt
-   names one genre and follows its palette, lighting, camera grammar, and motion
-   cadence consistently.
+2. **Treatment serves intent.** Preserve approved visual choices. Format and
+   style follow the desired audience effect and available track evidence; genre
+   recipes are optional examples, not compulsory locks or a ban on coherent hybrids.
 
 ### Song map
 
 3. **One event per section.** Each song section has one primary visual
    assignment and a visible end state.
 
-4. **Chorus repeats escalate.** A second chorus has rising visual energy —
-   not identical to the first.
+4. **Repeated sections have an intentional relationship.** Escalation, restraint,
+   repetition or counterpoint follows supplied audible changes or the requested
+   effect. A quiet return need not become larger or faster.
 
-5. **Bridge departs.** The bridge introduces a new angle, location, wardrobe,
-   or image not yet shown.
+5. **Structure is evidenced.** Do not invent a bridge or assume it requires a
+   new location, wardrobe or angle. Label a plan provisional when no track or
+   user section map supports exact structural claims.
 
 ### Audio contract
 
@@ -1239,22 +1208,39 @@ Source skill: `seedance-music-video`
 11. **Audio events named.** Which beats trigger cuts and camera moves —
     not just "cuts on the beat."
 
-12. **Cut density matches section energy.** Low for verses, high for chorus;
-    the prompt states the relationship.
+12. **Cuts follow intent and evidence.** Do not assume verses are quiet, choruses
+    are loud, or every edit precedes a downbeat. Preserve continuous performance
+    and unmetered pauses when requested; keep raw timing separate from simplification.
 
 ### Structure
 
 13. **Right-sized (4–30s).** One song section per pass, or an explicit
     continuous one-take. Not padded to fill 30s.
 
-14. **Style seal present.** Compact closing sentence with genre, palette,
-    motion cadence, beat contract, and tone — does not contradict the format
-    or genre.
+14. **Style remains coherent.** A closing summary is optional. Judge consistent
+    visual decisions and preservation of the brief, not a required style-seal phrase.
 
 ### Rap-specific (when applicable)
 
-15. **Rap uses timestamped timeline.** Rap and fast vocal delivery always
-    use the timestamped lyric timeline (never large `{...}` blocks).
+15. **Timing is proportional.** Use source-grounded lyric timing when coverage
+    or synchronization requires it; rap genre alone does not mandate timestamps.
+    Do not invent beat timings or claim to have listened to unavailable audio.
 
 16. **Delivery cue present.** The prompt includes a physical delivery cue
     (e.g., "jaw opening fully on vowels, lips stay in frame throughout").
+
+---
+
+## UGC hooks and scripts
+
+1. **Product truth.** Trace numerical, comparison, performance and personal-use
+   claims to supplied evidence. No invented trial duration, testimonial, saving
+   or demonstrated result. Missing facts allow a truthful demonstration angle.
+2. **Audience objection.** The hook addresses the supplied concern using a
+   supported feature or proposed demonstration, not unrelated hype.
+3. **Distinct angles.** Requested alternatives differ in persuasive mechanism
+   or objection addressed; synonym swaps alone do not make distinct concepts.
+4. **CTA fidelity.** Preserve the supplied offer and destination. Do not invent
+   a discount, guarantee, scarcity claim or purchase experience.
+5. **Mode respects scope.** Hooks/scripts can be completed without generating
+   assets. Hypothetical actors are not evidence of real customer experiences.

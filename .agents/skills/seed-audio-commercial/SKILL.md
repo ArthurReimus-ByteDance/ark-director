@@ -16,6 +16,32 @@ specializes the commercial workflow: story arc design, commercial-specific SFX
 and music patterns, multilingual safety filter guidance, cost management, and
 the production lifecycle.
 
+
+## Input and output contract
+
+Input: brand, audience, language, cast, story objective, duration and authorized generation scope.
+
+Output: a commercial soundscape prompt, prepared request, durable audio, and QA evidence.
+
+## Procedure and reference loading
+
+The lifecycle below remains the entry path. Add commercial-sound-patterns to design music/SFX and worked-examples for a relevant commercial pattern; examples do not change the requested language or approve a retry.
+
+Read only the mode-specific resources needed for the request. Reference paths
+mentioned in prose are relative to this skill directory unless a link says otherwise.
+
+- [Commercial Sound Patterns](references/commercial-sound-patterns.md) — Commercial music direction patterns; SFX patterns for food commercials; Ambience transition patterns; Story arc template (5 acts).
+- [Worked Examples](references/worked-examples.md) — Full example: Jollibee Chickenjoy (Taglish); Full example: Lola Maria's Ube Halaya (Taglish, 30s spot).
+
+## Submission boundary and failure behavior
+
+The caller owns production authorization, the exact request preflight, and the
+complete hash-bound prompt review. A leaf returns its prompt package without
+loading sibling skills. An explicitly declared orchestrator may coordinate the
+review and submission stages. Missing required inputs remain unresolved; a draft
+or technical success does not establish user approval. Preserve optional timing,
+the three-image sampling default where applicable, and the requested delta.
+
 ## What this skill produces
 
 A finished audio commercial asset, saved locally, with:
@@ -57,10 +83,11 @@ flowchart TD
   G[Brief: brand, product, tone, language] --> H[Story arc design]
   H --> P[Prompt composition: T2A full soundscape]
   P --> V[Validate: char count, safety, format]
-  V --> S[Generate via seed_audio_generate]
+  V --> PERSIST[Persist exact prompt and prepared request]
+  PERSIST --> S[Generate via seed_audio_generate]
   S --> D[Download to shot/scene folder]
   D --> Q[Verify: ffprobe + full decode]
-  Q --> M[Save prompt snapshot + manifests]
+  Q --> M[Update output metadata + manifests]
   M --> R[Present for user review]
 ```
 
@@ -156,7 +183,7 @@ Check these constraints before calling `seed_audio_generate`:
 | `text_prompt` length | 3,000 characters | Trim redundant descriptions, shorten stage directions |
 | Target duration | 120 seconds max per call | Split into multiple calls and chain via TA2A |
 | Output format | MP3 at 24000 Hz recommended | WAV at 44100 Hz can exceed the 10 MB artifact limit |
-| Non-English dialogue | Content safety filter may reject | See [Multilingual and Taglish guidance](#multilingual-and-taglish-guidance) |
+| Non-English dialogue | Content safety filter may reject | See [Multilingual and Taglish guidance](SKILL.md#multilingual-and-taglish-guidance) |
 | Reference audio | Not needed for T2A | Omit `audio_references` and all `<<TGT_SPKN>>` tags |
 
 **Format recommendation**: Always use `mp3` at `24000` Hz for commercials. A
@@ -165,7 +192,12 @@ the same clip as MP3 at 24000 Hz is ~800 KB.
 
 ### Step 5 — Generate
 
-Call `seed_audio_generate` with the composed prompt:
+Before calling the tool, write the immutable exact prompt snapshot beside the
+planned output and record its SHA-256, ordered references, parameters, model,
+operation ID, request hash, and `submission_status: prepared` in `task_ids.json`.
+Obtain a complete prompt-review result for that exact request. Persist each
+variation as its own operation before submission. Then mark the operation
+`submitting` and call `seed_audio_generate` with the composed prompt:
 
 ```python
 seed_audio_generate(
@@ -186,18 +218,20 @@ For multiple takes, use `seed_audio_generate_variations` with
 `variation_prompts` (up to 5 parallel variations). Each variation is an
 independent generation — partial failures are captured per variation.
 
-**Timeouts**: Audio generation can take 30–120+ seconds. The MCP tool may time
-out even though the provider is still processing. If a timeout occurs:
-- Do NOT retry blindly — the operation may have succeeded server-side.
-- If no `task_id` or `request_id` was returned, retry the same prompt after a
-  brief wait.
-- If a `request_id` was returned, note it and attempt to reconcile before
-  resubmitting.
+**Timeouts**: A local timeout is unavailable completion evidence. Preserve the
+prepared request and set `submission_status: submission_unknown` when acceptance
+cannot be established. Record any provider task/request ID immediately. Reconcile
+through provider status, artifact lookup, or support using the operation and
+request evidence. With a known task ID, resume polling that task. Without an ID,
+keep the operation unresolved; elapsed time does not establish non-acceptance.
+Do not resubmit automatically or switch transport to repeat the request. A new
+operation requires terminal/non-acceptance evidence or explicit user authorization
+that acknowledges the unresolved prior request and duplicate-cost risk.
 
 **Content safety rejections**: The provider runs an audio risk audit on the
 generated output. If a chunk is rejected (`decision_in_reject_list`), the
 entire generation fails with `code=55001310`. See
-[Multilingual and Taglish guidance](#multilingual-and-taglish-guidance) for
+[Multilingual and Taglish guidance](SKILL.md#multilingual-and-taglish-guidance) for
 mitigation strategies.
 
 ### Step 6 — Download and verify
@@ -211,8 +245,8 @@ After generation succeeds:
    no decode errors.
 4. **SHA-256** — compute and record the hash; verify it matches the artifact
    record.
-5. **Save the prompt snapshot** — write the exact submitted prompt to a
-   `.md` file beside the audio asset.
+5. **Verify the prepared snapshot** — retain the pre-submission prompt file and
+   confirm its SHA-256 still matches the request; add output metadata only.
 
 ### Step 7 — Save manifests
 
@@ -247,145 +281,18 @@ Set the manifest `status` to `review`. Only explicit user approval sets it to
 
 ## Multilingual and Taglish guidance
 
-Seed Audio 1.0 supports cross-lingual synthesis, but the **content safety
-filter** can reject non-English dialogue, especially in mixed-language scripts
-(Taglish, Singlish, Spanglish). This is the most common failure mode for
-dramatic commercials with cultural authenticity.
+Seed Audio supports multilingual synthesis. A moderation error is a provider
+rejection, not proof that a language, phrase, or cultural term is unsafe or that
+the classifier made a false positive. Save the provider code, request/task ID,
+reported reason, and available evidence without inventing a cause.
 
-### Mitigation strategies (in order of preference)
-
-1. **Mix languages at the sentence level, not within sentences.** Instead of
-   "Dalawang taon na ako dito at hindi pa rin feels like home," use
-   "Two years na ako dito... hindi pa rin feels like home." — the Tagalog and
-   English are separated by ellipsis or natural pauses.
-
-2. **Keep proper nouns and short cultural terms in the native language.**
-   Words like `anak`, `po`, `salamat`, `nanay`, `langhap-sarap` are usually
-   safe. Longer Tagalog sentences are higher risk.
-
-3. **Avoid pure Tagalog monologues.** If a line is entirely in Tagalog and
-   longer than 5 words, rephrase to mix in English. The filter appears to flag
-   sustained non-English chunks.
-
-4. **Iterate on rejections.** If the filter rejects a chunk, identify which
-   section likely triggered it (usually a long non-English dialogue block),
-   rephrase with more English, and retry. Each retry costs generation quota,
-   so validate carefully before resubmitting.
-
-5. **Fall back to English with accent description.** If Taglish is repeatedly
-   rejected, generate an all-English version with Filipino accent descriptions
-   in the voice profiles. This is less culturally authentic but always passes.
-
-### Known working Taglish patterns
-
-These patterns have been verified to pass the content safety filter as of
-July 2026:
-
-```text
-# Short Tagalog phrases mixed with English — PASSES
-"Two years na ako dito... hindi pa rin feels like home."
-"Miss na miss kita, Ma."
-"Anak, gising ka pa? Gabi na."
-"Opo, Ma. Nandito lang... nag-iisip."
-"Kumain ka na ba? Go get some Chickenjoy, anak. Parang nandito lang kami."
-"Welcome po! One Chickenjoy meal, sir?"
-"Oo, please. Salamat."
-"Isang kagat... and I'm back at our table. Yung ngiti ni Papa. Yung tawa ni Nanay."
-"Salamat, Ma. Okay na ako."
-"Chickenjoy. Crispy. Juicy. Langhap-sarap. Because no matter how far you go — home is just one bite away."
-```
-
-```text
-# Heavier Tagalog — REJECTED by content safety filter
-"Dalawang taon na ako dito... hindi pa rin parang tahanan."
-"Anak, gising ka pa? Gabi na, matulog ka na."
-"Pumunta ka, bumili ka ng Chickenjoy. Parang nandito lang kami kasama ka."
-"Isang kagat lang... and I'm back at our table. Yung ngiti ni Papa. Yung tawa ni Nanay. Parang kailan lang."
-```
-
-The threshold is not a character count — it appears to be a semantic
-classification on each generated audio chunk. Lighter Taglish (short phrases
-within English-dominant dialogue) passes; sustained Tagalog sentences trigger
-rejection.
-
-## Commercial music direction patterns
-
-Music is the emotional spine of a dramatic commercial. Describe it as a dynamic
-arc, not a static label.
-
-```text
-# Good — dynamic arc tied to story beats
-Background music: A melancholic solo piano, slow and measured, underscored by
-a low ambient drone. It begins softly under dialogue, shifts to warmer strings
-with acoustic guitar when the emotional turn arrives, then resolves into
-bright uplifting guitar with light percussion for the tagline.
-
-# Bad — static label
-Background music: Sad cinematic music that becomes happy.
-```
-
-Common commercial music arcs:
-
-| Story type | Opening | Turn | Resolution |
-|---|---|---|---|
-| Nostalgic / homesick | Melancholic solo piano | Warm strings + acoustic guitar | Bright guitar + light percussion |
-| Tense / suspense | Low drone + sparse percussion | Swelling strings | Triumphant brass |
-| Romantic / warm | Gentle acoustic guitar | Soft piano enters | Full warm ensemble |
-| Energetic / fun | Upbeat percussion + synth | Bass drop + rhythm intensifies | Full bright pop mix |
-| Sad / dramatic | Solo cello or violin | Music drops to silence | Single sustained note resolving |
-
-## SFX patterns for food commercials
-
-Food commercials live or die on their SFX. The product interaction sound is the
-emotional trigger — describe it with sensory, acoustic detail.
-
-```text
-# Fried chicken
-[CRUNCH — a crisp golden crackle of fried chicken skin.]
-
-# Pouring coffee
-[A rich, dark pour of coffee into a ceramic mug, with a warm gurgle and a
-distant clink of the spoon.]
-
-# Opening a soda
-[A sharp metallic "tssss!" of a soda can opening, followed by a bright
-effervescent fizz.]
-
-# Sizzling food
-[A lively sizzle on a hot plate, oil popping in sharp rapid snaps, steam
-hissing softly in the background.]
-
-# Breaking chocolate
-[A clean, dry snap of dark chocolate breaking, with a faint crumble.]
-```
-
-Position SFX relative to actions: "as he takes the first bite," "immediately
-after the pour," "under her gasp of delight."
-
-## Ambience transition patterns
-
-Commercials often move between locations. Describe the transition as an
-audible state change, not two independent palettes.
-
-```text
-# Good — transition tied to an event
-[Footsteps on wet pavement. A door opens — rain muffles. A distant storefront
-jingle plays ahead.]
-[A door chime. Warm chatter replaces rain. A busy store hum.]
-
-# Bad — two unrelated ambience descriptions
-Ambience: Rain on a window.
-Ambience: Busy store.
-```
-
-Pattern:
-
-```text
-Audio state A: [music, ambience, intensity]
-Transition trigger: [observable action — door, footsteps, phone answer]
-Transition behavior: [muffle, crossfade, cut]
-Audio state B: [new ambience, new music mood, new intensity]
-```
+Review the actual content and rights context. Correct a legitimate issue with a
+recorded change contract, or use the provider's support/appeal path when the
+reason is unclear. Preserve the user's requested language unless a translation
+is explicitly requested or agreed. Rephrasing to disguise content or bypass a
+filter is not a remediation strategy. A new authorized attempt gets a new
+operation record, reviewed prompt snapshot, and cost estimate; no wording
+promises a guaranteed pass.
 
 ## Cost management
 
@@ -408,120 +315,3 @@ Audio state B: [new ambience, new music mood, new intensity]
   audio is generated before the audit rejects it). Validate multilingual
   prompts carefully before submitting.
 - Set `DAILY_BUDGET_USD` on the MCP server to enforce a hard daily limit.
-
-## Full example: Jollibee Chickenjoy (Taglish)
-
-This is the verified, production-grade prompt that generated a 110.6-second
-dramatic commercial in T2A mode. Use it as a reference for structure, length,
-and density.
-
-```text
-Scene and atmosphere
-Environment: A cold rainy night in a small apartment in Singapore. Rain taps the window. Distant traffic hums through thin walls. The room feels lonely and still.
-
-Background music: A melancholic solo piano, slow and measured, underscored by a low ambient drone. It begins softly under dialogue, shifts to warmer strings with acoustic guitar when the emotional turn arrives, then resolves into bright uplifting guitar with light percussion for the tagline.
-
-Ambience: Foreground rain on glass, midground distant traffic, background low room tone.
-
-Characters and dialogue
-[A phone buzzes. A notification chime.]
-
-Marco (late 20s, male, Filipino English with subtle Filipino accent, warm but tired, slightly hoarse, quiet) says softly: "Two years na ako dito... hindi pa rin feels like home."
-
-[The rain intensifies. The piano holds a suspended note.]
-
-Marco says, voice cracking: "Miss na miss kita, Ma."
-
-[A phone rings — warm familiar ringtone. He answers.]
-
-Nanay (late 50s, female, warm gentle Filipino accent, nurturing, slightly raspy with age, calm motherly warmth) says through the phone with telephone compression: "Anak, gising ka pa? Gabi na."
-
-Marco, forcing cheer: "Opo, Ma. Nandito lang... nag-iisip."
-
-Nanay, knowing and tender: "Kumain ka na ba? Go get some Chickenjoy, anak. Parang nandito lang kami."
-
-[The piano shifts warmer. The drone softens.]
-
-Marco whispers, voice tightening: "Chickenjoy..."
-
-[Footsteps on wet pavement. A door opens — rain muffles. A distant storefront jingle plays ahead.]
-
-[A door chime. Warm chatter replaces rain. A busy store hum.]
-
-Crew member (young female, cheerful Filipino English, bright energetic, warm service tone) says brightly: "Welcome po! One Chickenjoy meal, sir?"
-
-Marco, steadier: "Oo, please. Salamat."
-
-[A tray set down. The crinkle of a red-and-white box opening.]
-
-[CRUNCH — a crisp golden crackle of fried chicken skin.]
-
-[The piano transforms — warm strings swell, acoustic guitar joins. The soundscape shifts to a joyful memory: a Filipino family dinner, laughter, a child's giggle, utensils clinking.]
-
-Marco (internal voice-over, soft, emotional, near whisper) says, voice full: "Isang kagat... and I'm back at our table. Yung ngiti ni Papa. Yung tawa ni Nanay."
-
-[Joyful memory — laughter, clinking glasses — fades back to store ambience.]
-
-Marco, smiling, warm and steady: "Salamat, Ma. Okay na ako."
-
-[The guitar brightens. Light rhythmic percussion enters — uplifting.]
-
-Announcer (deep, warm, confident male, professional comforting broadcaster) says with warm authority: "Chickenjoy. Crispy. Juicy. Langhap-sarap. Because no matter how far you go — home is just one bite away."
-
-[The jingle plays its final bright notes and resolves cleanly.]
-
-Ending
-The guitar and percussion hold a warm sustained chord. Store ambience fades. A final soft rain — gentler now — and silence.
-```
-
-**Result**: 110.64 seconds, MP3, 24kHz stereo, 64 kbps, 885 KB. Full decode
-check passed. SHA-256 verified.
-
-## Full example: Lola Maria's Ube Halaya (Taglish, 30s spot)
-
-A shorter, warmer commercial spot for reference on concise prompt structure.
-
-```text
-Scene and atmosphere
-Environment: A warm Filipino home kitchen in the late afternoon. An electric fan hums softly. A kawa (wide copper pan) sits on a kalan (clay stove). Distant street sounds and children playing outside. The room smells of sweet coconut and ube. Warm, golden light.
-
-Background music: A gentle acoustic guitar playing a Filipino folk melody, warm and nostalgic. It begins softly under dialogue, stays subtle, then swells gently for the brand tagline.
-
-Ambience: Foreground electric fan hum and occasional spoon scraping the kawa. Midground distant children playing. Background gentle afternoon room tone.
-
-Characters and dialogue
-[A spoon scrapes the kawa — thick, satisfying stirring of ube halaya.]
-
-Bianca (7-year-old girl, bright curious voice, Filipino child accent, energetic and innocent) says excitedly: "Lola! Ang bango naman! Ano 'yan?"
-
-Lola Maria (65-year-old grandmother, warm soft voice, provincial Filipino lola accent, gentle and loving, slightly raspy) says with a warm chuckle: "Ube halaya, anak. Luto ko ngayon para sa merienda mo. Paborito mo 'yan since bata ka pa, 'di ba?"
-
-Bianca, amazed: "Lola, bakit purple na purple siya? Parang mas creamy pa kaysa dati!"
-
-Lola Maria, proud and tender: "Kasi, anak, gawa ito sa totoong ube — walang artificial, lahat natural. 'Yan ang secret ng lola mo."
-
-Bianca, delighted: "Sarap! Lola, pwede ba akong kumuha ng isa pa? Please naman?"
-
-Lola Maria, teasing but firm: "Sige, isa pa. Pero huwag masyado, ha? Baka masiraan ka ng tiyan."
-
-[A warm brand transition chime — bright and clean.]
-
-Announcer (middle-aged female, warm professional Filipino commercial announcer, confident and comforting) says with warm authority: "Sarap ng ube, lalo na gawa sa totoong ube. Walang artificial, lahat natural — kaya pala paborito ng pamilya. Lola Maria's Ube Halaya — dahil ang paborito mo, deserves the best."
-
-[The guitar resolves on a warm sustained chord. The fan hum fades gently.]
-
-Ending
-The kitchen ambience settles into a warm silence with a final distant child's laugh.
-```
-
-**Result**: ~28 seconds, full soundscape in one pass.
-
-## Story arc template (5 acts)
-
-```
-Act 1 — Setup:        [emotional state] + [environment] + [melancholic/tense music]
-Act 2 — Conflict:     [tension/longing] + [dialogue escalation] + [music intensifies]
-Act 3 — Journey:      [character moves toward product] + [ambience transition]
-Act 4 — Turn/Reveal:   [product trigger] + [SFX: crunch/pour/sizzle] + [music transforms]
-Act 5 — Resolution:    [emotional resolution] + [announcer tagline] + [bright music]
-```

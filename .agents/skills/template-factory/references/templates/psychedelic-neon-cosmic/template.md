@@ -1,7 +1,8 @@
 # Template — Psychedelic Neon Cosmic Journey
 
-Replicates the validated reference (see `projects/template-factory`, pin
-`01.mp4`, approved take `t03`).
+Reusable style recipe derived from a prior local reference experiment.
+The local source assets and historical approval are not bundled; inspect and
+obtain selection for the current project's references before production use.
 
 ## Style
 

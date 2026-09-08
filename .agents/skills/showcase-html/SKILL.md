@@ -87,17 +87,17 @@ Full field reference: [references/schema.md](references/schema.md).
 4. **Generate and open** (review-only, no selection write-back):
 
 ```bash
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
   projects/<project> --out index.html
 open projects/<project>/index.html
 ```
 
    **To let the user lock variants from the browser**, run the server — it is the
-   single supported save path. It serves the page and persists selections back
+   browser save path, sharing its validated selection service with `--apply`. It serves the page and persists selections back
    to the manifests:
 
 ```bash
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
   projects/<project> --serve --port 8000
 ```
 
@@ -116,12 +116,27 @@ python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
    files to disk by default, so persistence is deliberately server-only rather
    than a confusing mix of downloads and pickers.
 
+The repository environment supplies `ruamel.yaml`; run `uv sync --group dev`
+   once from the workspace root before using these commands.
+
+   **Explicit CLI selection** uses the same validation and commit service:
+
+```bash
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
+  projects/<project> --apply '{"asset-id":"registered-variant.png"}'
+```
+
+   The supplied filename must be a registered variant. An explicit user choice
+   is required before an agent uses `--apply`; an automated recommendation is
+   not selection authority. `--apply` accepts `--expected-revision HASH` for a
+   previously reviewed snapshot and returns the resulting revision as JSON.
+
 5. **Verify.** Run `--check` to confirm every media `src` resolves (relative
    paths are the #1 failure), then spot-check sections, prompts, and the
    combined view in the opened page:
 
 ```bash
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py projects/<project> --check
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py projects/<project> --check
 ```
 
 ### Quick mode (ad-hoc review from file paths — no showcase.json needed)
@@ -133,19 +148,19 @@ setup — no `showcase.json` required.
 
 ```bash
 # Compare two video takes (auto-groups by folder, auto-populates ffprobe metadata):
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
   --quick scenes/scene-01/s01_sh010/s01_sh010_t01_v01.mp4 \
          scenes/scene-01/s01_sh010/s01_sh010_t02_v01.mp4 \
   --contact-sheets
 
 # Compare images:
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
   --quick elements/lucky-lion/char_lucky-lion_turnaround_v01.png \
          elements/lucky-lion/char_lucky-lion_turnaround_v02.png \
          elements/lucky-lion/char_lucky-lion_turnaround_v03.png
 
 # Mix of videos, images, and audio:
-python3 .agents/skills/showcase-html/scripts/generate_showcase.py \
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
   --quick scenes/scene-01/s01_sh010/s01_sh010_t01_v01.mp4 \
          elements/neon-reels/screen_slot-grid_v01.png \
          library/sfx_sonic-logo_v01.wav
@@ -251,6 +266,39 @@ filter graph and the PIL label fallback when `drawtext` is unavailable.
    `filename` matches the media `src` basename. ffprobe chips are
    auto-populated (run `--contact-sheets` to also generate contact sheets).
 9. Takes section: `promptFile` paths resolve on disk (checked by `--check`).
+
+## Selection consistency and recovery
+
+**Browser and CLI saves validate the entire batch before writing.** Unknown
+IDs, unsupported selection fields, unregistered variants, missing files,
+absolute/traversal paths, and symlink escapes fail without updating manifests.
+The generated browser registry includes both grid variants and video takes.
+
+YAML edits preserve unrelated fields, comments, quoted scalars, block scalars,
+and the Markdown body. Duplicate keys, non-mapping frontmatter, and YAML
+anchors/aliases are rejected with an actionable error before any write.
+Expand aliases explicitly before selecting; the tool never rewrites them for you.
+
+A project writer lock serializes cooperating writers. Browser saves include a
+revision of the manifests and registry; stale saves fail with HTTP 409 and
+require reload. Changing `showcase.json` while serving requires restarting the
+server. Each file is replaced atomically. A batch uses `.selection-journal.json`
+to recover an interrupted commit; per-file replacement alone is not a batch
+transaction. Recovery completes the recorded selection, derived
+`selection.json`, and one audit event. If any affected file has a later edit,
+recovery stops and preserves the journal and that edit for review. Do not delete
+a pending journal or overwrite conflicting user content.
+
+The server binds only `127.0.0.1`. Writes require the current same-origin session
+token and a bounded JSON body. Media uses streaming and single byte ranges.
+`--check` validates paths and frontmatter without writing files, even alongside
+`--contact-sheets`, and returns nonzero on invalid input. It checks references;
+it is not a full media decode or semantic quality audit.
+
+Offline checks: `.venv/bin/python -m unittest discover -s tests -p 'test_showcase*.py'`.
+The localhost tests require loopback access. The separately gated browser smoke
+uses `SHOWCASE_BROWSER_SMOKE=1`, Node with Playwright, Chrome (or
+`SHOWCASE_BROWSER_CHANNEL`), and FFmpeg to create temporary synthetic media.
 
 ## Concurrency warning
 

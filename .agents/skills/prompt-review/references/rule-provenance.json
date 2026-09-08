@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "rule_catalog": "../../../contracts/rules.json",
+  "rule_catalog_schema_version": 1,
+  "policy_owner": "../../../contracts/production-policy.md",
+  "checklist": "review-checklists.md",
+  "ownership": "Specialist grammar and applicability guidance; workspace policy remains with the rule catalog.",
+  "rule_ids": [
+    "approval.explicit_choice", "references.current_hashes",
+    "references.ordered_bindings", "references.control_only",
+    "submission.reconcile_unknown", "model.supported_mode",
+    "narrative.observable_event", "asset.visible_consistency",
+    "revision.declared_delta", "review.complete_evidence"
+  ]
+}

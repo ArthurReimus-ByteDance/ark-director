@@ -129,9 +129,9 @@ Relaxed neutral expression in all panels: mouth relaxed and closed, eyes looking
 
 **Never put held props in the character sheet.** Anything the character holds,
 carries, aims, or operates on camera (devices, weapons, tools, bags) is a
-separate canonical prop. Author a dedicated `prop_` sheet for each one and bind
-it as an `@Image N` reference downstream — do not describe or show it in the
-character sheet.
+separate from the character identity. Exclude held items from the sheet.
+Branded, recurring, or story-critical objects need a dedicated `prop_` reference
+bound downstream; incidental objects may remain text-only in a scene.
 
 **Scene-variant wearables are props, not outfit.** A wearable that is not worn
 in every scene (e.g. sunglasses the character wears in some scenes and removes

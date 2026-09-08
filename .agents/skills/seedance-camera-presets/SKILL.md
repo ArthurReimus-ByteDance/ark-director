@@ -143,7 +143,7 @@ required; everything else is optional.
 | `shot_size` | From the shot-size vocabulary | Optional; e.g. `medium close-up`. |
 | `angle` | From the angle vocabulary | Optional; e.g. `low angle`. |
 | `timestamp` | Optional `At Ns` moment for a transition or beat | Use only for critical handoffs or transitions. A time budget, not frame-accurate. |
-| `stack` | Number of simultaneous moves in one clip | **At most 2 per clip.** One move plus one secondary move (e.g. `dolly in` + `tilt up`) is the comfortable default; more than 2 risks instability. |
+| `stack` | Number of simultaneous moves in one clip | **At most 2 per clip.** Default to one move. Add one secondary move (e.g. `dolly in` + `tilt up`) only when the shot requires it and the motions remain compatible; more than 2 risks instability. |
 | `speed` | Pace of the move | Optional; use directional words (`slow`, `fast`, `rapid`, `leisurely`) rather than numeric fps. |
 
 ## Output grammar

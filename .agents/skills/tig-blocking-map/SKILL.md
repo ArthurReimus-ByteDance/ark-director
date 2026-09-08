@@ -1,11 +1,11 @@
 ---
 name: tig-blocking-map
-description: Tigran's project-agnostic method for giving Seedance / Higgsfield character DISPOSITION via a color-coded outline schematic — a "staging reference" (blocking map). Use WHENEVER a user attaches a frame/still and asks for a blocking map / staging reference, whenever a video prompt needs precise multi-character staging (who is where, facing which way), whenever characters jump seats or swap places between shot sizes, or on the words "blocking map," "staging reference," "diagram," "@staging_," "@map_," "position map." Figures are ALWAYS bound to letters A, B, C, D... in PROMPT TEXT ONLY — no letters are drawn on the map. The map is GEOMETRY ONLY — it must never bleed style, colors, wardrobe, or location into the shot.
+description: Tigran's project-agnostic method for giving Seedance / Higgsfield character DISPOSITION via a color-coded outline schematic — a "staging reference" (blocking map). Use WHENEVER a user attaches a frame/still and asks for a blocking map / staging reference, whenever a video prompt needs precise multi-character staging (who is where, facing which way), whenever characters jump seats or swap places between shot sizes, or when these terms clearly refer to cinematic staging. Do not trigger for generic software diagrams, architecture, charts, or maps. Figures are ALWAYS bound to letters A, B, C, D... in PROMPT TEXT ONLY — no letters are drawn on the map. The map is GEOMETRY ONLY — it must never bleed style, colors, wardrobe, or location into the shot.
 ---
 
 # TIG BLOCKING MAP v2 — staging reference as character disposition (any project)
 
-A **staging reference** is a deliberately schematic, color-coded OUTLINE drawing fed to the video model alongside the real location and character references. It tells the model WHO IS WHERE — nothing else. It is built to carry maximum geometry with minimum style mass, because style bleed from the map into the shot is the method's known enemy.
+A **staging reference** is a deliberately schematic, color-coded OUTLINE drawing used to design cinematic positions before video prompting. It tells the model WHO IS WHERE — nothing else. It is built to carry maximum geometry with minimum style mass, because style bleed from the map into the shot is the method's known enemy.
 
 ## THE THREE-LAYER ANTI-BLEED ARCHITECTURE (why v2 looks like this)
 
@@ -13,35 +13,43 @@ Bleed has three feeds; v2 closes all three:
 
 1. **IMAGE**: figures are thin muted-color OUTLINES, no fills, no color blocks. Line-work reads as "plan"; big flat color fields read as "aesthetic." The grid is faint — it is an authoring tool (see TRAJECTORIES), not a signal to the model.
 2. **TEXT**: the connector block is written in POSITIVE form. Models are weak at negation — "no flat illustration, no vector shapes, no grid" still injects the tokens *flat, vector, grid* into the video prompt and primes the very style being banned. The connector therefore never names the map's graphic style at all; it only asserts where style DOES come from (the location and character references). Graphic vocabulary exists in exactly one place: the diagram GENERATION prompt, which never touches the video context.
-3. **STRUCTURE**: the staging reference is attached LAST, after the location and character references, so the photo references dominate the style vote.
+3. **STRUCTURE**: control drawings remain authoring-only by default. Translate positions, crops, paths, facing, and trigger beats into the video prompt. Only explicitly selected conditioning in a supported live mode may attach a staging image; attach eligible identity/location references before it and verify leakage in output QA.
 
 ## THE WORKFLOW — two steps, in order
 
 **STEP 1 — the user uploads a frame → deliver the diagram prompt.**
-The source image IS attached to the diagram generation (as `image_1`) — it guarantees the exact scene match — but it must be SCOPED: the prompt opens with a guard declaring the image is a COMPOSITION-ONLY guide (framing, angle, crop, positions, poses, scale), that its photographic look must NOT be copied, that NOTHING may be added that is not in the image, and that CROPPED BODIES MUST NOT BE COMPLETED (if a figure's head is cut by the frame edge, the drawing cuts it too). The assistant still translates every character's position, pose, facing direction and anchoring geometry into explicit text — the words carry the staging, the image pins the outline. Deliver, always together:
+The source image is bound to the image-generation tool as a composition reference — verify the result against the source because conditioning does not guarantee an exact match — but it must be SCOPED: the prompt opens with a guard declaring the image is a COMPOSITION-ONLY guide (framing, angle, crop, positions, poses, scale), that its photographic look must NOT be copied, that NOTHING may be added that is not in the image, and that CROPPED BODIES MUST NOT BE COMPLETED (if a figure's head is cut by the frame edge, the drawing cuts it too). The assistant still translates every character's position, pose, facing direction and anchoring geometry into explicit text — the words carry the staging, the image pins the outline. Deliver, always together:
 1. The **diagram-generation prompt** (template below).
 2. The **`@staging_` tag to assign to the RESULT** once generated (e.g. `@staging_[PROJECT]_[scene]_[version]`), plus the **`@loc_` tag** for the source image in the format `@loc_[PROJECT]_[name]_[scene]_[version]` (e.g. `@loc_TROY_battlefield_s07_v1`) — scene and version in the tag keep multiple frames and retakes of the same location from colliding.
 3. A **one-line color key** describing what each color is in the source frame (e.g. "BLUE = the captive soldier, center-foreground").
 Do NOT move to step 2 until asked — diagram first.
 
-**STEP 2 — when asked, deliver the connector block** (template below), where the user binds each letter to THEIR character tag. Letters exist ONLY in the prompt text; the map carries only colors.
+**STEP 2 — when asked, deliver text geometry**: bind each letter to the user's
+character, then state start position, facing, crop, path, end position, and trigger
+beat in plain video direction. Omit the map attachment by default. The connector
+below is an optional conditioning format only when the user explicitly selects
+the map and the live tool/mode supports that role.
 
 ## STEP 1 TEMPLATE — the diagram prompt (use exactly, fill the brackets)
 
 ```
-@[Image 1](image_1) — use the attached image ONLY as the compositional guide: copy its exact framing, camera angle, crop, and the positions, poses and scale of every person — but do NOT copy its photographic look: no photo textures, no realistic lighting, no realistic faces, no colors from the image. Do NOT add anything that is not in the attached image. Do NOT complete cropped bodies — if a body part is cut off by the frame edge in the image, cut it off in the drawing. The OUTPUT is a flat schematic:
+@Image 1 — use the attached image ONLY as the compositional guide: copy its exact framing, camera angle, crop, and the positions, poses and scale of every person — but do NOT copy its photographic look: no photo textures, no realistic lighting, no realistic faces, no colors from the image. Do NOT add anything that is not in the attached image. Do NOT complete cropped bodies — if a body part is cut off by the frame edge in the image, cut it off in the drawing. The OUTPUT is a flat schematic:
 Flat minimalist technical LINE DRAWING, a staging plan for a film scene — an obviously schematic, non-photographic drawing on a white background with a very faint, thin, light-grey graph-paper grid. Figures are drawn as clean THIN OUTLINES in muted colors — NO fills, NO solid color blocks, NO shading, NO texture, NO realism, NO text, NO letters, NO labels anywhere.
 Front view matching the attached image's framing exactly: [N] outline figures.
 [For each figure: POSITION IN FRAME — a MUTED-COLOR outline figure, what is visible (full body / head and shoulders only / torso and arms only), pose exactly as in the image (seated / standing / head tilted back / mouth open / back to camera), facing direction, any signature prop as a simple outlined shape and exactly where it sits relative to the body.]
 [Anchoring furniture/architecture as simple thin-outline shapes and where — or "no furniture, open background."]
 [Background extras, if any, as tiny faint grey silhouettes, exact area of frame — or omit.]
-Nothing else — no ground line, no extra props, no extra figures. Simple, readable, diagrammatic — flat 2D line drawing, minimal detail, only who is where. --ar [match source frame] --style raw --stylize 30 --v 8.1 --no photorealism, photo texture, realistic lighting, realistic faces, shading, solid color fills, color blocks, text, letters, labels, typography
+Nothing else — no ground line, no extra props, no extra figures. Simple, readable, diagrammatic — flat 2D line drawing, minimal detail, only who is where.
 ```
 
 Template notes:
+- Provider-neutral serialization: bind the source to the first image slot exposed
+  by the selected live tool and use its documented reference token. For Seedream,
+  `@Image 1` names that ordered image input; set aspect/size in supported request
+  parameters. Do not pass Midjourney flags to Seedream or another provider.
 - Muted color palette for outlines: muted blue, muted orange, muted yellow, muted purple, muted red, muted green — one per figure, maximally distinct hues, identity only.
 - The frame-mismatch traps to check EVERY time before delivering: (a) bodies cropped by the frame edge must be described as cropped AND forbidden from completion; (b) head angle / gaze direction spelled out ("tilted far back, face angled up"); (c) prop height pinned relative to anatomy ("across the throat, under the chin — not the chest"); (d) anything the assistant is tempted to add that is not in the frame — don't.
-- The `@staging_` tag is NOT inside this prompt; it is assigned to the generated drawing afterward. In VIDEO prompts, reference ONLY the staging drawing (`@staging_...`) — never the source photo as a composition image.
+- The `@staging_` tag is NOT inside this prompt; it is assigned to the generated drawing afterward. In video prompts, use the text geometry by default. The source and staging drawing do not become approved video inputs automatically.
 
 ## STEP 2 TEMPLATE — the connector block (paste into the video prompt's references)
 
@@ -63,7 +71,8 @@ RENDER RULE: place the real, photoreal characters (from their own references) in
 LOCKS: All style, light, and texture come exclusively from @loc_[PROJECT]_[name]_[scene]_[version] and the character references; @staging_[PROJECT]_[scene]_[version] defines positions only. The colors on the staging reference identify WHO IS WHO on that reference only — wardrobe and grading come from the character and location references. Everyone stays in their staging-locked position until their scripted action.
 ```
 
-ATTACHMENT ORDER: location reference and character references FIRST, staging reference LAST.
+OPTIONAL CONDITIONING ORDER: approved location and character references first,
+explicitly selected staging reference last. Otherwise omit the control image.
 
 ## TAG NAMING
 
@@ -87,7 +96,7 @@ ATTACHMENT ORDER: location reference and character references FIRST, staging ref
 
 - **Style bleed (map look enters the shot)**: caused by any of the three feeds — color-block fills in the map, graphic vocabulary in the video prompt (even as negations — negation blindness), or the map attached before/instead of strong photo references. Fix at all three layers; see ANTI-BLEED ARCHITECTURE. If bleed persists in a moving-character shot, keep movement language plain and physical ("real, live-action gestures"), never "come alive"; last resort, drop the map from that shot.
 - **Color → wardrobe bleed** (blue figure → blue tunic): killed by outline-not-fill figures, muted palette, the legend routing identity to the user's character tag (whose own reference controls wardrobe), and the positive locks line routing wardrobe to the character references.
-- **Model invents what isn't in the frame** (completes a cropped body, adds a helmet to a headless torso, adds furniture): killed by the guard lines "do NOT add anything that is not in the attached image" + "do NOT complete cropped bodies," by describing crops explicitly per figure, and by putting the invented item in the `--no` list once it has appeared in a failed generation.
+- **Model invents what isn't in the frame** (completes a cropped body, adds a helmet to a headless torso, adds furniture): killed by the guard lines "do NOT add anything that is not in the attached image" + "do NOT complete cropped bodies," by describing crops explicitly per figure, and by recording the observed defect as an edit boundary using the selected provider's supported syntax.
 - **Prop at wrong height/place** (sword drifts from throat to chest): pin props to anatomy with a positive AND a contrast ("across the THROAT, under the chin — not the chest").
 - **Stale staging tags**: multiple maps per scene are fine (versioned `@staging_..._v2`, `_v3`), but reference only the active version per shot — stale tags cause ghost blocking.
 
@@ -116,3 +125,12 @@ On the VIDEO result, after using the connector:
 - **Movement maps**: dashed line for a character's cross (A→new mark) — declare start, path, end mark, and WHEN the move happens (tie to a dialogue/action beat).
 
 Compose with `seedance-prompt-25` when writing the surrounding video prompt.
+
+## Intentional conditioning representation
+
+A sketch or blockout stays `control_only: true` while it is analysis-only. To
+use intentional conditioning, first obtain explicit selection of a derived
+composition or motion reference. Record its exact selected manifest, current
+SHA-256, `reference_image` or `reference_video` role, and `control_only: false`.
+Confirm live model/mode support. Flipping the flag alone never grants approval;
+the caller applies the [production policy](../../contracts/production-policy.md).

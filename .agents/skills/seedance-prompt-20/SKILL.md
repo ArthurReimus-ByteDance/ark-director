@@ -181,7 +181,8 @@ Shot 3: [Camera movement and applicable @Video N]. [Subject @Image N] [action wi
 ```
 
 **Camera movement rules**:
-- One camera movement per shot. Do not combine push, pull, pan, and tilt in one shot.
+- Use one or two clear requested camera movements per shot; define their order
+  and endpoints instead of combining competing push, pull, pan, and tilt directions.
 - Use standard terminology: medium shot, close-up, wide shot, slow push-in, smooth lateral tracking, fixed shot, handheld, dolly, crane, low angle, high angle, POV, over-the-shoulder.
 - See the [lens language reference](https://docs.byteplus.com/en/docs/ModelArk/1631633#a395fd3b) for the full taxonomy.
 

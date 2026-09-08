@@ -40,7 +40,8 @@ then passed to Seedance as a `reference_image`, `first_frame`, or `last_frame`
 with an explicit `@Image N` binding. Seedance's job is to **animate the plate**
 — move it, scale it, reveal it, transition between plates — never to draw the
 type. This is the repo's "screens and text first" rule applied to motion
-design: Seedream locks the copy pixel-for-pixel, Seedance supplies the motion.
+design: Seedream supplies a reviewed text reference and Seedance supplies motion;
+inspect the resulting frames because image conditioning does not guarantee text fidelity.
 
 For every prompt, define:
 
@@ -368,5 +369,5 @@ Before returning the prompt (and before any generation task), verify:
    text-lock discipline.
 10. **The response contains the prompt**, not an unrelated production workflow.
 
-After writing any prompt, run the `prompt-review` gate before submission —
+The calling agent owns the `prompt-review` gate before submission —
 CRITICAL/MAJOR findings must be fixed before generation.

@@ -1,435 +1,172 @@
 ---
 name: ugc-ad-modes
 description: >
-  Write production-grade Seedance 2.5 video prompts for 9 ad modes: UGC,
-  UGC How-To, UGC Unboxing, Product Showcase, Product Review, TV Spot,
-  Wild Card, UGC Virtual Try-On, and Pro Virtual Try-On. Each mode
-  encodes its own visual texture, narrative beat structure, hook formula,
-  camera style, audio direction, and CTA pattern. Use whenever the user
-  asks to create a UGC video ad, unboxing ad, product tutorial ad,
-  product showcase, product review ad, TV commercial, virtual try-on,
-  or any branded video ad. Partners with seedance-prompt-25 (six-part
-  formula) and seed-audio-prompt (dialogue audio). Does not call the API
-  itself.
+  Write Seedance video ad prompts for nine UGC, demonstration, review, showcase,
+  broadcast, experimental, and try-on modes. Ground hooks in supplied product
+  facts, audience objections, and the requested CTA; develop distinct persuasive
+  angles with coherent visual direction. Use for branded video prompts and
+  scoped revisions. Does not generate media or invoke other skills.
 ---
 
 # UGC Ad Modes
 
-Write ready-to-use Seedance 2.5 prompts for distinct ad modes. Make the
-chosen mode govern not only the visual texture but also the narrative
-structure, hook formula, creator performance, camera discipline, audio
-direction, and CTA pattern throughout the entire prompt.
-
-## Source basis
-
-The mode taxonomy is adapted from [Higgsfield's Marketing Studio](https://higgsfield.ai/skills/ugc)
-mode system, accessed 2026-08-16. The recipes are rebuilt from
-independent research into UGC, unboxing, tutorial, product showcase,
-product review, TV spot, and virtual try-on best practices (100+ sources,
-2025-2026). The creative principles are research-backed, not copied from
-Higgsfield's implementation.
-
-## Mode bank
-
-Read `references/mode-recipes.md` after identifying the requested mode.
-Use only the matching recipe or the custom-mode template.
-
-- `ugc`
-- `ugc-how-to`
-- `ugc-unboxing`
-- `product-showcase`
-- `product-review`
-- `tv-spot`
-- `wild-card`
-- `ugc-virtual-try-on`
-- `virtual-try-on`
-
-## Core principle
-
-The mode governs the entire world. A UGC ad shot with TV-spot lighting
-and polished transitions stops reading as UGC. A product showcase with a
-talking head stops reading as a product showcase. The mode is the
-physical law of the ad, just as the medium is the physical law of an
-animation scene.
-
-**Do not burn in captions, on-screen text overlays, or lower-thirds in
-Seedance video prompts.** Seedance cannot reliably render readable text
-in generated video. Platforms (TikTok, Reels, YouTube Shorts) generate
-captions natively from the audio track. For broadcast/CTV delivery
-(TV Spot mode), closed captions are added in post-production as
-sidecar files (SRT/TTML/CEA-608/708), not embedded in the video by
-Seedance.
-
-For every prompt, define:
-
-```text
-mode                 the ad format that governs visual texture and structure
-visual texture       what the footage looks like (phone-shot, studio, broadcast)
-narrative beats      the timed structure (hook, problem, demo, payoff, CTA)
-hook formula         the opening 0-3s pattern that stops the scroll
-creator performance  how the presenter acts, speaks, and engages
-camera style         angles, movement, framing discipline
-audio direction      voice style, ambience, SFX, music approach
-CTA pattern          how the ad closes (soft, hard, visual, spoken)
-failure modes        what kills authenticity or conversion for this mode
-```
-
-## Prompting workflow
-
-### 1. Resolve the requested mode
-
-Map the user's language to the closest recipe. Keep modes materially
-separate:
-
-- phone-shot organic content reads as `ugc`;
-- broadcast-quality multi-shot reads as `tv-spot`;
-- product-as-hero with no presenter reads as `product-showcase`;
-- presenter giving an opinion reads as `product-review`;
-- trying on clothing casually reads as `ugc-virtual-try-on`;
-- trying on clothing editorially reads as `virtual-try-on`.
-
-If the user asks for a hybrid, choose one dominant visual texture and
-state how the secondary influence appears. Do not combine incompatible
-textures without explaining which mode governs each visible element.
-
-**Default when the user doesn't specify:** `ugc`.
-
-### 2. Establish the mode before the story
-
-Open with one sentence that names:
-
-- the ad mode and its visual texture;
-- the camera style;
-- the dominant authenticity or production signal;
-- the narrative beat structure.
-
-Example pattern:
-
-```text
-A casual UGC creator-style video shot on a phone in vertical 9:16, with
-handheld micro-shake, natural window lighting, a real-environment
-background, and a 5-beat structure: hook, problem, demo, payoff, soft CTA.
-```
-
-### 3. Translate the entire scene into the mode
-
-Apply the mode's visual texture to every visible category:
-
-- camera style (handheld phone vs tripod vs gimbal vs studio rig);
-- lighting (natural window vs 3-point studio vs broadcast-grade);
-- framing (medium-close selfie vs full-body vs product-hero macro);
-- background (real environment vs minimalist sweep vs styled set);
-- editing (jump cuts vs clean transitions vs dynamic multi-shot cutting);
-- imperfections (refocus hunting, slight overexposure, verbal fillers
-  for UGC; controlled precision for polished modes).
-
-### 4. Structure the narrative beats
-
-Every mode has a beat structure with timestamps. Use numbered shots or
-stages, each with one primary event and a visible end state.
-
-The universal 5-beat spine (applies to most UGC and review modes):
-
-```text
-Beat 1 — Hook (0-2s):     Pattern-interrupt + pre-qualify the viewer
-Beat 2 — Problem (2-7s):  Name the pain in the viewer's language
-Beat 3 — Demo (7-22s):    Show the product working — proof, not claim
-Beat 4 — Payoff (22-27s): Specific, measurable outcome
-Beat 5 — CTA (27-30s):    One clear action, spoken and on-screen
-```
-
-**Only the demo beat scales with duration.** For 15s, compress demo to
-8s and combine payoff + CTA into 3-4s. Do not add a second hook, second
-problem, or extra CTAs.
-
-Not all modes use the 5-beat spine. Product Showcase uses 1-2-1 or
-4-beat. TV Spot uses 0-5-22-30. The recipe defines the structure; the
-skill enforces it.
-
-Treat time ranges as a readable pacing plan:
-
-- hook or reaction: roughly 2-3 seconds;
-- simple action or beat: roughly 3-5 seconds;
-- complex action, demonstration, or multi-step: roughly 5-10 seconds.
-
-If the requested actions do not fit, split the concept into multiple
-prompts. Do not compress many steps, locations, and reactions into an
-unreadable sequence.
-
-### 5. Write the hook
-
-The hook is the single highest-leverage element. Write 3-5 hook variants
-per concept. The first frame matters as much as the first line — brief
-the AI to open mid-action, already using the product, mid-sentence, in a
-real environment.
-
-Hook formula bank (10 patterns):
-
-1. **Contrarian claim** — "Stop buying [category] until you've seen this."
-2. **Specific number** — "I replaced 14 products with one."
-3. **Cost compare** — "Why I stopped paying $180 for this."
-4. **Identity call-out** — "If you're a [role] over 30, watch this."
-5. **Mistake confession** — "I wasted two years doing X the wrong way."
-6. **Problem callout** — "I stopped buying X because..."
-7. **Curiosity / open loop** — "I almost returned this until day four."
-8. **Visual surprise** — Show the product doing something unexpected in frame one.
-9. **Social proof** — "I didn't believe the reviews until..."
-10. **Native mimicry** — Open like an organic post (GRWM, haul, reaction).
-
-Pattern-interrupt and curiosity-gap hooks have the highest 3-second hold
-rate. Social-proof opens have the highest CTR-to-click conversion among
-viewers who hold.
-
-### 6. Direct the creator performance
-
-The presenter's behavior must match the mode:
-
-- **UGC modes**: conversational, like a friend recommending. Contractions,
-  filler words ("um", "like"), casual numbers ("after like two weeks").
-  Lock hook and CTA verbatim; leave the middle as beats. Mention one
-  honest drawback or learning curve.
-- **Product Review**: skeptic-to-convert structure ("I was skeptical
-  but...") outperforms straight praise. One honest con makes every pro
-  more believable.
-- **Product Showcase**: no presenter. The product speaks through motion,
-  material, and light.
-- **TV Spot**: professional delivery. Testimonial format outperforms
-  announcer-voice. The viewer is the protagonist; the brand is the guide.
-
-Avoid relying only on words such as `authentic`, `casual`, or
-`professional`. Make the mode visible through observable behavior,
-timing, and framing.
-
-### 7. Specify camera style per mode
-
-Each mode has a camera discipline. Encode the camera style explicitly:
-
-| Mode | Camera style | Key discipline |
-|---|---|---|
-| UGC family | Handheld phone, 9:16, eye-level, slight micro-shake | Lock exposure and focus; no digital zoom; rear camera |
-| UGC Unboxing | 3 angles: overhead, 45-degree, close-up macro | Product visible by 0:03; reveal in layers |
-| UGC How-To | Medium shot showing hand + product in real context | Cut every 2-4s; product fills 50%+ of frame |
-| Product Showcase | Tripod or gimbal, 16:9 or 1:1, low-angle hero | One camera move per beat; cap rotation 10-15°; protect text/logos |
-| Product Review | Handheld phone or casual tripod, 9:16 | Show product in use, not on shelf |
-| TV Spot | Professional cinematography, 16:9, multi-shot | 4-8 scenes for 30s; title-safe framing |
-| UGC Virtual Try-On | Phone, waist-level, 9:16, 2-2.5m distance | Full-body multi-angle; always include movement |
-| Pro Virtual Try-On | Tripod or gimbal, 85-135mm equivalent | 3-point studio lighting; editorial framing |
-| Wild Card | User-defined | State the camera discipline explicitly |
-
-Compose with `seedance-camera-presets` when the user names a specific camera
-move ("dolly in", "bullet-time orbit"). For ordinary ad mode prompts
-without such direction, this skill's camera table is sufficient.
-
-### 8. Direct audio
-
-Audio direction depends on the mode and whether the user requests
-lip-synced dialogue:
-
-- **UGC modes**: natural voice with room echo, ambient background noise
-  mixed in, no background music during speech. Do not burn in captions or
-  on-screen text overlays — Seedance cannot reliably render readable text.
-  Platforms (TikTok, Reels, YouTube Shorts) generate captions natively;
-  rely on the platform's caption system instead of embedding text in the
-  video itself.
-- **Product Showcase**: typically no voiceover. Product speaks through
-  motion and material. When audio is requested, use Seed Audio for
-  sensory SFX (pour, click, sparkle) + subtle music bed.
-- **TV Spot**: professional voiceover or testimonial-style delivery.
-  Licensed music bed. Sound design with SFX. Broadcast loudness spec
-  (-24 LKFS for TV, -14 LUFS for streaming).
-- **Product Review**: voice is mandatory — silent videos engage at 0.90x
-  vs 1.09x with voice. Voice won in every category tested.
-
-When the user requests lip-synced dialogue audio, compose the audio-first
-pipeline: generate Seed Audio dialogue first (optionally compose with
-`seed-audio-prompt` for the prompt structure), then pass it as
-`reference_audio` to Seedance. See [Audio-video alignment](#audio-video-alignment-dialogue-scenes)
-below.
-
-### 9. Close with the CTA
-
-Each mode has a CTA pattern:
-
-- **UGC family**: soft CTA — permission, not pressure. One action, one
-  destination. Never bolt on a second CTA.
-- **Product Review**: single action, single destination. Soft not pushy.
-- **Product Showcase**: no spoken CTA. End on the product, not the logo.
-- **TV Spot**: brand lock-in in final 3-5 seconds. Spoken + on-screen.
-- **UGC How-To**: harder CTA — viewers have been educated. Include
-  brand name.
-
-### 10. End with a mode seal
-
-Close with one compact sentence that reinforces:
-
-- the ad mode;
-- the visual texture;
-- the camera style;
-- the audio direction;
-- relevant exclusions (positive phrasing only).
-
-Do not repeat the entire prompt. The seal exists to prevent the mode
-from drifting during later shots.
-
-## Hook variant generation
-
-By default, when the user asks for a UGC ad mode prompt, generate
-**3-5 hook variants** for the first 0-3 seconds. This is the single
-highest-leverage element. Present each variant as labeled alternatives
-within the Shot 1 section:
-
-```text
-Shot 1 — Hook (0-2s) [Variant A]: <contrarian claim hook>
-Shot 1 — Hook (0-2s) [Variant B]: <specific number hook>
-Shot 1 — Hook (0-2s) [Variant C]: <curiosity gap hook>
-```
-
-Treat hooks as separate ads — test 4 hooks × 1 mode before testing 1
-hook × 4 modes. Creative fatigue is fast (5-14 days on TikTok); plan for
-15-30 distinct variations per month.
-
-## Output formats
-
-### Mode block
-
-Use when the user only wants ad-mode wording:
-
-```text
-[Ad Mode]
-<Mode-first sentence naming visual texture, camera style, and beat structure.>
-
-[Narrative Beats]
-Beat 1 (<time range>): <hook event and visible end state>.
-Beat 2 (<time range>): <problem/demo event and visible end state>.
-...
-Beat N (<time range>): <CTA event and visible end state>.
-
-[Mode Seal]
-<Compact closing mode sentence and relevant exclusions.>
-```
-
-### Full ad prompt
-
-Use when the user asks for a complete Seedance 2.5 prompt:
-
-```text
-[Ad Mode]
-<Mode-first sentence naming visual texture, camera style, and beat structure.>
-
-[Subject]
-<Presenter definition, product definition, or both. Reference @Image N / @Audio N
-as needed. Define each reference's role explicitly.>
-
-[Scene and Environment]
-<Location, lighting, background, surface, and observable tone.>
-
-[Visual Style]
-<Mode-specific visual texture: handheld vs studio, natural vs controlled
-lighting, real environment vs minimalist sweep, editing style.>
-
-[Shot Plan]
-Shot 1 (<time range>): <beat name — one event and visible end state>.
-Shot 2 (<time range>): <beat name — one event and visible end state>.
-Shot 3 (<time range>): <beat name — one event and visible end state>.
-Shot 4 (<time range>): <beat name — one event and visible end state>.
-Final Shot (<time range>): <closing event and final visible state>.
-
-Shot labels and count adapt to the mode's beat structure — see the
-recipe in references/mode-recipes.md. UGC modes use 5 beats; Product
-Showcase uses 1-2-1 or 4-beat; TV Spot uses 0-5-22-30.
-
-[Camera]
-<Camera style, angles, movement discipline, framing, safe zones.>
-
-[Audio]
-<Voice style, ambience, SFX, music approach. Dialogue in {curly braces}
-for lip-sync when audio is requested.>
-
-[Mode Seal]
-<Compact mode, texture, camera, audio, tone, and exclusions.>
-```
-
-Return the prompt directly. Do not add production workflow, tool
-selection, asset management, approval gates, or generation instructions
-unless the user explicitly asks for them.
-
-## Audio-video alignment (dialogue scenes)
-
-When the user explicitly requests lip-synced dialogue audio for any UGC
-or review mode, follow the audio-first pipeline:
-
-1. **Generate Seed Audio dialogue first** — compose the audio prompt with
-   `seed-audio-prompt`, then generate via `seed_audio_generate`.
-2. **Verify audio duration ≤ video duration.** If audio exceeds video
-   duration, trim the audio prompt (shorter ambience tails, fewer
-   pauses) and regenerate.
-3. **Pass the audio as `reference_audio`** to the Seedance 2.5 task
-   (`seedance_2_5_create_task`).
-4. **Use `{curly brace}` syntax** in the Seedance prompt for dialogue
-   lines that should be lip-synced.
-5. **Adjust shot timestamps** in the prompt to match actual audio timing
-   after generating the audio.
-
-This is opt-in. When the user does not request lip-synced audio,
-generate video directly and let Seedance's native audio handle dialogue.
-
-## Integration with existing skills
-
-Compose with `seedance-prompt-25` for the six-part formula and with the axis
-preset skills (`seed-audio-prompt`, `seedance-camera-presets`,
-`seedance-lighting-presets`, `seedance-acting-console`, `seedance-pacing-presets`)
-only when the user names a specific axis ("dolly in on her face", "golden hour
-lighting", "rage at medium intensity"). For ordinary ad mode prompts without
-such direction, this skill alone is sufficient. Do not let two skills fight:
-exactly one dominant visual texture and 1-2 camera moves per clip.
-
-## Custom-mode procedure
-
-For an unlisted mode:
-
-1. Identify the dominant visual texture (phone-shot, studio, broadcast,
-   or hybrid).
-2. Define the camera style and framing discipline.
-3. Name the narrative beat structure with timing.
-4. Choose 3-5 hook formulas that fit the mode.
-5. Define creator performance and product interaction.
-6. Specify audio direction (voice, ambience, SFX, music).
-7. Choose a CTA pattern (soft, hard, visual, spoken).
-8. Write a mode-first opening and a compact mode seal.
-9. Add only exclusions that prevent likely mode drift.
-10. Name common failure modes for the custom mode.
-
-## Exclusion rules
-
-- Use positive phrasing throughout. Instead of "no cluttered
-  background," write "clean, minimal background with product as sole
-  focal point."
-- Instead of "no logo deformation," write "preserve all printed text
-  and logo integrity: rigid, sharp, undeformed."
-- Exclude only likely contradictions: studio lighting in a UGC mode,
-  handheld shake in a product showcase, talking head in a product-as-hero
-  shot.
-- Do not use exclusions as a substitute for positive mode direction.
+Turn a persuasion brief into a coherent ad. A mode guides visual texture and
+storytelling; it does not override supported facts, user constraints, or a
+purposeful hybrid. The nine-mode vocabulary is historically adapted from the
+Higgsfield Marketing Studio taxonomy. Recipes are **optional creative heuristics**,
+not platform ranking rules, API requirements, or demonstrated conversion gains.
+No numerical performance ranking is established by this bundle.
+
+## 1. Establish the persuasion brief
+
+Read supplied references, locked copy, and instructions first. Extract:
+
+| Input | Reasoning needed |
+| --- | --- |
+| Product facts and source | Which specifications, features, prices, offers, and limitations are supplied? |
+| Supported claims | What does the evidence support, under which conditions, and what wording is locked? |
+| Audience and objection | What uncertainty prevents the next step? Label an inferred objection as a hypothesis. |
+| Demonstrable action | Which truthful feature can the camera show clearly? |
+| Experience evidence | Whose actual experience, quotation, or review can be used, and in what approved scope? |
+| CTA | What one action and destination were requested? |
+| Creative constraints | Runtime, mode, ratio, audio, product identity references, and forbidden changes |
+
+Keep an internal ledger: `claim → supplied source → supported scope → usable
+wording`. It need not appear in a prompt-only answer. Unknowns stay unknown;
+factual placeholders belong in an explicitly unfinished draft, not generated
+dialogue. Ask only when a missing fact is necessary to the requested result;
+otherwise create a useful demonstration from known facts with a clearly proposed
+CTA. Do not invent URLs, offers, codes, urgency, or stock availability.
+
+**A synthetic presenter is not evidence of product use.** Do not invent personal
+histories, purchases, timelines, savings, review counts, efficacy, drawbacks, body
+measurements, or sizing advice. An "honest con" request without evidence needs a
+focused question or an unresolved draft note, not a fabricated limitation. A
+known mechanism can support "Here is how the lid opens" without "I used this
+for two weeks." Preserve supplied verified copy and the scope of real testimony.
+
+**Generated imagery illustrates a concept; it is not independent proof of
+performance.** Do not depict unsupported before/after results as demonstrated
+product efficacy. Separate an observable feature from a claim about its effects.
+
+## 2. Select a mode and persuasive angle
+
+Read only the matching section of [mode recipes](references/mode-recipes.md), or
+the custom template when no preset fits:
+
+- `ugc`: casual presenter-led content;
+- `ugc-how-to`: intelligible steps in a real use context;
+- `ugc-unboxing`: packaging and product discovery;
+- `product-showcase`: product-as-hero without a presenter;
+- `product-review`: an evidenced assessment or neutral feature comparison;
+- `tv-spot`: polished story or demonstration for the supplied placement;
+- `wild-card`: one experimental idea with coherent texture;
+- `ugc-virtual-try-on`: casual garment demonstration;
+- `virtual-try-on`: editorial garment presentation.
+
+If unspecified, choose a provisional mode from the product, audience, and
+placement. A product-only request does not need to become presenter-led UGC.
+For hybrids, state the dominant texture and the purposeful secondary influence.
+Honor user-requested silence, framing, and visual treatment over conventions.
+
+When exploration is requested, offer three materially different angles unless
+the user requests another count. A settled single-prompt or scoped revision does
+not need extra alternatives.
+
+| Angle | Opening and payoff | Evidence boundary |
+| --- | --- | --- |
+| Demonstration | Start with a known mechanism in use; reveal what it does | Supported operation, not invented efficacy |
+| Objection handling | Name uncertainty; show the feature addressing it | Inferred objection is a hypothesis; comparisons need evidence |
+| Discovery | Reveal an overlooked supplied detail and its use case | Curiosity cannot invent an experience or result |
+| Experience | Tell an actual approved account | No invented first-person endorsement presented as real |
+| Quantified comparison | Show the supplied comparison and conditions | Number, timeframe, denominator, and source must be available |
+
+Each alternative has a different viewer question, opening image, and payoff.
+Synonyms for "You need this" are not distinct angles. Do not claim any formula
+wins hold rate or conversion without relevant campaign evidence. A proposed
+comparison test is not an observed result.
+
+## 3. Make the visual idea executable
+
+Connect the product truth to a visible event. Describe framing, light, interaction,
+and sound only as needed to make it legible. Examples: hold on the latch as the
+finger releases it; show the full hem through a turn; keep both connector and
+socket in view until the connection completes.
+
+Mode texture is a design choice: phone-shot can be stable and well exposed;
+conversational speech does not need filler words or false hesitation. Direct
+observable performance matched to framing, not the abstract word "authentic."
+A product-only spot needs no acting. A silent review can use a visible comparison
+and separately authored finishing text. Never fabricate a skeptic-to-convert
+backstory or a drawback to make praise seem more credible.
+
+Use one primary event and a visible end state per beat. A common 30-second
+starting spine is hook → problem → demonstration → supported payoff → CTA;
+it is not mandatory. Adapt or combine beats for the requested runtime. Give the
+actual action and intelligible dialogue enough time; a six-second reveal does
+not require a problem monologue. Timestamps are useful when timing matters,
+not compulsory formatting. Preserve an explicitly requested structure.
+
+Treat hooks as alternatives, not simultaneous opening instructions. Deliver one
+selected hook in a final prompt. A hook-only revision preserves approved claims,
+CTA, mode, and other shots unless an actual dependency is identified.
+
+## 4. Preserve product and copy fidelity
+
+Bind supplied reference images explicitly to product identity, packaging, garment,
+or layout as appropriate. Keep the relevant shape, color, material, and printed
+content consistent during handling. Directions alone do not guarantee fidelity;
+exact captions, typography, CTA cards, and labels may need deterministic finishing.
+
+Specify exact copy as a separate finishing layer or approved text reference.
+Do not assume the platform automatically captions the delivered video. Retain
+safe visual space according to the actual placement, rather than prescribing
+universal pixel sizes or margins. Do not invent a brand name for a missing field.
+
+## 5. Direct audio and CTA
+
+Honor silence, native dialogue, voiceover, or supplied music. Speech needs room
+in the mix; a quiet bed is optional, not universally prohibited. Requested music
+must have an appropriate usable source; do not invent licensing. Resolve actual
+broadcast/platform delivery specifications during finishing, rather than assuming
+one universal loudness target.
+
+Separate lip-sync audio is opt-in. For that handoff, specify identical dialogue
+across audio/video prompt drafts and bind supplied audio references. Actual audio
+timing must be inspected before the calling production workflow submits video.
+Shorten only editable copy; flag duration conflicts when dialogue is locked.
+This leaf writes prompts and does not invoke siblings or submit generation tools.
+Without a separate-audio request, describe native audio or silence directly.
+
+Close with the user's one intended action and actual destination. Tone can be
+soft for discovery or direct for a supported offer, but the requested CTA wins
+over mode conventions. No invented discounts, social proof, stock pressure, or
+free-shipping code. Visual CTA copy belongs to the finishing layer when exactness
+matters.
+
+## Output and composition
+
+For a full prompt, cover the needed mode/texture, subject and bindings, environment,
+visible action sequence, camera, audio, and closing state. Headings are optional.
+For a mode block, provide just the reusable mode direction requested. Return the
+prompt directly without unrelated production workflow. When facts prevent a
+finished claim, clearly label the narrow unresolved item rather than smuggling a
+placeholder into spoken lines.
+
+A calling agent may compose the six-part formula from `seedance-prompt-25` or a
+requested axis from its specialist. Those are prose composition hints, not skill
+loading requirements. Ordinary mode requests are self-contained here.
+
+Read [worked repairs](references/worked-repairs.md) when a draft invents a claim,
+alternatives share an angle, or testimony lacks evidence. Those examples are
+hypothetical editorial diagnoses, not observed campaign or generated-media results.
 
 ## Self-check
 
-Before returning the prompt, verify:
-
-1. The mode appears before the story action.
-2. Visual texture, camera style, and lighting are mode-appropriate.
-3. The narrative beat structure matches the mode's recipe.
-4. The hook formula is specific, not generic ("Check this out" is
-   invisible).
-5. Creator performance direction matches the mode (conversational for
-   UGC, no presenter for showcase, professional for TV spot).
-6. Product interaction is visible and mode-appropriate (in use, not on
-   shelf).
-7. Audio direction matches the mode and the user's audio preference.
-8. The CTA pattern matches the mode (soft for UGC, brand lock-in for TV
-   spot, no CTA for showcase).
-9. The duration is right-sized for the mode and platform.
-10. The mode seal is compact and does not contradict the mode.
-11. Text and logo protection directives are included when the product
-   has visible branding or text.
-12. The response contains the prompt, not an unrelated production
-    workflow.
+- Claims, experience, numbers, limitations, and offers stay within supplied evidence.
+- The opening promise is paid off by an intelligible, supported demonstration.
+- Alternatives differ in persuasion mechanism rather than wording alone.
+- Product references and accepted copy remain faithful; generated imagery is not proof.
+- Beat count, dialogue, framing, and audio fit the actual request and runtime.
+- CTA action and destination are accurate; exact text has a viable finishing plan.
+- A scoped revision preserves unrelated decisions; no recommendation becomes approval.

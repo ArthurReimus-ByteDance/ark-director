@@ -1,136 +1,103 @@
 ---
 name: audio-split
-description: Splits an audio file into segments for Seed Audio reference preparation. Supports explicit cut points, a max-duration mode (e.g. -m 30 to honor the 30s reference clip limit), and a target segment count. Use when the user needs to divide source audio into multiple reference clips for dubbing, break a long audio file into ≤30s segments, split at dialogue boundaries, or prepare reference audio for Seed Audio voice cloning.
+description: Splits audio at explicit boundaries, by segment count, or within a maximum encoded duration. Use for source segmentation, subtitle-aware dubbing references, and reference clip preparation; not for generation or assembly.
 ---
 
 # Audio Split
 
-Split a source audio file into segments for Seed Audio reference preparation and
-dubbing assembly. Produces segment files plus a `manifest.txt` recording each
-segment's absolute offset and duration.
+Split source audio into local clips and a manifest containing actual source offsets, source ends, encoded durations, and byte sizes. This standalone helper does not upload, generate, approve, or assemble media.
 
-## When to use
+## Choose the mode
 
-- Preparing reference audio clips for Seed Audio (each must be ≤30s, ≤10MB)
-- Splitting source audio at dialogue/scene boundaries for dubbing
-- Trimming a silent tail or dividing a long track into chunks
-- Verifying segment offsets for the offset-mix assembly step
+| Need | Invocation |
+| --- | --- |
+| Upload-ready reference clips | `-m 30` or `--reference` |
+| Reference clips with explicit cuts/count | Add `--reference` |
+| Generic larger clips at chosen points | Positional cuts or `-b`, without `--reference` |
+| Generic equal-count split | `-n N` |
+| Generic maximum above 30 seconds | `-m SEC` |
+| Dialogue-aware boundaries | Add `-s script.srt` |
+| Overlapping reference context | Add `--overlap SEC`; use manifest for assembly offsets |
 
-## When NOT to use
+The max-duration, count, and explicit-cut strategies are mutually exclusive. Duration and overlap must be finite decimal seconds; cuts must be strictly increasing and inside source duration. Count must be an integer from 1 to 10,000.
 
-- Reassembling generated segments (see the `audio-dubbing` skill's offset-mix stage)
-- Generating or composing Seed Audio prompts (see `seed-audio-prompt` or `audio-dubbing`)
+## Limits and encoded media
 
-## Core limits
+The existing Seed Audio reference workflow uses **at most 30 seconds and 10,000,000 bytes per encoded clip**, with up to three reference clips per request. Confirm the current provider/tool requirements before uploading.
 
-| Constraint | Value |
-|---|---|
-| Max reference clips per request | 3 |
-| Max duration per clip | 30 seconds |
-| Max size per clip | 10 MB |
+`--reference` enforces those per-clip limits in every strategy. A maximum of 30 seconds or less also enables reference-size checks, matching the established `-m 30` upload-preparation workflow. A generic explicit/count split may create longer clips; it reports reference-limit warnings without changing the requested cut.
 
-- Max 3 reference audio files per Seed Audio request.
-- Each clip must be ≤30s. For a 68s file this means **3 clips minimum** (68/30 → 3).
-- Splitting at a point like 60s yields a 60s segment that **still exceeds** the 30s
-  reference limit — use `-m 30` when preparing actual upload clips.
+Every configured duration cap is checked against **actual encoded output**, including MP3 padding. MP3 planning reserves 80ms inside that cap; WAV has no MP3 padding reserve. Overlap is part of the duration budget. Fractional sources such as 30.001, 30.5, and 60.5 seconds are split without integer rounding.
 
-## Script usage
+Each output is probed, checked for byte size, and decoded before any generated candidate is moved to its final filename. An impossible cue, overlap, byte limit, invalid source, or decode error exits nonzero and leaves existing outputs intact. Use a new output directory for a new split version: older unrelated files are retained, and only entries in the current manifest belong to the current split.
+
+## Usage
+
+Resolve `scripts/` relative to this skill's directory.
 
 ```bash
-scripts/split_segments.sh <input_audio> <output_dir> [cut_points...]
-scripts/split_segments.sh -i <input_audio> -o <output_dir> [options]
+scripts/split_segments.sh source.wav output-dir 22 38 47.5 --overlap 2
+scripts/split_segments.sh -i source.wav -o references -m 30
+scripts/split_segments.sh -i source.wav -o references --reference -n 3 --wav
 ```
 
-| Option | Description |
-|---|---|
-| `-b, --boundary SEC` | Add a cut point at `SEC` seconds (repeatable) |
-| `-s, --srt FILE` | Snap cut points to subtitle gaps so no dialogue line is cut mid-sentence |
-| `-m, --max-duration SEC` | Split so every segment is ≤ `SEC` seconds (e.g. `-m 30`) |
-| `-n, --count N` | Split into N equal segments |
-| `--overlap SEC` | Overlap each boundary by `SEC` seconds (voice-identity continuity) |
-| `--wav` | Output WAV 44.1kHz instead of MP3 320kbps |
+| Option | Meaning |
+| --- | --- |
+| `-i, --input FILE` | Source audio |
+| `-o, --outdir DIR` | Local output directory |
+| `-b, --boundary SEC` | Explicit cut; repeat in increasing order |
+| `-m, --max-duration SEC` | Maximum actual encoded duration per clip |
+| `-n, --count N` | Equal source segments before optional subtitle snapping |
+| `-s, --srt FILE` | Preserve complete subtitle cues at segment boundaries |
+| `--overlap SEC` | Desired overlap before each boundary |
+| `--reference` | Enforce the 30s and 10MB reference caps |
+| `--max-bytes N` | Additional encoded byte cap; cannot relax reference limits |
+| `--wav` | Stereo PCM WAV at 44.1kHz; default is MP3 320kbps |
 
-Positional `cut_points` are the simplest form: each number starts a new segment.
+Quote paths in the calling shell. Files are passed as literal process arguments and never evaluated as shell code.
 
-## SRT-aware splitting
+## Subtitle boundaries
 
-Pass the target-language `.srt` with `-s` to snap each cut point to the nearest
-subtitle boundary (start or end). A cut that would land mid-line is moved to the
-nearer cue edge, so no sentence is split across reference clips.
+For explicit/count cuts, a cut inside a subtitle moves to the nearest safe cue edge. Overlapping cues are treated together so snapping cannot cut a second overlapping speaker. Collapsed, reordered, or out-of-range cuts fail clearly.
+
+For automatic max-duration splitting, choose the latest safe cue edge that fits the budget. An overlap start inside a cue moves earlier to preserve the full cue; that extra overlap must still fit the cap. If a cue cannot fit with the requested overlap and codec padding, reduce overlap or revise the source/subtitle segmentation. Do not silently cut a line or exceed the limit.
 
 ```bash
-# 30s cut lands inside a cue (29.66-33.07s) → snapped to 29.66s
-scripts/split_segments.sh -i source.wav -o segs -s script.srt 30 58.31
+scripts/split_segments.sh -i source.wav -o references \
+  -m 30 -s script.srt --overlap 2
+python3 scripts/srt_timestamps.py table script.srt --manifest references/manifest.txt
 ```
 
-The same SRT can be used to generate per-segment **relative** timestamps ready
-for prompt authoring (timestamps are relative to each segment's start, per the
-`audio-dubbing` convention):
+Use **the generated manifest** for prompt-relative timestamps after automatic splitting or overlap. It contains the true offsets after subtitle snapping and codec-padding allowance; the original requested cuts may differ.
+
+The standalone timestamp helper also supports inspection before splitting:
 
 ```bash
+python3 scripts/srt_timestamps.py snap script.srt 30 58.31
 python3 scripts/srt_timestamps.py table script.srt 30 58.31
 ```
 
-```
-=== Segment 1 (abs 0.00s - 29.66s) ===
-[1.2s:3.7s] Ms. Ford, alam mong peke ang kasal na ito.
-[4.6s:7.7s] Gusto ni Mr. Dawson na wakasan na ang kasal na ito ngayon.
-...
-```
+The cut-only table assumes nonoverlapping segments and uses the last subtitle end for the final table boundary. Empty subtitles produce no table. Malformed timestamps and ambiguous collapsed cuts fail; they are not silently ignored.
 
-## Examples
+## Output contract
 
-Split the ABS CBN 68s source at 60s into 2 segments (seg2 = silent tail, no dialogue):
-
-```bash
-scripts/split_segments.sh original-en-audio.mp3 segs 60
-```
-
-Prepare upload-ready reference clips honoring the 30s limit:
-
-```bash
-scripts/split_segments.sh -i original-en-audio.mp3 -o segs -m 30
-```
-
-Split at natural dialogue boundaries with 2s overlap:
-
-```bash
-scripts/split_segments.sh original-en-audio.mp3 segs 22 38 47.5 --overlap 2
-```
-
-Split snapped to SRT gaps (never mid-line) and print prompt-ready relative timestamps:
-
-```bash
-scripts/split_segments.sh -i original-en-audio.mp3 -o segs -s original-tagalog-script.srt 30 58.31
-python3 scripts/srt_timestamps.py table original-tagalog-script.srt 30 58.31
-```
-
-## Output
-
-```
-segs/
+```text
+references/
   seg1.mp3
   seg2.mp3
-  manifest.txt   # per-segment offset + duration + warnings
+  manifest.txt
 ```
 
-`manifest.txt` lines:
+Each manifest media row records:
 
+```text
+seg1.mp3 offset=0s duration=29.962449s source_end=29.92s bytes=1199589
 ```
-seg1.mp3 offset=0s duration=60s
-seg2.mp3 offset=60s duration=8.07s
-```
 
-Use these offsets as the `adelay` values in the `audio-dubbing` offset-mix assembly.
+The example illustrates schema rather than guaranteed encoded values. `offset` and `source_end` describe the source timeline; `duration` and `bytes` describe the actual encoded file. Convert offsets from seconds to milliseconds for offset mixing. Keep the source file and manifest with the appropriate local project scene/shot references.
 
-## Requirements
+## Requirements and verification
 
-- ffmpeg, ffprobe, bc (checked at runtime)
-- `-s/--srt` snapping requires Python 3 (uses `scripts/srt_timestamps.py`)
-- Only splits files — it does not upload or generate. Pair with `modelark-mcp`
-  `media_upload` (upload clips) and `seed_audio_generate` (generate per clip).
+Requirements: Python 3.10+, FFmpeg, and ffprobe. No `bc` dependency is required. Helpers use owned temporary directories and explicit argument lists. Missing executables and invalid options produce actionable nonzero failures.
 
-## Related skills
-
-- `audio-dubbing` — full dubbing pipeline (reference prep is its Stage 4; use this skill's `-s` snapping and `table` helper there)
-- `seed-audio-prompt` — Seed Audio prompt composition
+Technical checks establish readable clips and configured duration/size limits. Listen at the boundaries before using them as voice references. The caller may independently compose upload/generation tools and `audio-dubbing` assembly; this skill does not load sibling skills.

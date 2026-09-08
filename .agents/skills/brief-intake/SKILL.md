@@ -1,200 +1,144 @@
 ---
 name: brief-intake
 description: >
-  Run the two-mode brief intake that proposes genre-appropriate defaults for
-  every directorial axis (structure, acting, camera, lens, lighting, grade,
-  pacing, staging, medium, audio) and confirms them with the user. Fast mode
-  (default) accepts the proposed set, surfacing only high-risk choices; full
-  Q&A mode walks every axis for confirmation. Invoke from film-production at
-  the brief/development stage, or when the user starts a new project and wants
-  recommended defaults. Never generates media.
+  Shape a creative brief around the intended audience reaction, central visual
+  idea, and practical constraints. Derive applicable directing choices with
+  reasons; offer two distinct treatments during exploration or a compact
+  proposal when direction is settled. Confirm only decisions that need a lock.
+  Use for a new project or a scoped brief revision. Never generates media.
 ---
 
 # Brief Intake
 
-Run the two-mode brief intake: analyze the brief, propose genre-appropriate
-defaults per directorial axis, and confirm them with the user before any
-generation. The intake **suggests defaults** — it does not ask the user to
-specify every knob. The user confirms or adjusts, and the confirmed set is
-persisted as locked decisions.
+Translate intent into a usable creative direction. Genre is context, not a
+lookup key that selects a look. Preserve the user's existing creative choices
+and authorization; distinguish recommendations from confirmed decisions.
 
 ## When to use
 
-- At the brief/development stage of a new project (via `film-production`).
-- When the user starts a project and wants recommended defaults.
-- When a project's brief is being revised and directorial defaults need
-  re-confirmation.
+Use during project development, when a brief needs sharpening, or when the user
+requests recommended directing choices. This leaf capability writes a brief or
+proposal; it does not invoke other skills or generate media.
 
-Do not use this skill to generate media. It is prompt-composition and
-question-asking only.
+## 1. Read intent and constraints
 
-## Two modes
+Read the supplied brief and existing confirmed decisions first. Extract:
 
-| Mode | When | Behavior |
-|---|---|---|
-| **Fast (default)** | Any new project unless the user asks for full Q&A | Propose the full default set silently; present only the high-risk choices for confirmation; accept the rest as locked |
-| **Full Q&A** | User says "full Q&A", "walk me through it", "ask me everything", or opts in | Present every axis with proposed default + rationale + confirm/adjust prompt |
+| Input | Question it answers |
+| --- | --- |
+| Audience and context | Who sees it, and where or under what viewing conditions? |
+| Intended reaction | What should the viewer feel, understand, remember, or do? |
+| Central visual idea | What specific event, contrast, image, or recurring action carries that reaction? |
+| Story/product truth | Which supplied facts, characters, relationships, and claims must remain accurate? |
+| Constraints | Runtime, format, available references, budget posture, delivery needs, forbidden changes |
+| Tone/genre references | What useful quality is being borrowed, and which convention should be avoided? |
+| Confirmed decisions | Which axes and identities are already accepted? |
 
-Full Q&A mode is opt-in — trigger only on an explicit user request. Otherwise
-fast mode.
+An absent genre is not a blocker. If intent is clear, derive a proposal from it.
+Ask a focused question only when missing information materially changes the
+result. With no usable brief, ask what is being made, for whom, and the intended
+reaction; develop reversible suggestions while runtime or format is pending.
+Label assumptions instead of inventing audience research or product facts.
 
-## Step 1 — Read the brief
+State the creative spine in one sentence: **For [audience/context], show
+[specific idea] so the viewer [intended reaction].** This is an aid to reasoning,
+not mandatory output syntax. A static asset can use a visual contrast rather
+than a narrative event; a sound-only brief can use a sonic idea.
 
-Collect or read from the existing brief / `project.md`:
+## 2. Choose the appropriate depth
 
-| Field | Example | Used for |
-|---|---|---|
-| Genre / category | noir music video, horror short, food commercial | Genre default table |
-| Audience | pop listeners, families, B2B | Tone and pacing calibration |
-| Runtime | 30s, 60–120s, full short film | Scene and pacing right-sizing |
-| Tone | tense, stylish, warm, comedic | Lighting/grade/acting defaults |
-| Story objective | emotional hook, product trigger, scare beat | Structure and acting defaults |
-| Format / ratio | 16:9, 9:16, 1:1 | Pass-through to project config |
-| Budget posture | low-cost prototype vs final render | Resolution / take count |
+- **Fast proposal (default):** give one compact treatment tied to the creative
+  spine and only the axes needed to execute it. Do not produce alternatives or
+  a questionnaire merely because a project is new.
+- **Exploration:** when the user asks for directions, alternatives, or help
+  choosing a concept, offer two materially different treatments. Distinguish
+  them by central idea, viewpoint, or emotional strategy, not a lens or palette
+  swap. Each names its idea, key visible/sonic moment, rationale, and tradeoff.
+  Do not generate either or treat a recommendation as selection.
+- **Full Q&A (opt-in):** walk applicable axes with rationale and alternatives
+  when the user requests it. Do not revisit already accepted choices unless
+  their prerequisites changed or the user wants a revision.
 
-If the genre is unclear, ask one clarifying question to classify it before
-proposing defaults. If the brief is entirely absent, ask for at minimum: genre,
-runtime, and tone.
+For example, an invitation to feel welcome might use a subjective doorway view
+with people making room, or a still overhead table accumulating personal objects.
+The alternatives change the storytelling mechanism; warmer versus cooler grading
+of the same shot does not constitute two treatments.
 
-## Step 2 — Derive genre-appropriate defaults
+## 3. Derive applicable axes from the idea
 
-Map the brief to the genre table below. For each axis, produce a default value
-**and a one-line rationale** tied to the brief's tone and genre. Unknown genres
-fall back to the neutral cinematic set.
+Every recommended choice needs a concrete visible or audible purpose and a
+tradeoff where it affects feasibility. Choose fewer coherent instructions over
+an exhaustive preset stack.
 
-### Axis table (10 axes, mapped to owning preset skills)
+| Axis | Derivation | Composition hint for a calling agent |
+| --- | --- | --- |
+| Structure | Narrative development needs an event and progression; one-off static assets do not | `tig-scene-engine` |
+| Acting | Specify an observable reaction/tactic only if a performer matters; match detail to framing | `seedance-acting-console` |
+| Camera | Choose viewpoint, framing, and necessary movement to reveal the central idea | `seedance-camera-presets` |
+| Lens | Describe perspective, separation, and context; add optical terms only when useful | `seedance-lens-presets` |
+| Lighting | Motivate a source and guide attention to the story/product truth | `seedance-lighting-presets` |
+| Grade | Support tone and reference fidelity; retain accepted palette | `color-grade-palettes` |
+| Pacing | Give the action enough time; stillness, repetition, contrast, and escalation are choices | `seedance-pacing-presets` |
+| Staging | Define geography only when action or relationships depend on it | `tig-blocking-map` |
+| Medium | Preserve requested medium; propose only when the idea benefits from that choice | `seedance-animation-styles` |
+| Audio | Honor silent/native/soundtrack requests; separate lip-sync audio remains opt-in | `seed-audio-prompt` / `seed-audio-commercial` |
 
-| # | Axis | Owning skill | Default derivation |
-|---|---|---|---|
-| 1 | Structure | `tig-scene-engine` | Present only when developing story/narrative, not one-off shots |
-| 2 | Acting | `seedance-acting-console` | Always present an acting default. With dialogue, direct it; without dialogue, the genre acting row still supplies a mood-level default (e.g. Fear/Vigilance for noir) — never "none" unless the user wants a neutral, undirected performance |
-| 3 | Camera | `seedance-camera-presets` | Genre move + default shot size/angle |
-| 4 | Lens | `seedance-lens-presets` | Focal length/aperture paired with visible result |
-| 5 | Lighting | `seedance-lighting-presets` | Motivated source, key direction, softness |
-| 6 | Grade | `color-grade-palettes` | One project-wide palette; propose genre palette |
-| 7 | Pacing | `seedance-pacing-presets` | One ramp + one pacing; propose genre rhythm |
-| 8 | Staging | `tig-blocking-map` | Present only when multi-character spatial precision matters |
-| 9 | Medium | `seedance-animation-styles` | Live-action default; present only if stylized animation |
-| 10 | Audio | `seed-audio-prompt` / `seed-audio-commercial` | Always present. Native audio default; lip-sync only if user requests |
+These hints do not require loading sibling skills. Never require acting for a
+product-only still, a camera move for an audio brief, or a speed ramp because a
+genre is energetic. Genre examples such as noir concealment or comic reaction
+holds are optional creative heuristics, not model requirements or performance
+claims. A bright noir comedy can use information withholding in cheerful light;
+it need not inherit a neon palette or fear performance.
 
-### Genre default table (v1)
+For hybrid briefs, combine compatible intent, not the first matching genre row.
+When signals truly conflict, preserve explicit choices and identify the smallest
+remaining decision. Explain what each interpretation would make the viewer feel.
 
-Unknown genres fall back to the neutral cinematic row.
+## 4. Confirm and persist the right scope
 
-| Genre | Camera | Lens | Lighting | Grade | Pacing | Acting |
-|---|---|---|---|---|---|---|
-| Noir / neon | Handheld + slow push-in, ≤2 moves | 35mm f/1.8, shallow DOF | Cool neon key screen-left, warm rim | Teal-orange or B&W | Ramp Up into beats | Fear/Vigilance I2, motive-driven |
-| Pop music video | Kinetic, tracking/handheld | Wide 24mm, high-key | Colorful high-key, motivated | Vibrant, one palette | Beat-driven, Impact on chorus | Joy/Rage I2-I3, performance-as-escape |
-| Horror | Slow push-ins, handheld | Wide 28mm, deep-ish | Low-key green/moonlight | Desaturated, muted | Slow menacing, Flash In scares | Terror I3, freeze responses |
-| Comedy | Static or light handheld | 24mm bright | Bright soft fill | Warm, natural | Snappy, Calm-to-Dynamic | Comedic timing, reactive |
-| Documentary | Observational handheld | 24mm natural | Natural available light | Natural, neutral | Natural/auto | Authentic, non-actor |
-| Luxury/commercial | Slow dolly + static | 50mm f/2, controlled | Soft key + product fill | High-contrast premium | Slow, controlled | Serenity I1-I2, poised |
-| (unknown) | Medium shot, subtle push-in | 35mm neutral | Motivated soft key | Neutral project palette | Auto/natural | Neutral |
+Present the proposed direction with reasons, then identify decisions actually
+requiring acceptance: a new concept, a changed lock, or an impactful assumption.
+Do not demand a fixed checklist of confirmations for prompt-only drafts. Silence,
+an undisplayed default, and acceptance of one axis never approve an entire set.
+An explicit acceptance of a displayed set confirms that set. Existing task
+instructions can already establish an accepted choice; do not request it again.
 
-For axes not in the table (staging, medium, structure, audio), apply the rules
-in the axis table: staging only for multi-character precision, medium only for
-stylized animation, structure only for narrative development, audio native
-unless lip-sync is requested.
-
-## Step 3 — Run the confirmation loop
-
-### Fast mode (default)
-
-Present the full proposed set silently, then surface only the **high-risk
-choices** for confirmation:
-
-1. **Audio mode** — native vs lip-synced (`reference_audio` pipeline + cost)
-2. **Acting direction** — whether dialogue/mood needs directed performance
-3. **Grade palette** — project-wide choice that all later prompts must match
-4. **Medium** — stylized animation vs live-action (changes everything downstream)
-
-Output shape — compact full-set line first, then the high-risk confirmations:
-
-```
-Proposed defaults (fast mode):
-  Camera: handheld+slow push-in · Lens: 35mm f/1.8 · Lighting: cool neon key
-  Grade: teal-orange · Pacing: ramp-up · Acting: Fear/Vigilance I2
-  Audio: native · Medium: live-action
-High-risk confirmations:
-  - Grade palette [teal-orange]: ✓ / change to ___
-  - Audio [native]: ✓ / lip-sync
-  - Acting [Fear/Vigilance I2]: ✓ / direct ___
-  - Medium [live-action]: ✓ / stylized ___
-Confirm all → locked.
-```
-
-If the user confirms all (e.g. "✓ all" or "fine"), record the entire proposed
-set as locked and stop. If they adjust any high-risk choice, update that axis
-and continue.
-
-If the genre is ambiguous, apply the hybrid-genre resolution rule (see Edge
-cases).
-
-### Full Q&A mode (opt-in)
-
-Present every axis in the axis-table order, one at a time, each with the
-proposed default, a one-line rationale, and a confirm/adjust prompt:
-
-```
-<Axis> — proposed default: <value>
-  Why: <rationale tied to the brief>
-  ✓ accept / adjust: <value>
-```
-
-Omit only axes that do not apply (per the axis-table rules): structure when
-there is no narrative development, staging when spatial precision is not
-needed, medium when live-action. Always present camera, lens, lighting, grade,
-pacing, acting, and audio.
-
-## Step 4 — Persist confirmed decisions
-
-Write the confirmed set into `project.md` frontmatter under a `locked` block:
+When project-file updates are in scope, record in `project.md`:
 
 ```yaml
+creative_intent:
+  audience: first-time visitors
+  reaction: feel welcome
+  central_idea: a crowded table makes room for one more place setting
+  source: user_confirmed
+directorial_axes:
+  camera:
+    value: static overhead framing keeps the new place setting visible
+    rationale: the change in shared space carries the welcome
+    source: proposed
+  audio_mode:
+    value: native
+    source: user_confirmed
+    approval_evidence: "User requested native table ambience."
 locked:
-  audio_mode: native            # native | lip-sync
-  grade_palette: teal-orange
-  acting_direction: directed    # directed | none (none only when the user opts into a neutral, undirected performance)
-  medium: live-action           # live-action | stylized
-  camera: handheld-slow-pushin
-  lens: 35mm-f1.8-shallow
-  lighting: cool-neon-key
-  pacing: ramp-up
-  staging: none                 # none | blocking-map
-  structure: none               # none | scene-engine
+  audio_mode: native
 ```
 
-- Record which axes were **confirmed by the user** vs **accepted by default**
-  (e.g. a `confirmed: [grade_palette, audio_mode]` list alongside `locked`).
-- For multi-scene projects, scene-level overrides may add a per-scene `locked`
-  block in `scene.md`; a later full-Q&A pass revisits only confirmed decisions.
+`proposed` means recommendation; `defaulted` means a disclosed working assumption;
+only `user_confirmed` choices enter `locked`. Preserve prior evidence for unchanged
+choices. Scene overrides carry their own value/source/evidence and do not overwrite
+project-wide locks. For a one-axis revision, change that axis and identify any
+actual downstream dependency; do not reopen the whole brief. In prompt-only or
+chat-only work, return the proposal without creating project files.
 
-## Edge cases
+## Worked repairs and checks
 
-- **Unknown genre** — fall back to the neutral cinematic set and note the
-  assumption to the user.
-- **Hybrid genre** (matches multiple rows, e.g. "noir-style pop MV") — resolve
-  by priority: the brief's explicit tone statement wins over genre conventions;
-  if no tone statement exists, the first-listed matching genre row wins. Name
-  the resolution explicitly and flag it for confirmation.
-- **Conflicting brief signals** (e.g. "noir" + "bright and cheerful") — resolve
-  toward the dominant tone, state the resolution, and flag the conflict for
-  confirmation.
-- **User wants to change one axis only** — update that axis and keep the rest
-  of the proposal locked.
-- **Multi-scene project** — propose a project-wide default set, then let the
-  user override per scene; record both levels in `locked`.
+Read [worked repairs](references/worked-repairs.md) when a proposal feels generic,
+a hybrid brief produces competing defaults, or alternatives differ only in style.
+These are hypothetical teaching cases, not measured generation outcomes.
 
-## Self-check checklist
-
-Before finalizing the intake, verify:
-
-- [ ] The brief was read and its genre/runtime/tone extracted.
-- [ ] Every applicable axis has a proposed default with a one-line rationale.
-- [ ] Fast mode presented the compact full-set line and surfaced the four
-      high-risk choices (audio, acting, grade, medium) for confirmation.
-- [ ] Full Q&A mode presented every applicable axis with a confirm/adjust
-      prompt, including acting and audio.
-- [ ] Inapplicable axes were omitted, not presented empty.
-- [ ] The confirmed set was persisted as a `locked` block in `project.md`.
-- [ ] Confirmed-vs-default acceptance was recorded.
+Before returning, check that the proposal serves the stated reaction, names a
+specific idea, respects constraints and accepted choices, and omits irrelevant
+axes. Two treatments appear only when exploration is wanted, and differ in
+mechanism. Unknowns remain labeled; recommendations remain unapproved until the
+user chooses them. Evaluate the reasoning and usefulness, not exact headings.
