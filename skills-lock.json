@@ -275,7 +275,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedance-restoration/SKILL.md",
-      "computedHash": "a3664b81fdd0b688e16403d236376fe628c213b5b19c734002df9256fff48b40"
+      "computedHash": "811eacc2a64b4638db7f6849344dbb252094c5bae5f0c755637e50c0998b2312"
     },
     "seedance-vfx-prompt": {
       "source": "local",

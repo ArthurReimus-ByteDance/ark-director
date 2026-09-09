@@ -64,11 +64,10 @@ Output: a Seedance 2.5 structured-edit prompt with the source bound as `@Video 1
    defect mix from the footage and the diagnosis.
 3. **Trim to the 30s ceiling — and center the defect.** Seedance 2.5 caps edits
    at 30s. If the source is longer, trim to ≤29s before upload; the edit
-   auto-locks duration to the input. **For a localized defect, never leave it at
-   a clip boundary.** Seedance trims ~0.3s off the clip tail on edit tasks, so a
-   defect sitting in the final second can be silently cut from the input (and
-   re-introduced by any last-frame pad you add to splice). Re-center the defect
-   with ≥1s of clean margin on both sides.
+   auto-locks duration to ~input (±0.3s). **For a localized defect, never leave
+   it at a clip boundary.** A defect sitting in the final second can be dropped
+   or altered by the duration drift (and re-introduced by any last-frame pad you
+   add to splice). Re-center the defect with ≥1s of clean margin on both sides.
 4. **Choose an escalation level** (below) based on how much cleanup is wanted and
    what the last take under-delivered on. For localized tears/bands/waves, use the
    dedicated framing in [Localized transient defects](#localized-transient-defects-scans-tears-bands-waves) rather than the grain ladder.
@@ -126,6 +125,8 @@ frame. They need different vocabulary and a different mental model:
 
 ### Template (scan-line tear / rolling band)
 
+Submit with `omni_reference_task_type="edit"`, `generate_audio: false`, `resolution` 1080p.
+
 ```text
 [Edit Goal]
 Edit @Video 1 to <rebuild/eliminate> a <thin full-width horizontal band / rolling
@@ -153,6 +154,8 @@ duplicated copy.
 ```
 
 ## Canonical prompt template (Seedance 2.5 edit)
+
+Submit with `omni_reference_task_type="edit"`, `generate_audio: false`, `resolution` 1080p.
 
 ```text
 [Edit Goal]
@@ -211,8 +214,10 @@ direction.
   direction"), and face protection ("never waxy, plastic, or warped") belong in
   every prompt that preserves people.
 - **Submission.** `omni_reference_task_type="edit"`, `resolution` 480p/720p/1080p
-  (2.5 has no 4K), `watermark: false`. Duration auto-locks to the input — do not
-  set it.
+  (2.5 has no 4K), `generate_audio: false` (since the source audio is re-muxed
+  afterward — skip the re-mux if you instead keep native audio), `watermark: false`
+  only when the tool supports the parameter. Duration auto-locks to the input —
+  do not set it.
 - **Temporal denoising with a no-ghosting guard.** Always pair the temporal
   instruction with "without introducing motion blur, ghosting, or trailing."
 
