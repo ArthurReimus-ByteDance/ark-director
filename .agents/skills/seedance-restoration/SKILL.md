@@ -34,10 +34,13 @@ general edit grammar and the full six-part formula, compose with
 
 > **Known ceiling.** Seedance re-renders the picture; aggressive cleanup trades
 > fine-detail fidelity for smoothness, and there is a real limit to how far a
-> generative model cleans before it starts re-interpreting the image. If
-> residual grain or lines remain after escalation, surface the deterministic
-> alternative (temporal denoiser + scratch-removal filters in FFmpeg) rather
-> than promising a generative fix.
+> generative model cleans before it starts re-interpreting the image. Fast,
+> thin, time-varying geometric or luminance defects (a rolling scan-line tear,
+> a wave/ripple, a bright band) are the hardest case — even with correct
+> vocabulary they can be reproduced as "content" rather than erased. If residual
+> grain or lines remain after escalation, surface the deterministic alternative
+> (temporal denoiser + scratch-removal filters in FFmpeg) rather than promising
+> a generative fix.
 
 ## Input and output contract
 
@@ -48,18 +51,37 @@ Output: a Seedance 2.5 structured-edit prompt with the source bound as `@Video 1
 
 ## Procedure
 
-1. **Inspect the source.** Probe duration, fps, resolution, and aspect. Read the
-   actual defect mix from the footage — is it grain, scratch lines, flicker, or
-   all of the above? This drives which defect to name as dominant.
-2. **Trim to the 30s ceiling.** Seedance 2.5 caps edits at 30s. If the source is
-   longer, trim to ≤29s before upload; the edit auto-locks duration to the input.
-3. **Choose an escalation level** (below) based on how much cleanup is wanted and
-   what the last take under-delivered on.
-4. **Write the prompt** using the canonical template. Make the dominant defect
+1. **Diagnose the defect first — never guess the vocabulary.** Upload the damaged
+   clip and ask `seed_understand` to characterize the artifact precisely: its
+   exact type (grain, scratch line, dust, flicker, a horizontal scan-line tear, a
+   rolling wave/ripple, a geometric warp, a luminance band), its direction of
+   travel, its timing window, and whether it displaces the image or only changes
+   brightness. Misnaming the defect is the single biggest cause of under-fixes —
+   a "vertical wave" that is actually a horizontal scan-line tear + luminance
+   band will not respond to a wave-removal prompt. Use the diagnosis to drive the
+   prompt's vocabulary word-for-word.
+2. **Inspect the source.** Probe duration, fps, resolution, and aspect. Read the
+   defect mix from the footage and the diagnosis.
+3. **Trim to the 30s ceiling — and center the defect.** Seedance 2.5 caps edits
+   at 30s. If the source is longer, trim to ≤29s before upload; the edit
+   auto-locks duration to the input. **For a localized defect, never leave it at
+   a clip boundary.** Seedance trims ~0.3s off the clip tail on edit tasks, so a
+   defect sitting in the final second can be silently cut from the input (and
+   re-introduced by any last-frame pad you add to splice). Re-center the defect
+   with ≥1s of clean margin on both sides.
+4. **Choose an escalation level** (below) based on how much cleanup is wanted and
+   what the last take under-delivered on. For localized tears/bands/waves, use the
+   dedicated framing in [Localized transient defects](#localized-transient-defects-scans-tears-bands-waves) rather than the grain ladder.
+5. **Write the prompt** using the canonical template. Make the dominant defect
    explicit and dominant; never bury it in a mixed list.
-5. **Run `prompt-review`** against the Seedance 2.5 edit checklist before
+6. **Run `prompt-review`** against the Seedance 2.5 edit checklist before
    submission.
-6. **Re-mux original audio** afterward. Seedance regenerates native audio; for
+7. **Verify the fix before splicing — do not trust the task.** Re-run
+   `seed_understand` on the Seedance output and check the same three things: the
+   defect is gone, the people/scene/camera are intact, and no new artifacts were
+   introduced. Only splice a verified-clean clip; a technical `succeeded` is not
+   proof the tear/wave/grain actually left.
+8. **Re-mux original audio** afterward. Seedance regenerates native audio; for
    "keep everything the same," mux the source audio back onto the restored video.
 
 ## Escalation ladder
@@ -70,12 +92,65 @@ emphasis, keep the preserve-locks stable.
 
 | Level | Dominant target | Key phrasing |
 |---|---|---|
-| **1 — gentle cleanup** | scratches, dust, grain as a mixed list | "Edit @Video 1 to restore and clean the archival footage: remove film scratches, dust, dirt, grain noise, flicker, and compression artifacts…" |
+| **1 — gentle cleanup** | scratches, dust, grain as a mixed list | "restore and clean the archival footage" |
 | **2 — aggressive denoise** | grain / noise | "grain removal is the dominant task — push it hard, frame by frame, until no visible noise or shimmer remains" |
-| **3 — scratch lines + grain** | black and white scratch lines **and** grain | "black lines, white lines, and scratches … are a dominant defect — eliminate every one of them, frame by frame, until no line or scratch remains" |
+| **3 — scratch lines + grain** | black/white scratch lines **and** grain | "black lines and scratches … are a dominant defect — eliminate every one of them, frame by frame, until no line or scratch remains" |
 
-The "key phrasing" in each level is the sentence to drop into `[Edit Scope]` (or
-`[Edit Goal]` for level 1), keeping the rest of the template stable.
+## Localized transient defects (scans, tears, bands, waves)
+
+A **distinct defect class** from broad grain/scratch cleanup. These are thin,
+fast, time-varying geometric or luminance artifacts — a horizontal scan-line
+tear (scan lines displaced left/right inside a narrow band), a rolling
+wave/ripple, or a washed-out bright/dark luminance band that travels across the
+frame. They need different vocabulary and a different mental model:
+
+- **Reconstruct, don't remove.** These artifacts are best framed as *missing or
+  corrupted data to rebuild from the clean scan lines above and below the band*,
+  not as "a tear to erase." "Remove the tear" tells the model the band is content
+  worth keeping; "rebuild the corrupted strip from surrounding clean context" gets
+  it to redraw the band cleanly. This is the single most effective phrasing for
+  this class.
+- **Name it precisely.** A scan-line tear is not a "wave" and not a "geometric
+  warp" — wrong vocabulary produces a partial fix. Confirm the exact type with
+  `seed_understand` first (see Procedure step 1).
+- **Do not hedge.** For these defects, "aggressively remove" + "completely
+  eliminate … through the final frame" is appropriate; the timid "keep everything
+  the same" framing lets the model reproduce the band as content.
+- **Center the defect in the clip.** These defects are often a ~1s window; put it
+  mid-clip, not at the tail (Procedure step 3).
+- **Expect the model to sometimes reproduce them.** A rolling tear is the hardest
+  restoration case. Verify with `seed_understand` before splicing; if it persists
+  after 2–3 attempts with correct vocabulary, fall back to a deterministic
+  temporal repair (motion-compensated interpolation / temporal median over the
+  affected frames), which can rebuild the band from neighboring clean scan lines.
+
+### Template (scan-line tear / rolling band)
+
+```text
+[Edit Goal]
+Edit @Video 1 to <rebuild/eliminate> a <thin full-width horizontal band / rolling
+vertical ripple> where <the scan lines are scrambled and displaced / the image is
+warped> <and the exposure is washed out and uneven>, rolling <top-to-bottom>, so
+the final picture is flat, continuous, and evenly exposed with no seam, while
+every person, object, action, composition, camera movement, and timing stays
+exactly as it is.
+
+[Edit Scope]
+A narrow <full-width horizontal band / vertical ripple> is corrupted: <describe the
+scrambling/displacement and the washout>. Treat it as missing data and reconstruct
+it from the clean <scan lines above and below / surrounding frames>, so the repair
+is invisible. <For rolling artifacts:> It rolls from the <top> edge to the <bottom>
+edge and disappears — eliminate it wherever it sits on each frame, through the
+final frame, until no seam, misalignment, or exposure mismatch remains anywhere.
+Do not change the framing or geometry of the scene. Do not perform broad
+film-grain or noise removal; retain the real surface texture of skin, fabric, and
+objects. Keep edges crisp — do not soften the image into a blurry or mushy
+picture. Do not modify any person's face, body, clothing, or gestures; do not
+modify the background objects, set, or props; do not modify the camera movement,
+framing, or cuts; do not modify the lighting direction, color grade, contrast, or
+exposure. Exactly one of each person remains in frame — never a second or
+duplicated copy.
+```
 
 ## Canonical prompt template (Seedance 2.5 edit)
 
@@ -136,23 +211,29 @@ direction.
   direction"), and face protection ("never waxy, plastic, or warped") belong in
   every prompt that preserves people.
 - **Submission.** `omni_reference_task_type="edit"`, `resolution` 480p/720p/1080p
-  (2.5 has no 4K), `watermark: false`. Duration and aspect ratio auto-lock to the
-  input for edit tasks — do not set them.
+  (2.5 has no 4K), `watermark: false`. Duration auto-locks to the input — do not
+  set it.
 - **Temporal denoising with a no-ghosting guard.** Always pair the temporal
   instruction with "without introducing motion blur, ghosting, or trailing."
 
 ## Self-check checklist
 
-1. `[Edit Goal]` is one sentence, begins "Edit @Video 1 to …", and names the
+1. The defect was **diagnosed with `seed_understand`** before writing the prompt;
+   the prompt uses the diagnosis's exact vocabulary (not a guessed name).
+2. `[Edit Goal]` is one sentence, begins "Edit @Video 1 to …", and names the
    dominant defect explicitly.
-2. `[Source Video Role]` declares `@Video 1` the sole editing master.
-3. `[Edit Scope]` names the change, pushes the dominant defect hard, and carries
+3. `[Source Video Role]` declares `@Video 1` the sole editing master.
+4. `[Edit Scope]` names the change, pushes the dominant defect hard, and carries
    the "exactly one … never a second" quantity guard.
-4. The discriminator line ("remove only the film-print … retain real surface
-   texture") is present.
-5. Temporal denoising is paired with the no-blur/ghosting/trailing guard.
-6. `[Content to Preserve]` locks identity, motion, timing, camera, and lighting.
-7. Grounding and face-protection locks are present when people are in frame.
-8. No `[Target Material Role]` section (single `@Video 1` source only).
-9. Source trimmed to ≤29s before submission; no duration embedded in the prompt.
-10. Prompt-review gate passed before submission; original audio re-muxed after.
+5. The discriminator line ("remove only the film-print … retain real surface
+   texture") is present — or, for a localized tear/band, the
+   reconstruct-from-surrounding-context framing is used instead.
+6. Temporal denoising is paired with the no-blur/ghosting/trailing guard.
+7. `[Content to Preserve]` locks identity, motion, timing, camera, and lighting.
+8. Grounding and face-protection locks are present when people are in frame.
+9. No `[Target Material Role]` section (single `@Video 1` source only).
+10. Source trimmed to ≤29s, and any localized defect is **centered** with ≥1s
+    clean margin on both sides — never at the clip boundary.
+11. The Seedance output was **verified with `seed_understand`** (defect gone,
+    content intact, no new artifacts) before splicing.
+12. Prompt-review gate passed before submission; original audio re-muxed after.
