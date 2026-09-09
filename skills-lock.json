@@ -271,6 +271,12 @@
       "skillPath": ".agents/skills/seedance-prompt-25-filipino/SKILL.md",
       "computedHash": "df0d8c34c4517c1e14e146ed74c8dcd1050e78593bcbaa62e1be8355b1d1db86"
     },
+    "seedance-restoration": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/seedance-restoration/SKILL.md",
+      "computedHash": "8ed0eaa2517923a9ade7b89d5a5e367f9b1070373635f01690b6a50dfd831cdc"
+    },
     "seedance-vfx-prompt": {
       "source": "local",
       "sourceType": "local",
