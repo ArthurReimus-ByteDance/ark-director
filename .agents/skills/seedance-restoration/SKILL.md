@@ -70,9 +70,12 @@ emphasis, keep the preserve-locks stable.
 
 | Level | Dominant target | Key phrasing |
 |---|---|---|
-| **1 — gentle cleanup** | scratches, dust, grain as a mixed list | "restore and clean the archival footage" |
+| **1 — gentle cleanup** | scratches, dust, grain as a mixed list | "Edit @Video 1 to restore and clean the archival footage: remove film scratches, dust, dirt, grain noise, flicker, and compression artifacts…" |
 | **2 — aggressive denoise** | grain / noise | "grain removal is the dominant task — push it hard, frame by frame, until no visible noise or shimmer remains" |
-| **3 — scratch lines + grain** | black/white scratch lines **and** grain | "black lines and scratches … are a dominant defect — eliminate every one of them, frame by frame, until no line or scratch remains" |
+| **3 — scratch lines + grain** | black and white scratch lines **and** grain | "black lines, white lines, and scratches … are a dominant defect — eliminate every one of them, frame by frame, until no line or scratch remains" |
+
+The "key phrasing" in each level is the sentence to drop into `[Edit Scope]` (or
+`[Edit Goal]` for level 1), keeping the rest of the template stable.
 
 ## Canonical prompt template (Seedance 2.5 edit)
 
@@ -133,8 +136,8 @@ direction.
   direction"), and face protection ("never waxy, plastic, or warped") belong in
   every prompt that preserves people.
 - **Submission.** `omni_reference_task_type="edit"`, `resolution` 480p/720p/1080p
-  (2.5 has no 4K), `watermark: false`. Duration auto-locks to the input — do not
-  set it.
+  (2.5 has no 4K), `watermark: false`. Duration and aspect ratio auto-lock to the
+  input for edit tasks — do not set them.
 - **Temporal denoising with a no-ghosting guard.** Always pair the temporal
   instruction with "without introducing motion blur, ghosting, or trailing."
 
