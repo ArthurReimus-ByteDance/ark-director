@@ -38,9 +38,12 @@ Bind the source keyframe as `@Image 1` (I2I) where the breakdown flags one.
 
 ## Storyboard
 
-- Panel count = `shots.length` (dynamic).
-- Render = monochrome sketch (pencil/ink), never full color.
-- Delivery = single-image grid; smallest grid that fits the count.
-- 3 variants (same prompt, distinct seeds), selection gate: human review by
-  default (`storyboard.review: true`). When false, recommendations stay under
-  `recommended_variant` with review status; explicit selection is still required.
+- Panel count defaults to `shots.length`; an explicit user budget wins and must
+  retain a documented mapping from every source shot to a panel or combined beat.
+- Render defaults to monochrome sketch. Honor an explicit limited-palette,
+  full-color, or standalone-production-panel request.
+- Delivery defaults to the smallest readable single-image grid. Paginate large
+  boards or use separate panels when downstream promotion needs individual images.
+- Variant count defaults to 3. Honor an explicit requested count and vary only a
+  supported seed for sampling variants. Human selection remains required even
+  when `storyboard.review` hides the review UI.

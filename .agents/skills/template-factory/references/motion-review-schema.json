@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MotionReview",
+  "type": "object",
+  "required": ["schema_version", "source_breakdown_sha256", "mode", "shots", "top_directing_prompt_text"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "source_breakdown_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "mode": { "enum": ["source", "comparison"] },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["shot_index", "start_s", "end_s", "visible_content", "motion", "confidence", "uncertain_estimates", "directing_prompt_text"],
+        "additionalProperties": false,
+        "properties": {
+          "shot_index": { "type": "integer", "minimum": 1 },
+          "start_s": { "type": "number", "minimum": 0 },
+          "end_s": { "type": "number", "exclusiveMinimum": 0 },
+          "visible_content": {
+            "type": "object",
+            "required": ["subjects", "background_elements", "effects"],
+            "additionalProperties": false,
+            "properties": {
+              "subjects": { "$ref": "#/$defs/nonEmptyStrings" },
+              "background_elements": { "$ref": "#/$defs/nonEmptyStrings" },
+              "effects": { "$ref": "#/$defs/nonEmptyStrings" }
+            }
+          },
+          "motion": { "$ref": "#/$defs/motion" },
+          "confidence": { "enum": ["low", "medium", "high"] },
+          "uncertain_estimates": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "directing_prompt_text": { "type": "string", "minLength": 1 },
+          "missing_or_wrong": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "concrete_fix_prompt_text": { "type": "string", "minLength": 1 }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "confidence": { "enum": ["low", "medium"] } }, "required": ["confidence"] },
+            "then": { "properties": { "uncertain_estimates": { "minItems": 1 } } }
+          }
+        ]
+      }
+    },
+    "top_directing_prompt_text": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "global_diffs": {
+      "type": "object",
+      "required": ["pace_cut_timing", "energy_level", "aesthetic"],
+      "additionalProperties": false,
+      "properties": {
+        "pace_cut_timing": { "type": "string", "minLength": 1 },
+        "energy_level": { "type": "string", "minLength": 1 },
+        "aesthetic": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "comparison" } }, "required": ["mode"] },
+      "then": {
+        "required": ["global_diffs"],
+        "properties": {
+          "shots": {
+            "items": { "required": ["missing_or_wrong", "concrete_fix_prompt_text"] }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonEmptyStrings": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "motion": {
+      "type": "object",
+      "required": ["camera_motion", "moving_elements", "light_motion", "strongest_cue"],
+      "additionalProperties": false,
+      "properties": {
+        "camera_motion": { "type": "string", "minLength": 1 },
+        "moving_elements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "motion", "direction", "speed", "amplitude", "easing", "loop_period"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "motion": { "type": "string", "minLength": 1 },
+              "direction": { "type": "string", "minLength": 1 },
+              "speed": { "type": "string", "minLength": 1 },
+              "amplitude": { "type": "string", "minLength": 1 },
+              "easing": { "type": "string", "minLength": 1 },
+              "loop_period": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "light_motion": { "type": "string", "minLength": 1 },
+        "strongest_cue": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

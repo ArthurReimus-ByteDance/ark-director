@@ -1,7 +1,7 @@
 ---
 name: template-factory
 description: >-
-  Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video — each generated prompt passing the mandatory prompt-review gate. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, media-review, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.
+  Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video — each generated prompt passing the mandatory prompt-review gate and every stage synchronized into the project's showcase-html production canvas. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, showcase-html, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.
 ---
 
 # Template Factory
@@ -15,11 +15,14 @@ This skill is an **explicitly-marked orchestrator** (precedent: `film-production
 It composes MCP tools + specialist skills; it never calls the Ark REST API
 directly.
 
+Follow the implementation structure in `plans/PLAN_TEMPLATE_FACTORY.md`, with
+the current workspace contracts taking precedence where the plan is stale.
+
 ## Core operating model
 
 - Act as the single manager communicating with the user.
-- Treat `project.md`, `task_ids.json`, `ref_cache.json`, and shot manifests as
-  production memory.
+- Treat `project.md`, `task_ids.json`, `ref_cache.json`, shot manifests and the
+  persistent `showcase.json`/`index.html` production canvas as production memory.
 - Never infer approval. Technical success places an output in `review`; only the
   user sets `approved`.
 - **Every prompt this factory submits — Seedream storyboard, Seedream element
@@ -28,6 +31,11 @@ directly.
   reproduce identifiable real people (de-identify in analysis).
 - Default `watermark: false` only where the selected live tool supports the
   parameter, unless the user requests otherwise.
+- Initialize the eight-stage HTML canvas at intake. After every numbered step,
+  update its stage sources/sections, regenerate `index.html`, and pass the
+  matching `--check --stage` checkpoint before advancing.
+- Resolve live model and operation capabilities before authoring request-bound
+  parameters or reference roles. Defaults remain proposals until accepted.
 
 ## Pipeline (one stage at a time)
 
@@ -43,30 +51,50 @@ pin_uploaded → breakdown_draft → breakdown_approved → motion_reviewed
    only if content changed or the recorded remote object is missing.
 2. **Analysis** — `seed_understand` with the template's analysis prompt
    (`references/analysis-prompt.md`) → validate `VideoBreakdown` against
-   `references/breakdown-schema.json` → write `analysis.json` + `breakdown.md`.
-   Gate A: user reviews the breakdown.
+   `references/breakdown-schema.json` and run
+   `scripts/validate_breakdown.py` → write `analysis.json` + `breakdown.md`.
+   Freeze the reviewed source as `analysis.vNN.json`; record its SHA-256 and
+   approval scope. Gate A: user reviews the breakdown.
 3. **Keyframes** — `ffmpeg` extracts a frame per shot (mid-shot, or the flagged
    element keyframe) into `keyframes/`.
 4. **Deep motion review** — second `seed_understand` pass (`thinking=true`) per
-   `references/motion-review-prompt.md` → merge `shots[].motion` into
-   `analysis.json`. This is the primary fix for "ours looks static".
+   `references/motion-review-prompt.md` → validate against
+   `references/motion-review-schema.json` → merge by `shot_index`, never array
+   position, into a new analysis revision while retaining the immutable source
+   revision. Motion evidence may enrich the approved breakdown without changing
+   timing or action. If it changes an approved decision, invalidate affected
+   downstream review and obtain review for the new revision. This is the primary
+   fix for "ours looks static".
 5. **Elements** — identify required canonical inputs from the draft breakdown.
    Use the workspace prop threshold: branded, recurring, story-critical, or
    scene-variant wearables need a separate prop reference; incidental objects
-   may be described in text. Generate required sheets in 3 variants after
-   prompt review; persist `selected_variant` only after explicit user choice.
+   may be described in text. Generate the user-requested number of variants, or
+   3 by default, after prompt review; persist `selected_variant` only after
+   explicit user choice.
 6. **Storyboard** — after relevant Elements are approved, write a dynamic
-   production board via `seedream-storyboard`, one panel per shot. Review the
-   prompt and generate 3 variants with distinct seeds. A monochrome analysis
-   sketch is control-only: translate its blocking into text and omit it from
-   video inputs by default. A production panel can be promoted only after
-   explicit selection, source-hash validation, and a supported image mode.
+   production board via `seedream-storyboard`, one panel per shot unless the
+   user sets a panel budget. Review the prompt and generate the requested count,
+   or 3 variants by default, using distinct seeds only when supported. Paginate
+   large boards into readable grids while preserving one ordered panel plan. A
+   monochrome analysis sketch is control-only: translate its blocking into text
+   and omit it from video inputs by default. A production panel can be promoted
+   only after explicit selection, source-hash validation, and a supported image
+   mode.
 
-7. **Video** — compose the Seedance 2.5 six-part prompt from breakdown + board +
-   motion review + element sheets (via `seedance-prompt-25`), run
-   `prompt-review`, submit via `seedance_2_5_create_task`, persist the task id,
-   poll, download, QA (`ffprobe` + decode + contact sheet).
-8. **Review** — set `review`; user approves.
+7. **Video** — use current capability evidence to choose one supported clip or
+   multiple natural-duration shots plus assembly. Compose the Seedance 2.5
+   six-part prompt from breakdown + eligible board directions + motion review +
+   element sheets (via `seedance-prompt-25`), run `prompt-review`, persist the
+   prepared request, then submit via the supported durable transport. Prefer
+   `seedance_2_5_create_task`; use an equivalent Ark CLI route only before any
+   ambiguous submission and only when it satisfies the same contract. Persist
+   the task id, poll, download, and run technical and playback QA.
+8. **Review** — compare the reference and take in playback for shot timing,
+   motion direction and intensity, action progression, camera movement,
+   transitions, opening/ending state, and requested audio arc. Add every take,
+   exact prompt, ordered references and QA evidence to the `shot-generation`
+   canvas section; regenerate/open the page, pass its stage freshness check, set
+   `review`, and let the user approve there.
 
 ## Route specialist work
 
@@ -79,15 +107,47 @@ pin_uploaded → breakdown_draft → breakdown_approved → motion_reviewed
 | Element sheets | `seedream-character-sheet`, `seedream-location-asset`, `seedream-prompt` |
 | Seedance 2.5 video prompt | `seedance-prompt-25` |
 | Prompt quality gate (mandatory) | `prompt-review` |
-| Visual review of outputs | `media-review` |
+| Persistent stage canvas and visual review | `showcase-html` |
+
+## Canvas stage mapping
+
+| Factory work | Canvas stage | Exit evidence |
+| --- | --- | --- |
+| Pin intake and template intent | `brief-development` | source hash, constraints, recipe target |
+| Analysis, keyframes, motion review | `scene-breakdown` | valid breakdown, motion review, approved revision |
+| Element generation and selection | `canon-elements` | variants, hashes, explicit selections |
+| Storyboard generation and selection | `storyboard-visual-plan` | ordered panels, prompts, eligibility state |
+| Audio decision | `audio-preparation` | requested assets and timing, or `skipped` with reason |
+| Video generation and take review | `shot-generation` | prepared requests, task provenance, takes, QA |
+| Multi-shot edit and final review | `assembly-review` | approved inputs and inspected assembly, or `skipped` for one clip |
+| Final output | `delivery` | master/proxy hashes and approval, or `skipped` when outside scope |
+
+Analysis, keyframes, and motion review update the same `scene-breakdown` stage;
+run its freshness check after each material update. Mark optional stages
+`skipped` explicitly before advancing so no earlier stage remains pending.
+
+## Capability and request preflight
+
+Before freezing a generation request, resolve the current model binding,
+operation, duration range, resolution, reference count and roles, supported
+image mode, seed support, audio support, and optional flags. Record the evidence
+source and verification time. Then freeze the prompt and ordered references and
+run the workspace request validator. If the requested duration exceeds one
+supported clip, split on shot boundaries, generate natural-duration clips, and
+assemble approved takes; do not compress the whole template into an unsupported
+duration.
 
 ## Storyboard rules
 
-- **Dynamic panel count** — one panel per identified scene/shot; never a fixed
-  budget. Grid = smallest grid that fits (1×3, 2×2, 2×3, 3×3, …).
-- **Monochrome sketch only** — colorless pencil/ink; the board is a
-  composition/order anchor, never a color source.
-- **3 variants** — identical prompt + references + params, distinct seeds.
+- **Dynamic panel count by default** — one panel per identified shot. Honor an
+  explicit user panel budget and preserve all shot-to-panel coverage decisions.
+  Use the smallest readable grid and paginate large boards.
+- **Sketch by default** — use colorless pencil/ink as a composition/order anchor.
+  Honor an explicit request for a limited palette, full color, or standalone
+  production panels and record that decision in the manifest.
+- **3 variants by default** — honor an explicit requested count. Keep prompt,
+  references, model, and effective parameters identical across sampling variants;
+  vary only a supported stochastic seed.
 - **Video eligibility** — production panels need explicit user selection and
   current canonical source hashes. Control sketches are omitted by default;
   an intentional conditioning exception requires explicit selection, supported
@@ -112,6 +172,21 @@ Before any generation call, run `prompt-review`:
 
 CRITICAL/MAJOR findings must be fixed before submission.
 
+## Reusable recipe contract
+
+Validate every committed template against `references/template-schema.json`.
+Keep the recipe distinct from a particular run:
+
+- `locked_grammar` contains the reusable style, composition, motion,
+  transition, and rhythm rules that define the template.
+- `replaceable_inputs` declares subject, product, environment, palette, copy,
+  and other slots the caller may substitute, including constraints.
+- `adaptation_rules` explains how duration, aspect ratio, audio, and shot-count
+  changes preserve the grammar.
+
+Never bundle source media, historical approval, identities, brands, or signed
+URLs into the reusable recipe. A new run must resolve and approve its own canon.
+
 ## Revisions
 
 Write every revision as: locked decisions, requested delta, acceptance criteria,
@@ -130,10 +205,13 @@ Skill (committed):
 │   ├── analysis-prompt.md
 │   ├── motion-review-prompt.md
 │   ├── breakdown-schema.json
+│   ├── motion-review-schema.json
+│   ├── template-schema.json
 │   ├── slot-mapping.md
 │   └── templates/
 │       ├── index.json
 │       └── <template-id>/template.md + template.json
+├── scripts/validate_breakdown.py
 └── evals/evals.json
 ```
 
@@ -144,7 +222,8 @@ projects/<project>/
 ├── pins/                     # downloaded reference videos
 ├── project.md, task_ids.json, ref_cache.json
 ├── templates/<template-id>/
-│   ├── analysis.json, breakdown.md, motion-review.md
+│   ├── analysis.json, analysis.vNN.json, breakdown.md
+│   ├── motion-review.json, motion-review.md
 │   └── keyframes/
 ├── elements/<id>/
 └── scenes/scene-01/...

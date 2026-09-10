@@ -16,10 +16,15 @@ RULES
 - Break the video into consecutive shots at every cut. Each shot needs:
   index, start_s, end_s, duration_s, composition, camera, action, lighting,
   audio, and end_state (observable state at the shot's end).
+- Use positive, unique shot indices starting at 1. Keep shots ordered,
+  non-overlapping, and within the measured source duration. Set duration_s to
+  end_s minus start_s.
 - Identify every distinct character, location, and prop that appears. Assign each
   a short kebab-case id and an exhaustive visual descriptor (the exact phrasing
   a generator can use word-for-word). Mark the shot index of the clearest
   keyframe for each element.
+- Make each keyframe_index and in_shots entry refer to an existing shot. A
+  keyframe must also appear in that element's in_shots list.
 - Extract visual_style (grade, lighting_direction, lens, film_look), camera
   (shot_sizes, moves, framing, transitions), and audio (mode, music, sfx,
   dialogue — transcribe any dialogue verbatim inside {braces}).
@@ -55,6 +60,10 @@ Notes:
 - Video inputs must be HTTPS URLs (Base64 unsupported) — upload via
   `media_upload` first and pass the presigned URL.
 - `thinking=false` for extraction speed; the JSON contract keeps it deterministic.
-- Validate the response against `breakdown-schema.json`; on schema failure,
-  retry once with an explicit "return JSON only, no markdown fences" correction.
-  Never proceed with a malformed breakdown.
+- Validate the response against `breakdown-schema.json`, then run
+  `scripts/validate_breakdown.py <analysis.json> --source-duration-s <seconds>`.
+  The schema validates structure; the helper validates timing, identities, and
+  cross-references. On parse failure, retry once with an explicit "return JSON
+  only, no markdown fences" correction. On other validation failures, retry
+  once with the exact findings as repair constraints. Never proceed with an
+  invalid breakdown.

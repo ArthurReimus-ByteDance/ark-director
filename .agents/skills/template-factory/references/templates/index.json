@@ -1,8 +1,10 @@
 {
   "templates": [
     {
+      "schema_version": "1.0",
       "id": "psychedelic-neon-cosmic",
       "name": "Psychedelic Neon Cosmic Journey",
+      "version": "1.1",
       "category": "animation",
       "tags": ["psychedelic", "vaporwave", "neon", "surreal", "animation"],
       "path": "psychedelic-neon-cosmic/"

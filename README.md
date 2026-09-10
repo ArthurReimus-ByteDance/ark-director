@@ -148,7 +148,7 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **film-production** | Master orchestrator for multi-scene, multi-modality productions. Advances one production stage at a time (brief → development → canon → storyboard → audio → shot generation → review → assembly → delivery), delegates modality-specific work to specialist skills, and preserves explicit human approval at creative locks and handoffs. |
-| **template-factory** | Pinterest-inspired template factory that reverse-engineers a reference video (a "pin") into reproducible AIGC output. |
+| **template-factory** | Reverse-engineer a reference video into reproducible AIGC while synchronizing every stage in the project HTML canvas. |
 | **brief-intake** | Shape intent-led briefs and distinct exploratory treatments; derive applicable directing choices and preserve confirmed decisions. |
 | **prompt-review** | Review and fix prompts written for BytePlus generative models (Seedance, Seed Audio, Seedream) against the repo's skill best practices using a sub-agent review pipeline. |
 | **media-review** | Thin CLI fallback for opening generated media (images and videos) for the user to visually review on macOS when no browser is available. |

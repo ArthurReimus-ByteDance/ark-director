@@ -489,8 +489,8 @@
     },
     "template-factory": {
       "kind": "orchestrator",
-      "description": "Pinterest-inspired template factory that reverse-engineers a reference video (a \"pin\") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video \u2014 each generated prompt passing the mandatory prompt-review gate. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, media-review, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.",
-      "readme_summary": "Pinterest-inspired template factory that reverse-engineers a reference video (a \"pin\") into reproducible AIGC output.",
+      "description": "Pinterest-inspired template factory that reverse-engineers a reference video (a \"pin\") into reproducible AIGC output. Orchestrates pin intake, seed_understand breakdown, keyframe extraction, a deep motion review, a dynamic sketch storyboard, optional Seedream element sheets, and a Seedance 2.5 video \u2014 each generated prompt passing the mandatory prompt-review gate and every stage synchronized into the project's showcase-html production canvas. Explicitly-marked orchestrator: composes modelark-mcp, seedream-storyboard, seedance-prompt-25, prompt-review, showcase-html, and the ffmpeg skills; it does not call the Ark REST API itself. Use when the user wants to replicate a reference video's style/composition/grammar, build a reusable visual template, or turn a downloaded Pinterest pin into generated elements and video.",
+      "readme_summary": "Reverse-engineer a reference video into reproducible AIGC while synchronizing every stage in the project HTML canvas.",
       "dependencies": [],
       "source_revision": "workspace",
       "upstream_hash": null,

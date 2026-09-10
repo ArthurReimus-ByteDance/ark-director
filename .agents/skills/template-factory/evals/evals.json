@@ -3,39 +3,64 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Reverse-engineer the reference video pins/01.mp4 into a storyboard and a Seedance 2.5 video. No audio. Generate the 3-panel storyboard with Seedream and the video with Seedance.",
-      "expected_output": "A breakdown from seed_understand, a monochrome-sketch storyboard whose panel count matches the number of shots Seed identified (not a fixed 3), and a Seedance 2.5 video prompt that passes prompt-review and is submitted with the sketch board as @Image 1.",
+      "prompt": "Reverse-engineer pins/01.mp4 into a three-panel monochrome storyboard and a silent Seedance video. Use exactly three panels even if the analysis finds more shots.",
+      "expected_output": "A validated full-shot breakdown, an explicit three-panel coverage plan, three storyboard candidates by default, and a reviewed video request that translates control-board composition into text without attaching the sketch by default.",
       "files": [],
-      "expectations": [
-        "The storyboard panel count is dynamic and equals the number of identified shots.",
-        "The storyboard is monochrome sketch only, never full color.",
-        "The storyboard prompt passes the prompt-review gate before generation.",
-        "The sketch board is passed to Seedance as @Image 1 reference_image.",
-        "The Seedance prompt passes the prompt-review gate before submission.",
-        "The Seedance prompt includes per-shot motion grammar (type, direction, speed, easing), not just static action descriptions."
+      "assertions": [
+        "The full breakdown passes structural and semantic validation before downstream generation.",
+        "The explicit three-panel budget is honored and every source shot maps to a panel or documented combined beat.",
+        "The monochrome sketch remains control_only and is omitted from video inputs unless the user explicitly promotes it.",
+        "The storyboard and Seedance prompts pass prompt-review before submission.",
+        "The audio-preparation canvas stage is explicitly skipped with the user's no-audio decision."
       ]
     },
     {
       "id": 2,
-      "prompt": "Our generated take looks too static compared to the template. Diagnose why and fix it.",
-      "expected_output": "A deep motion-review pass (thinking=true) that extracts per-shot motion grammar and emits positive-only imperative fix wording merged into the Seedance prompt.",
+      "prompt": "Our generated take looks too static compared with the reference. Diagnose it shot by shot and prepare a corrected take without changing the approved shot timing.",
+      "expected_output": "A hash-bound comparison motion review keyed by shot_index, with observed evidence separated from uncertainty and prompt fixes, followed by playback-based comparison and request review.",
       "files": [],
-      "expectations": [
-        "The motion review runs as a second seed_understand pass inside the factory, not as a separate skill.",
-        "The output merges shots[].motion into analysis.json.",
-        "The imperative motion wording follows positive-only phrasing (no negative instructions).",
-        "The motion wording is reviewed as part of the Seedance prompt-review gate."
+      "assertions": [
+        "The motion review references the SHA-256 of the approved pre-merge breakdown.",
+        "Each breakdown shot appears exactly once and merges by shot_index rather than array position.",
+        "Approved shot boundaries remain unchanged; a proposed timing change creates a new revision and invalidates affected review.",
+        "Low or medium confidence observations include explicit uncertainty.",
+        "Playback QA compares motion direction, intensity, action progression, camera movement, transitions, and opening and ending state."
       ]
     },
     {
       "id": 3,
-      "prompt": "Generate 3 storyboard variants of the same board and select one for video generation.",
-      "expected_output": "Three variants with identical prompt/references/params and distinct seeds, then a selection gate that requires human review by default.",
+      "prompt": "The template has storyboard.review=false. Recommend the strongest sketch and continue to video.",
+      "expected_output": "A recommendation recorded separately from selection, with video submission paused until the user explicitly selects eligible inputs.",
       "files": [],
-      "expectations": [
-        "The three variants share the same prompt, references, and parameters; only the seed differs.",
-        "The selection requires human review by default (storyboard.review: true).",
-        "Auto-selection only occurs when the template sets review: false, and records selected_variant as auto, never approved."
+      "assertions": [
+        "The strongest candidate is stored only as recommended_variant.",
+        "Neither selected_variant nor approved is written automatically.",
+        "Disabling the review UI does not authorize sketch conditioning or video submission."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Reuse the psychedelic neon cosmic template for a new sports-shoe campaign in 9:16. Keep the template's motion and editing grammar but replace the subject, environments, palette, and music.",
+      "expected_output": "A template adaptation that validates the recipe, preserves locked grammar, resolves new project canon, and applies declared ratio and audio adaptation rules.",
+      "files": [],
+      "assertions": [
+        "The reusable template validates against template-schema.json.",
+        "Locked composition, motion, transition, and rhythm rules remain identifiable in the adaptation.",
+        "Replacement subject, environment, palette, and audio are recorded as run-specific inputs requiring current approval.",
+        "The 9:16 result is recomposed around the locked grammar instead of mechanically cropped."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Turn this 28-second reference into the same-paced template. The live model only supports 10-second clips and two image references. Generate two storyboard variants in a limited palette.",
+      "expected_output": "A capability-backed multi-clip plan split at shot boundaries, with the requested storyboard count and style, explicit reference prioritization, assembly review, and delivery evidence.",
+      "files": [],
+      "assertions": [
+        "Current capability evidence is recorded before request parameters and bindings are frozen.",
+        "The sequence splits at shot boundaries into supported natural-duration clips and records assembly work.",
+        "Exactly two limited-palette storyboard variants are planned; a seed differs only when supported.",
+        "No request exceeds the live two-reference limit.",
+        "All eight canvas stages are completed, approved, or explicitly skipped before delivery."
       ]
     }
   ]

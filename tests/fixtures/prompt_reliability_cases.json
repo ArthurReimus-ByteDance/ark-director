@@ -222,6 +222,37 @@
       }
     },
     {
+      "id": "template_explicit_panel_budget",
+      "skill": "template-factory",
+      "prompt": "The source has eight shots, but make exactly three storyboard panels and two full-color variants.",
+      "expected_decisions": {
+        "panel_count": 3,
+        "variant_count": 2,
+        "render_style": "full_color",
+        "shot_coverage_mapping_required": true
+      }
+    },
+    {
+      "id": "template_long_source_capability_split",
+      "skill": "template-factory",
+      "prompt": "Adapt this 28-second pin. The verified model limit is 10 seconds per clip. Keep the source rhythm.",
+      "expected_decisions": {
+        "split_at_shot_boundaries": true,
+        "single_unsupported_submission": false,
+        "assembly_review_required": true
+      }
+    },
+    {
+      "id": "template_invalid_breakdown",
+      "skill": "template-factory",
+      "prompt": "The analysis JSON has duplicate shot 2, overlapping timestamps, and a prop keyframe pointing to shot 99. Continue to storyboard generation.",
+      "expected_decisions": {
+        "breakdown_validation_required": true,
+        "storyboard_submission_allowed": false,
+        "repair_before_advancing": true
+      }
+    },
+    {
       "id": "one_axis_routing",
       "skill": "seedance-camera-presets",
       "prompt": "Use a slow dolly-in and preserve the already approved grade, lighting, and lens.",

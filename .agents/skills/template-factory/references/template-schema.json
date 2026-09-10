@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TemplateRecipe",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "version", "category", "model", "default_resolution", "default_ratio", "analyze", "motion_review", "storyboard", "element_mapping", "seedance_mapping", "recipe", "defaults"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "category": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1 },
+    "default_resolution": { "type": "string", "minLength": 1 },
+    "default_ratio": { "type": "string", "pattern": "^[0-9]+:[0-9]+$" },
+    "analyze": { "type": "object" },
+    "motion_review": { "type": "object" },
+    "storyboard": { "type": "object" },
+    "element_mapping": { "type": "object" },
+    "seedance_mapping": { "type": "object" },
+    "recipe": {
+      "type": "object",
+      "required": ["locked_grammar", "replaceable_inputs", "adaptation_rules"],
+      "additionalProperties": false,
+      "properties": {
+        "locked_grammar": {
+          "type": "object",
+          "required": ["style", "composition", "motion", "transitions", "rhythm"],
+          "additionalProperties": false,
+          "properties": {
+            "style": { "$ref": "#/$defs/nonEmptyStrings" },
+            "composition": { "$ref": "#/$defs/nonEmptyStrings" },
+            "motion": { "$ref": "#/$defs/nonEmptyStrings" },
+            "transitions": { "$ref": "#/$defs/nonEmptyStrings" },
+            "rhythm": { "$ref": "#/$defs/nonEmptyStrings" }
+          }
+        },
+        "replaceable_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["slot", "required", "description", "constraints"],
+            "additionalProperties": false,
+            "properties": {
+              "slot": { "enum": ["subject", "product", "environment", "palette", "copy", "audio", "other"] },
+              "required": { "type": "boolean" },
+              "description": { "type": "string", "minLength": 1 },
+              "constraints": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        },
+        "adaptation_rules": {
+          "type": "object",
+          "required": ["duration", "aspect_ratio", "audio", "shot_count"],
+          "additionalProperties": false,
+          "properties": {
+            "duration": { "type": "string", "minLength": 1 },
+            "aspect_ratio": { "type": "string", "minLength": 1 },
+            "audio": { "type": "string", "minLength": 1 },
+            "shot_count": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "defaults": { "type": "object" }
+  },
+  "$defs": {
+    "nonEmptyStrings": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+  }
+}

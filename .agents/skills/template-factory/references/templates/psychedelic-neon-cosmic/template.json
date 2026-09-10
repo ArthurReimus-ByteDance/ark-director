@@ -1,7 +1,8 @@
 {
+  "schema_version": "1.0",
   "id": "psychedelic-neon-cosmic",
   "name": "Psychedelic Neon Cosmic Journey",
-  "version": "1.0",
+  "version": "1.1",
   "category": "animation",
   "model": "dreamina-seedance-2-5-260628",
   "default_resolution": "720p",
@@ -38,6 +39,61 @@
     "style_slot": "from visual_style",
     "camera_slot": "from camera + per-shot camera + motion.camera_motion",
     "audio_slot": "from audio"
+  },
+  "recipe": {
+    "locked_grammar": {
+      "style": [
+        "High-saturation emissive neon against dark starfields",
+        "Retro digital animation with grain, scanlines, chromatic aberration, and soft bloom"
+      ],
+      "composition": [
+        "Center the main subject within graphic symmetrical environments",
+        "Use wide views for travel beats and standard views for figure beats"
+      ],
+      "motion": [
+        "Keep most cameras locked while subjects, lights, and backgrounds move continuously",
+        "Use parallax or scrolling geometry to create forward travel"
+      ],
+      "transitions": [
+        "Use hard cuts between distinct graphic environments"
+      ],
+      "rhythm": [
+        "Alternate held graphic tableaux with faster travel beats",
+        "Synchronize the strongest light or color change to each beat transition"
+      ]
+    },
+    "replaceable_inputs": [
+      {
+        "slot": "subject",
+        "required": true,
+        "description": "The recurring central figure or object",
+        "constraints": ["Preserve a readable silhouette", "Keep identity consistent across shots"]
+      },
+      {
+        "slot": "environment",
+        "required": true,
+        "description": "The sequence of surreal graphic worlds",
+        "constraints": ["Retain centered geometry", "Provide independent moving layers"]
+      },
+      {
+        "slot": "palette",
+        "required": false,
+        "description": "A replacement high-contrast emissive palette",
+        "constraints": ["Maintain strong separation from the dark background"]
+      },
+      {
+        "slot": "audio",
+        "required": false,
+        "description": "Music and sound cues that drive transitions",
+        "constraints": ["Align major visual accents to audible beats when audio is enabled"]
+      }
+    ],
+    "adaptation_rules": {
+      "duration": "Preserve the relative rhythm of tableau and travel beats; split at shot boundaries when one supported clip cannot contain the sequence.",
+      "aspect_ratio": "Recompose around the centered subject and retain readable edge motion rather than cropping the source frame mechanically.",
+      "audio": "Keep the run silent when audio is disabled; when enabled, map the same transition accents to the replacement track.",
+      "shot_count": "Preserve the alternation and transition logic; combine or repeat beats only when the requested count changes."
+    }
   },
   "defaults": {
     "watermark": false,

@@ -329,13 +329,13 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedream-storyboard/SKILL.md",
-      "computedHash": "2f80bb33769b434c94ea89ca73412ee9129e6a49c0d3404c711a2b48e49bb6f5"
+      "computedHash": "6f3e5a3164122dc842834664d4760169b48ef95a67f63f24543ab5e4463a062e"
     },
     "template-factory": {
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/template-factory/SKILL.md",
-      "computedHash": "adad8081613b7234eb64f3dac8375face6d533ae1bba748270c097990284dc3e"
+      "computedHash": "eef725fb7f8edb9bf212774e6ccf871cd37bb48fed0b7da58821746a78b8cb53"
     },
     "tig-blocking-map": {
       "source": "local",

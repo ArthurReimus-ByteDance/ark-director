@@ -101,6 +101,66 @@
       "owner_path": ".agents/contracts/production-policy.md",
       "summary": "All applicable checks have complete request-bound evidence.",
       "exceptions": []
+    },
+    {
+      "id": "breakdown.schema",
+      "severity": "error",
+      "applies_to": [
+        "template_analysis"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Template analysis contains the complete structured breakdown required by downstream stages.",
+      "exceptions": []
+    },
+    {
+      "id": "breakdown.timeline",
+      "severity": "error",
+      "applies_to": [
+        "template_analysis"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Shot indices and timing form one finite, ordered, continuous source timeline.",
+      "exceptions": []
+    },
+    {
+      "id": "breakdown.element_references",
+      "severity": "error",
+      "applies_to": [
+        "template_analysis"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Element identifiers are unique and their shot and keyframe references resolve.",
+      "exceptions": []
+    },
+    {
+      "id": "motion.source_current",
+      "severity": "error",
+      "applies_to": [
+        "template_motion_review"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Motion evidence is bound to the exact approved breakdown bytes.",
+      "exceptions": []
+    },
+    {
+      "id": "motion.shot_alignment",
+      "severity": "error",
+      "applies_to": [
+        "template_motion_review"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Motion evidence covers each approved shot exactly once without changing its boundaries.",
+      "exceptions": []
+    },
+    {
+      "id": "motion.evidence_complete",
+      "severity": "error",
+      "applies_to": [
+        "template_motion_review"
+      ],
+      "owner_path": ".agents/skills/template-factory/SKILL.md",
+      "summary": "Motion observations, confidence, uncertainty, and directing language are complete.",
+      "exceptions": []
     }
   ]
 }

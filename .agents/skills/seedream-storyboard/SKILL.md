@@ -115,13 +115,13 @@ are reviewed and promoted.
 - **A single-image grid cannot be directly promoted to a video keyframe.** To
   promote a panel from a grid, crop it or re-generate that panel as a
   standalone image using the same canon and the panel's recorded prompt.
-- **But the whole grid CAN be passed to Seedance as a storyboard-grid
-  reference.** A monochrome sketch grid is the standard reverse-engineering /
-  template-factory handoff: upload it and bind it as `@Image 1`
-  (`reference_image`) with "Do not use the grid's sketch lines, panel numbers,
-  or divider lines." It locks shot order and approximate composition; the
-  prompt text supplies color, motion grammar, and timing. The board itself
-  stays a review artifact — only the video that consumes it is a deliverable.
+- **Keep a sketch grid control-only by default.** Translate its composition,
+  shot order, and blocking into prompt text. Bind the whole grid to Seedance
+  only after the user explicitly selects it for conditioning, its current hash
+  and manifest selection are recorded, the live mode supports its
+  `reference_image` role, and artifact-specific QA is planned. Promotion makes
+  it an intentional conditioning input; disabling review or changing
+  `control_only` alone does not make it eligible.
 - **A one-panel board is always a single image** regardless of mode — the mode
   distinction applies only when the board has two or more narrative panels.
 
