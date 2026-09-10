@@ -2,6 +2,8 @@
 
 > An AI director workspace that orchestrates BytePlus / Volcano Engine generative models — **Seedance** (video), **Seedream** (images), and **Seed Audio** (audio) — to turn prompts and references into finished content assets.
 
+> Pair this workspace with the partner [`byteplus-sa/modelark-mcp`](https://github.com/byteplus-sa/modelark-mcp) server and consult the [ModelArk console docs](https://console.byteplus.com/ark/region:ap-southeast-1/docs/ModelArk/2536875?lang=en) to maximize capabilities.
+
 `ark-director` behaves like an "AI director": it composes multiple BytePlus model families into end-to-end content pipelines. The primary integration mechanism is **MCP (Model Context Protocol) servers** plus **agent skills**:
 
 - **MCP servers** wrap the BytePlus ModelArk REST API and expose narrowly-scoped, composable tools.
@@ -298,6 +300,13 @@ sibling hints, and explicitly-marked orchestrators.
 
 ## References
 
+### Partner repositories
+
+- [modelark-mcp](https://github.com/byteplus-sa/modelark-mcp) — partner MCP server repo ([branch rules](https://github.com/byteplus-sa/modelark-mcp/settings/rules/new?target=branch&enforcement=disabled))
+
+### Documentation & console
+
+- [ModelArk console docs — Seedance 2.5 multimodal reference](https://console.byteplus.com/ark/region:ap-southeast-1/docs/ModelArk/2536875?lang=en)
 - [BytePlus ModelArk quick start](https://docs.byteplus.com/en/docs/ModelArk/1399008)
 - [Seedance video generation API](https://docs.byteplus.com/en/docs/ModelArk/1520757)
 - [Seedance 2.5 prompt guide (Lark)](https://bytedance.larkoffice.com/docx/A88jd0B47oAd8zxWp5ycZFMfnxh)
