@@ -125,7 +125,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/modelark-mcp/SKILL.md",
-      "computedHash": "7d770e3d5eeb7f1618f3c82e5545cd060353fe5e12c9466ccfa8531e3a302558"
+      "computedHash": "5075b9c8c82200a89526e757eb5065b863319e70a50ffedce761e122d932f33f"
     },
     "prompt-review": {
       "source": "local",
