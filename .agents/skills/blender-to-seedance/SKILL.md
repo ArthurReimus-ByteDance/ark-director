@@ -10,7 +10,8 @@ description: >
   grammar (prompt), modelark-mcp (submit/poll/download), and
   seedance-vfx-pipeline's save/manifest pattern. This is an orchestrator skill:
   it delegates the build to the blender-* skills, the grammar to
-  seedance-prompt-25, and submission to modelark-mcp. Use whenever the user wants to
+  seedance-prompt-25, submission to modelark-mcp, and persistent stage review to
+  showcase-html. Use whenever the user wants to
   direct a shot from 3D — "blockout to video", "graybox previz to Seedance",
   "3D to Seedance", "previz the camera then render", "Blender blocking to
   Seedance" — or wants camera, cuts, and timing locked down before spending
@@ -27,6 +28,11 @@ Core principle from the Higgsfield Blender workflow: **block it in 3D, lock the
 camera, then make the AI execute your shot instead of rolling the dice.** The
 blocking is reusable — swap the character, swap the location, keep the exact
 same moves.
+
+For project work, initialize or resume the persistent production canvas. Put the
+blockout, dummy map and prompt in `storyboard-visual-plan`; put generated takes,
+their exact prompts/references and QA in `shot-generation`. Regenerate and
+freshness-check the HTML after each step rather than opening assets separately.
 
 ```mermaid
 flowchart LR
@@ -120,6 +126,9 @@ to dress the world, never to re-choreograph it.
 - `ffprobe` + full decode check.
 - `seed_understand` a contact sheet (opening, transitions, ending).
 - `ffmpeg-side-by-side-comparison` — verify the camera lock with a previz-vs-output comparison.
+- Update and open the project's HTML production canvas with the previz, output,
+  exact prompt, element bindings, side-by-side comparison and QA results; run
+  `--check --stage shot-generation` before completing the stage.
 - Technical success = `review`; only explicit user approval = `approved`.
 
 ## Manifest (shot.md additions)
@@ -163,6 +172,8 @@ references: 4
 6. Dialogue is timestamped and never adds coverage; off-screen stays off-screen.
 7. The submitted reference array matches the prompt bindings 1:1, same order.
 8. `previz_sha256`, `object_key`, `task_id`, and manifest fields are recorded.
+9. The synchronized project canvas contains the blockout and shot stages and its
+   `shot-generation` freshness check passes.
 
 ## Intentional conditioning representation
 

@@ -41,6 +41,11 @@
   sep.textContent = '·';
   brand.appendChild(sep);
   navInner.appendChild(brand);
+  if (data.canvas) {
+    const canvasLink = el('a', null, 'Production canvas');
+    canvasLink.href = '#production-canvas';
+    navInner.appendChild(canvasLink);
+  }
   for (const s of data.sections) {
     const a = el('a', null, s.title);
     a.href = '#' + s.id;
@@ -66,6 +71,10 @@
     header.appendChild(badges);
   }
   document.getElementById('app').appendChild(header);
+
+  if (data.canvas) {
+    document.getElementById('app').appendChild(buildProductionCanvas(data.canvas));
+  }
 
   // ---- selection toolbar ----
   // Server mode: full select + save. Plain file:// : read-only preview.
@@ -176,6 +185,92 @@
     return section;
   }
 
+  function buildProductionCanvas(canvas) {
+    const section = el('section', 'canvas-board');
+    section.id = 'production-canvas';
+    const heading = el('div', 'canvas-heading');
+    const headingCopy = el('div');
+    headingCopy.appendChild(el('div', 'kicker', 'Live production workspace'));
+    headingCopy.appendChild(el('h2', null, 'Production canvas'));
+    const build = data.canvasBuild || {};
+    const sync = el('div', 'canvas-sync');
+    sync.appendChild(el('span', 'canvas-sync-dot'));
+    sync.appendChild(document.createTextNode(
+      build.generatedAt ? 'Synced ' + build.generatedAt : 'Generated canvas snapshot'
+    ));
+    heading.appendChild(headingCopy);
+    heading.appendChild(sync);
+    section.appendChild(heading);
+
+    const stages = el('div', 'canvas-stages');
+    for (const [index, stage] of (canvas.stages || []).entries()) {
+      const card = el('article', 'canvas-stage status-' + (stage.status || 'pending'));
+      if (stage.id === canvas.currentStage) card.classList.add('current');
+      const top = el('div', 'canvas-stage-top');
+      top.appendChild(el('span', 'canvas-step', String(index + 1).padStart(2, '0')));
+      top.appendChild(el('h3', null, stage.label || stage.id));
+      top.appendChild(el('span', 'canvas-status', stage.status || 'pending'));
+      card.appendChild(top);
+      if (stage.summary) card.appendChild(el('p', 'canvas-summary', stage.summary));
+      const counts = stage.counts || {};
+      const metrics = el('div', 'canvas-metrics');
+      for (const [label, value] of [
+        ['sections', counts.sections || 0],
+        ['sources', counts.sources || 0],
+        ['media', counts.media || 0],
+        ['prompts', counts.prompts || 0],
+      ]) {
+        const metric = el('span', 'canvas-metric');
+        metric.appendChild(el('b', null, String(value)));
+        metric.appendChild(document.createTextNode(' ' + label));
+        metrics.appendChild(metric);
+      }
+      card.appendChild(metrics);
+      if (stage.sectionIds && stage.sectionIds.length) {
+        const links = el('div', 'canvas-links');
+        for (const sectionId of stage.sectionIds) {
+          const target = (data.sections || []).find(item => item.id === sectionId);
+          const link = el('a', null, target ? target.title : sectionId);
+          link.href = '#' + sectionId;
+          links.appendChild(link);
+        }
+        card.appendChild(links);
+      }
+      if (stage.sources && stage.sources.length) {
+        const sources = el('div', 'canvas-sources');
+        for (const source of stage.sources) {
+          const sourceRow = el('div', 'canvas-source');
+          const sourceHead = el('div', 'canvas-source-head');
+          sourceHead.appendChild(el('span', 'canvas-source-kind', source.kind || 'source'));
+          const sourceLink = el('a', null, source.label || source.path);
+          sourceLink.href = encodeURI(source.path);
+          sourceHead.appendChild(sourceLink);
+          if (source.sha256) {
+            sourceHead.appendChild(el('code', null, source.sha256.slice(0, 10)));
+          }
+          sourceRow.appendChild(sourceHead);
+          if (source.content != null) {
+            const details = document.createElement('details');
+            details.appendChild(el('summary', null, 'View in canvas'));
+            const content = el('pre');
+            content.textContent = source.content;
+            details.appendChild(content);
+            sourceRow.appendChild(details);
+          } else if (['image', 'video', 'audio'].includes(source.kind)) {
+            const preview = el('div', 'canvas-source-media');
+            preview.appendChild(mediaNode({type: source.kind, src: source.path, alt: source.label || source.path}));
+            sourceRow.appendChild(preview);
+          }
+          sources.appendChild(sourceRow);
+        }
+        card.appendChild(sources);
+      }
+      stages.appendChild(card);
+    }
+    section.appendChild(stages);
+    return section;
+  }
+
   function buildCard(c) {
     const card = el('div', 'card ' + (c.type || 'video'));
     const isSelectable = viaServer && !!selectable[c.id];
@@ -211,7 +306,9 @@
       for (const r of c.refs) {
         const ref = el('div', 'ref');
         ref.appendChild(el('span', 'dot ' + (r.kind || 'vid')));
-        ref.appendChild(el('span', 'ref-name', r.name));
+        const name = r.path ? el('a', 'ref-name', r.name) : el('span', 'ref-name', r.name);
+        if (r.path) name.href = encodeURI(r.path);
+        ref.appendChild(name);
         if (r.role) ref.appendChild(el('span', 'ref-role', r.role));
         refs.appendChild(ref);
       }
@@ -325,14 +422,17 @@
       if (grp.promptFile) {
         promptPre = el('pre', 'takes-prompt');
         promptPre.style.display = 'none';
-        promptPre.textContent = 'Loading…';
-        fetch(grp.promptFile)
-          .then(r => r.ok ? r.text() : Promise.reject())
-          .then(text => { promptPre.textContent = text; })
-          .catch(() => {
-            // file:// fallback: can't fetch, show path
-            promptPre.textContent = 'Prompt file: ' + grp.promptFile + '\n(open in editor to view)';
-          });
+        if (grp.prompt) {
+          promptPre.textContent = grp.prompt;
+        } else {
+          promptPre.textContent = 'Loading…';
+          fetch(grp.promptFile)
+            .then(r => r.ok ? r.text() : Promise.reject())
+            .then(text => { promptPre.textContent = text; })
+            .catch(() => {
+              promptPre.textContent = 'Prompt file: ' + grp.promptFile;
+            });
+        }
         card.appendChild(promptPre);
       }
 
@@ -460,6 +560,11 @@
       const r = await res.json();
       if (r.ok) {
         expectedRevision = r.revision;
+        if (r.canvasSynced === false) {
+          selStatus.textContent = 'Selection saved; canvas refresh failed: ' + (r.canvasError || 'unknown error');
+          showToast('Selection saved, but the production canvas is stale.', 'error');
+          return;
+        }
         const errs = r.errors.length;
         selStatus.textContent = 'Saved ' + r.applied.length + ' selection(s)' + (errs ? ' — ' + errs + ' error(s)' : '') + '.';
         if (errs) {

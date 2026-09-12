@@ -1,25 +1,22 @@
 ---
 name: showcase-html
 description: >
-  Build a self-contained local HTML review page for a project's generated media.
-  Turns the project's elements (images, audio, base footage), videos, and prompts
-  into a polished dark-mode gallery with color-coded cards, an "elements used"
-  list per video, before/after comparison tables, and a combined grid/side-by-side
-  view. Generates a data-driven page from a single showcase.json manifest plus an
-  embedded template (no external assets), and optionally composes a combined-view
-  MP4 with FFmpeg. Also supports locking variant selections back into element
-  manifests via a local server (--serve) with a timestamped activity log. Use
-  whenever the user wants an HTML review page, a media showcase or gallery, a
-  before/after comparison page, a combined grid view, or a local template to
-  preview generated assets, their prompts, and pick winning variants.
+  Build and maintain a self-contained HTML production canvas for generated-media
+  projects. Keep briefs, stage status, elements, prompts, references, images,
+  audio, video takes, selections, review evidence, assemblies, and deliverables
+  synchronized in one data-driven page throughout every production stage. Also
+  supports ad-hoc comparison pages and locking variants back into manifests.
+  Use for every project production review or lifecycle checkpoint, and whenever
+  the user asks for an HTML gallery, showcase, canvas, before/after comparison,
+  combined view, or local interface for reviewing assets and choosing variants.
 ---
 
 # Showcase HTML
 
-Build a **self-contained, data-driven HTML review page** for a project's
-generated media. The page is one portable file: it embeds a fixed template, the
-project data as JSON, and a small renderer — no build step, no external CSS/JS,
-works by double-clicking `index.html` in any browser.
+Build a **self-contained, data-driven HTML production canvas** for a project's
+generated media. The page is one portable file: it embeds lifecycle status,
+project sources, exact prompts, media, a fixed template, and a small renderer —
+no build step or external CSS/JS.
 
 This skill captures the page design used across the `seedance-lens-showcase`
 and `honda-civic-location-swap` projects: color-coded asset cards, an
@@ -32,11 +29,14 @@ grid view.
   **template** for generated media.
 - A project has multiple assets + prompts that need to be viewed side by side.
 - The user wants a **before/after** or **combined view** in the same page.
+- A project starts, resumes, changes stage, produces an artifact, or reaches a
+  review/approval checkpoint.
 
 Do **not** use for Lark/Feishu documents — that is `lark-showcase-aigc`. For
 composing the side-by-side/grid video itself, use `ffmpeg-side-by-side-comparison`.
-The `media-review` skill is a thin CLI fallback for environments without a
-browser; prefer `showcase-html` for all media review workflows.
+The production canvas is required for project workflows. `media-review` is only
+an unavailable-browser or explicitly requested OS-player fallback and never
+satisfies a production stage checkpoint.
 
 ## The data-driven model
 
@@ -51,6 +51,35 @@ Edit the **manifest**, not the HTML. The page is produced by:
    template and writes `index.html`.
 
 Full field reference: [references/schema.md](references/schema.md).
+For the required lifecycle structure, stage contents, and freshness gate, read
+[Production canvas](references/production-canvas.md).
+
+## Required production-canvas behavior
+
+Create `showcase.json` and `index.html` when a production project is initialized.
+Keep the same files for the life of the project. After every material prompt,
+manifest, element, storyboard, audio, video, assembly, review, or delivery
+change, update the relevant stage in `showcase.json` and regenerate `index.html`.
+
+Every production stage exit requires this read-only check:
+
+```bash
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
+  projects/<project> --check --stage <stage-id>
+```
+
+The check binds the generated page to the declared stage, `showcase.json`, and
+all referenced project files by SHA-256. A stale or incomplete canvas keeps the
+stage open. Use `--stage <stage-id> --open` to regenerate and display it.
+
+Initialize the canvas after `project.md` exists:
+
+```bash
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
+  projects/<project> --init --open
+```
+
+`--init` refuses to overwrite an existing `showcase.json`.
 
 ## Workflow
 
@@ -65,7 +94,8 @@ Full field reference: [references/schema.md](references/schema.md).
      elements a shot binds (`@Image N` / `@Video N` / `@Audio N`) — use it to
      populate the card's `refs` ("Elements used").
 
-2. **Author `showcase.json`.** One `grid` section for elements, one for videos,
+2. **Author `showcase.json`.** For production work, add the full lifecycle
+   `canvas` object and set `stage` on every section. Use one `grid` section for elements, one for videos,
    plus a `panel` section for the combined view and/or a `table` section for
    before/after. Use relative paths (resolved against the project dir). Read
    prompts verbatim from the `prompt_*.md` snapshots — never retype them.
@@ -88,8 +118,7 @@ Full field reference: [references/schema.md](references/schema.md).
 
 ```bash
 .venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
-  projects/<project> --out index.html
-open projects/<project>/index.html
+  projects/<project> --stage <stage-id> --out index.html --open
 ```
 
    **To let the user lock variants from the browser**, run the server — it is the
@@ -98,7 +127,7 @@ open projects/<project>/index.html
 
 ```bash
 .venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
-  projects/<project> --serve --port 8000
+  projects/<project> --stage <stage-id> --serve --port 8000
 ```
 
    The user clicks a variant to mark it, then presses **Ctrl+S / ⌘S** (or clicks
@@ -123,7 +152,8 @@ The repository environment supplies `ruamel.yaml`; run `uv sync --group dev`
 
 ```bash
 .venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
-  projects/<project> --apply '{"asset-id":"registered-variant.png"}'
+  projects/<project> --stage <stage-id> \
+  --apply '{"asset-id":"registered-variant.png"}'
 ```
 
    The supplied filename must be a registered variant. An explicit user choice
@@ -136,8 +166,13 @@ The repository environment supplies `ruamel.yaml`; run `uv sync --group dev`
    combined view in the opened page:
 
 ```bash
-.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py projects/<project> --check
+.venv/bin/python .agents/skills/showcase-html/scripts/generate_showcase.py \
+  projects/<project> --check --stage <stage-id>
 ```
+
+Production canvases require `--stage <stage-id>` for generation, serving,
+selection, and checks. The check verifies that `index.html` contains the current
+manifest and source hashes. Legacy non-canvas gallery manifests may omit it.
 
 ### Quick mode (ad-hoc review from file paths — no showcase.json needed)
 
@@ -171,9 +206,10 @@ written to `_quick_review.html` in the current directory (override with
 `--out`). Media paths are converted to `file://` URIs so the browser can
 load them from anywhere on disk.
 
-Use `--quick` as the default media review path instead of `media-review`.
-The `media-review` skill is a thin CLI fallback for environments without
-a browser — prefer `--quick` everywhere else.
+Use `--quick` only for ad-hoc files outside a tracked project. A project review
+uses its persistent production canvas so the result remains part of lifecycle
+state. `media-review` remains an emergency or explicitly requested OS-player
+fallback.
 
 ## Section recipes
 
@@ -228,10 +264,11 @@ side-by-side. Each scene becomes one takes group with:
 
 ```bash
 # Generate with auto-populated ffprobe metadata:
-python3 scripts/generate_showcase.py projects/<project>
+python3 scripts/generate_showcase.py projects/<project> --stage <stage-id>
 
 # Generate with ffprobe metadata + contact sheet images:
-python3 scripts/generate_showcase.py projects/<project> --contact-sheets
+python3 scripts/generate_showcase.py projects/<project> \
+  --stage <stage-id> --contact-sheets
 ```
 
 The `--contact-sheets` flag also writes back the enriched `showcase.json`
@@ -260,12 +297,14 @@ filter graph and the PIL label fallback when `drawtext` is unavailable.
    and multiple variant cards of one asset share the same `id`.
 5. The page is a single portable `index.html` (no external CSS/JS/fonts).
 6. The generated file opens cleanly and the combined view plays.
-7. The page was opened in the browser via `open projects/<project>/index.html`
-   (never asking the user to open it manually).
+7. The page was opened in the browser with `--open` or `--serve` rather than
+   asking the user to open it manually.
 8. Takes section: all takes in a group share the same `id` + `manifest`;
    `filename` matches the media `src` basename. ffprobe chips are
    auto-populated (run `--contact-sheets` to also generate contact sheets).
 9. Takes section: `promptFile` paths resolve on disk (checked by `--check`).
+10. Production canvas: all eight stages exist in order, every section has a
+    stage, the current stage is accurate, and `--check --stage <stage-id>` passes.
 
 ## Selection consistency and recovery
 

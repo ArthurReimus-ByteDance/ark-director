@@ -1,24 +1,19 @@
 ---
 name: media-review
 description: >
-  Thin CLI fallback for opening generated media (images and videos) for the
-  user to visually review on macOS when no browser is available. For all
-  normal review workflows, prefer the `showcase-html` skill (`--quick` for
-  ad-hoc file comparison, or full `showcase.json` for project review with
-  synchronized playback, contact sheets, and variant selection). This skill
-  is only needed in environments without a browser, or as a quick `open`
-  command when the user explicitly says "just open these files".
+  Emergency CLI fallback for opening generated images or videos in macOS when
+  HTML/browser review is unavailable, or when the user explicitly requests an
+  OS-native player. Never use it as production-stage review evidence: project
+  workflows require the synchronized showcase-html canvas and freshness check.
 ---
 
 # Media Review
 
-> **Prefer `showcase-html` instead.** This skill is a thin fallback for
-> environments without a browser. The `showcase-html --quick` command
-> provides a strictly better experience: inline video playback, synchronized
-> comparison, ffprobe metadata, contact sheets, and variant selection — all
-> in a single browser page. Use this skill only when `showcase-html` is
-> unavailable or the user explicitly wants files opened in the OS default
-> player.
+> **Fallback only.** Project workflows use their persistent `showcase-html`
+> canvas at every stage. Use this skill only when the HTML/browser surface is
+> unavailable or the user explicitly requests the OS default player. Record the
+> unavailable canvas evidence and restore the synchronized HTML before the stage
+> exits; this fallback never satisfies the production canvas checkpoint.
 
 Help the user visually review generated media assets on macOS. Since the agent
 runs in a CLI with no graphical display, the practical way to let the user
@@ -100,6 +95,9 @@ open _review_sheet.png
    it. Optionally also open the individual files.
 3. **Videos**: open the files directly with `open`. Do not extract keyframes.
 4. Tell the user the file paths and ask which variant they prefer.
+5. If this is project work, return the result to the orchestrator so it can add
+   the files and decision to `showcase.json`, regenerate `index.html`, and pass
+   the stage freshness check.
 
 ## Notes
 

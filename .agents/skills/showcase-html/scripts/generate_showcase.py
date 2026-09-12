@@ -1,17 +1,19 @@
 """Generate a self-contained showcase index.html from template.html + showcase.json.
 
 Usage:
-  python3 scripts/generate_showcase.py <project_dir> [--out index.html]
-  python3 scripts/generate_showcase.py <project_dir> --check
-  python3 scripts/generate_showcase.py <project_dir> --serve [--port 8000]
+  python3 scripts/generate_showcase.py <project_dir> --init
+  python3 scripts/generate_showcase.py <project_dir> --stage <stage-id> [--out index.html]
+  python3 scripts/generate_showcase.py <project_dir> --check --stage <stage-id>
+  python3 scripts/generate_showcase.py <project_dir> --serve --stage <stage-id> [--port 8000]
 
 Reads <project_dir>/showcase.json (relative asset paths are resolved against
 <project_dir>) and writes the final HTML next to it. The HTML embeds the data
 JSON and the renderer, so it is a single portable file.
 
 Modes:
+  --init     create an eight-stage production canvas without overwriting one.
   (default)  generate index.html in place (read-only review page).
-  --check    validate that every media ``src`` in showcase.json resolves on disk.
+  --check    validate paths; with --stage, verify the generated canvas is current.
   --serve    generate, then run a local HTTP server so in-browser variant
              selection can persist to the project (writes selection.json, the
              element/shot manifests, and a timestamped selection.log). Opens the
@@ -24,6 +26,9 @@ Selection contract (see references/schema.md):
   single key inside a ``selected_variants`` map in the manifest frontmatter.
 """
 import argparse
+import copy
+import datetime
+import hashlib
 import html
 import json
 import os
@@ -35,12 +40,13 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from selection_service import (
     SelectionConflict,
     SelectionError,
     SelectionService,
+    atomic_write,
     collect_selectable,
     contained_path,
     read_selection,
@@ -49,11 +55,300 @@ from selection_service import (
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(HERE, "..", "template.html")
 RENDERER = os.path.join(HERE, "..", "renderer.js")
+CANVAS_TEMPLATE = os.path.join(HERE, "..", "assets", "production-canvas.json")
+
+CANVAS_STAGE_IDS = (
+    "brief-development",
+    "scene-breakdown",
+    "canon-elements",
+    "storyboard-visual-plan",
+    "audio-preparation",
+    "shot-generation",
+    "assembly-review",
+    "delivery",
+)
+CANVAS_STATUSES = {
+    "pending",
+    "active",
+    "review",
+    "approved",
+    "complete",
+    "blocked",
+    "skipped",
+}
+CANVAS_TERMINAL_STATUSES = {"approved", "complete", "skipped"}
+CANVAS_TEXT_KINDS = {"brief", "data", "document", "manifest", "prompt", "review"}
+CANVAS_TEXT_EXTENSIONS = {".json", ".md", ".txt", ".yaml", ".yml"}
+CANVAS_EMBED_LIMIT = 512 * 1024
 
 
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def file_sha256(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def inferred_source_kind(path):
+    suffix = path.suffix.lower()
+    if suffix in _VIDEO_EXTS:
+        return "video"
+    if suffix in _IMAGE_EXTS:
+        return "image"
+    if suffix in _AUDIO_EXTS:
+        return "audio"
+    if suffix == ".md" and path.name.startswith("prompt_"):
+        return "prompt"
+    if suffix == ".json":
+        return "data"
+    if suffix in {".md", ".txt", ".yaml", ".yml"}:
+        return "document"
+    return "other"
+
+
+def inspect_paths(value):
+    paths = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in {"src", "contactSheet", "promptFile", "manifest", "path"} and isinstance(item, str):
+                paths.append(item)
+            elif isinstance(item, (dict, list)):
+                paths.extend(inspect_paths(item))
+    elif isinstance(value, list):
+        for item in value:
+            paths.extend(inspect_paths(item))
+    return paths
+
+
+def section_contract_errors(value, section_id):
+    errors = []
+    if isinstance(value, dict):
+        if isinstance(value.get("prompt"), str) and value["prompt"] and not value.get("promptFile"):
+            errors.append(
+                f"Section {section_id}: inline production prompts require promptFile"
+            )
+        refs = value.get("refs")
+        if isinstance(refs, list):
+            for reference in refs:
+                if not isinstance(reference, dict) or not isinstance(reference.get("path"), str):
+                    errors.append(
+                        f"Section {section_id}: every element reference requires a project-relative path"
+                    )
+        for item in value.values():
+            if isinstance(item, (dict, list)):
+                errors.extend(section_contract_errors(item, section_id))
+    elif isinstance(value, list):
+        for item in value:
+            errors.extend(section_contract_errors(item, section_id))
+    return errors
+
+
+def hydrate_prompt_files(value, proj):
+    if isinstance(value, dict):
+        prompt_file = value.get("promptFile")
+        if isinstance(prompt_file, str):
+            path = contained_path(proj, prompt_file)
+            if path.stat().st_size > CANVAS_EMBED_LIMIT:
+                raise SelectionError(f"Prompt file is too large to embed: {prompt_file}")
+            prompt = path.read_text(encoding="utf-8")
+            authored = value.get("prompt")
+            if isinstance(authored, str) and authored and authored != prompt:
+                raise SelectionError(f"Inline prompt differs from promptFile: {prompt_file}")
+            value["prompt"] = prompt
+        for item in value.values():
+            if isinstance(item, (dict, list)):
+                hydrate_prompt_files(item, proj)
+    elif isinstance(value, list):
+        for item in value:
+            hydrate_prompt_files(item, proj)
+
+
+def canvas_validation_errors(data, proj, expected_stage=None):
+    canvas = data.get("canvas") if isinstance(data, dict) else None
+    if not isinstance(canvas, dict):
+        return ["Lifecycle review requires a top-level canvas object"]
+    current_stage = canvas.get("currentStage")
+    if current_stage not in CANVAS_STAGE_IDS:
+        return [f"canvas.currentStage must be one of: {', '.join(CANVAS_STAGE_IDS)}"]
+    errors = []
+    if expected_stage and current_stage != expected_stage:
+        errors.append(
+            f"Canvas stage mismatch: expected {expected_stage}, found {current_stage}"
+        )
+    stages = canvas.get("stages")
+    if not isinstance(stages, list):
+        return errors + ["canvas.stages must be an array"]
+    stage_ids = [stage.get("id") for stage in stages if isinstance(stage, dict)]
+    if stage_ids != list(CANVAS_STAGE_IDS):
+        errors.append("canvas.stages must contain all eight production stages in order")
+        return errors
+    current_index = CANVAS_STAGE_IDS.index(current_stage)
+    sections = data.get("sections")
+    if not isinstance(sections, list):
+        errors.append("showcase.json requires a sections array")
+        sections = []
+    sections_by_stage = {stage_id: [] for stage_id in CANVAS_STAGE_IDS}
+    section_ids = set()
+    for section in sections:
+        if not isinstance(section, dict):
+            errors.append("Every canvas section must be an object")
+            continue
+        section_id = section.get("id")
+        if not isinstance(section_id, str) or not section_id:
+            errors.append("Every canvas section requires a nonempty id")
+        elif section_id in section_ids:
+            errors.append(f"Duplicate canvas section id: {section_id}")
+        else:
+            section_ids.add(section_id)
+        stage_id = section.get("stage")
+        if stage_id not in CANVAS_STAGE_IDS:
+            errors.append(f"Section {section_id or '<unknown>'} requires a valid stage")
+        else:
+            sections_by_stage[stage_id].append(section)
+            errors.extend(section_contract_errors(section, section_id or "<unknown>"))
+    for index, stage in enumerate(stages):
+        status = stage.get("status")
+        if status not in CANVAS_STATUSES:
+            errors.append(f"{stage['id']}: invalid canvas stage status: {status}")
+            continue
+        if index < current_index and status not in CANVAS_TERMINAL_STATUSES:
+            errors.append(f"{stage['id']}: earlier stages must be approved, complete, or skipped")
+        if index == current_index and status == "pending":
+            errors.append(f"{stage['id']}: current stage cannot be pending")
+        if index > current_index and status not in {"pending", "skipped"}:
+            errors.append(f"{stage['id']}: future stages must be pending or skipped")
+        sources = stage.get("sources", [])
+        if not isinstance(sources, list):
+            errors.append(f"{stage['id']}: sources must be an array")
+            continue
+        if status not in {"pending", "skipped"} and not sources and not sections_by_stage[stage["id"]]:
+            errors.append(f"{stage['id']}: progressed stage requires a source or section")
+        for source in sources:
+            if not isinstance(source, dict):
+                errors.append(f"{stage['id']}: every source must be an object")
+                continue
+            relative = source.get("path")
+            try:
+                path = contained_path(proj, relative)
+            except SelectionError as error:
+                errors.append(str(error))
+                continue
+            kind = source.get("kind", inferred_source_kind(path))
+            if not isinstance(kind, str) or not kind:
+                errors.append(f"{stage['id']}: source kind must be a nonempty string")
+            if kind in CANVAS_TEXT_KINDS and path.stat().st_size > CANVAS_EMBED_LIMIT:
+                errors.append(f"Canvas text source is too large to embed: {relative}")
+    return errors
+
+
+def prepare_canvas_data(data, proj, manifest_bytes=None, expected_stage=None):
+    errors = canvas_validation_errors(data, proj, expected_stage)
+    if errors:
+        raise SelectionError("; ".join(errors))
+    prepared = copy.deepcopy(data)
+    hydrate_prompt_files(prepared.get("sections", []), proj)
+    manifest_content = manifest_bytes
+    if manifest_content is None:
+        manifest_path = proj / "showcase.json"
+        manifest_content = (
+            manifest_path.read_bytes()
+            if manifest_path.exists()
+            else json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        )
+    source_records = {}
+    for stage in prepared["canvas"]["stages"]:
+        stage_sections = [
+            section for section in prepared["sections"] if section.get("stage") == stage["id"]
+        ]
+        stage["sectionIds"] = [section["id"] for section in stage_sections]
+        stage_paths = []
+        for source in stage.get("sources", []):
+            path = contained_path(proj, source["path"])
+            kind = source.get("kind", inferred_source_kind(path))
+            source["kind"] = kind
+            source["sha256"] = file_sha256(path)
+            source["bytes"] = path.stat().st_size
+            if kind in CANVAS_TEXT_KINDS or path.suffix.lower() in CANVAS_TEXT_EXTENSIONS:
+                source["content"] = path.read_text(encoding="utf-8")
+            stage_paths.append(source["path"])
+        for section in stage_sections:
+            stage_paths.extend(inspect_paths(section))
+        unique_paths = list(dict.fromkeys(stage_paths))
+        media_count = 0
+        prompt_count = 0
+        for relative in unique_paths:
+            path = contained_path(proj, relative)
+            kind = inferred_source_kind(path)
+            if kind in {"image", "video", "audio"}:
+                media_count += 1
+            if kind == "prompt":
+                prompt_count += 1
+            source_records[relative] = {
+                "path": relative,
+                "kind": kind,
+                "sha256": file_sha256(path),
+                "bytes": path.stat().st_size,
+            }
+        stage["counts"] = {
+            "sections": len(stage_sections),
+            "sources": len(unique_paths),
+            "media": media_count,
+            "prompts": prompt_count,
+        }
+    build = {
+        "currentStage": prepared["canvas"]["currentStage"],
+        "manifestSha256": hashlib.sha256(manifest_content).hexdigest(),
+        "templateSha256": file_sha256(Path(TEMPLATE)),
+        "rendererSha256": file_sha256(Path(RENDERER)),
+        "sources": [source_records[path] for path in sorted(source_records)],
+    }
+    snapshot_payload = json.dumps(build, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    build["snapshotSha256"] = hashlib.sha256(snapshot_payload).hexdigest()
+    build["generatedAt"] = datetime.datetime.now(datetime.UTC).isoformat()
+    prepared["canvasBuild"] = build
+    return prepared
+
+
+def embedded_showcase_data(path):
+    text = path.read_text(encoding="utf-8")
+    match = re.search(
+        r'<script id="showcase-data" type="application/json">(.*?)</script>',
+        text,
+        re.DOTALL,
+    )
+    if not match:
+        raise SelectionError(f"Generated HTML has no embedded showcase data: {path.name}")
+    try:
+        return json.loads(match.group(1))
+    except json.JSONDecodeError as error:
+        raise SelectionError(f"Generated HTML contains invalid showcase data: {path.name}") from error
+
+
+def canvas_sync_errors(data, proj, out_path, expected_stage):
+    errors = canvas_validation_errors(data, proj, expected_stage)
+    if errors:
+        return errors
+    try:
+        expected = prepare_canvas_data(data, proj, expected_stage=expected_stage)["canvasBuild"]
+    except (OSError, UnicodeError, SelectionError) as error:
+        return [str(error)]
+    if not out_path.is_file():
+        return [f"Missing generated production canvas: {out_path.name}"]
+    try:
+        actual = embedded_showcase_data(out_path).get("canvasBuild", {})
+    except (OSError, UnicodeError, SelectionError) as error:
+        return [str(error)]
+    if actual.get("snapshotSha256") != expected["snapshotSha256"]:
+        return [
+            "Production canvas is stale; regenerate index.html after updating this stage"
+        ]
+    return []
 
 
 # --------------------------------------------------------------------------- #
@@ -277,14 +572,17 @@ def enrich_takes(data, proj, generate_sheets=False):
 # generation
 # --------------------------------------------------------------------------- #
 
-def generate(proj, data, out_name):
+def generate(proj, data, out_name, expected_stage=None):
     with open(TEMPLATE, "r", encoding="utf-8") as f:
         template = f.read()
     with open(RENDERER, "r", encoding="utf-8") as f:
         renderer = f.read()
 
-    # bake in current manifest selections if available
     proj_path = Path(proj) if proj else None
+    if proj_path and data.get("canvas"):
+        data = prepare_canvas_data(data, proj_path, expected_stage=expected_stage)
+
+    # bake in current manifest selections if available
     selectable = collect_selectable(data)
     if proj_path and selectable:
         current_sel = read_selection(selectable, proj_path)
@@ -305,7 +603,7 @@ def generate(proj, data, out_name):
         )
     )
     out = proj / out_name
-    out.write_text(rendered_html, encoding="utf-8")
+    atomic_write(out, rendered_html.encode("utf-8"))
     return out
 
 
@@ -316,6 +614,8 @@ def generate(proj, data, out_name):
 class ShowcaseHandler(BaseHTTPRequestHandler):
     service: SelectionService
     proj: Path
+    data: ClassVar[dict] = {}
+    expected_stage: ClassVar[str | None] = None
     server: HTTPServer
     session_token: str
     index_name = 'index.html'
@@ -432,15 +732,29 @@ class ShowcaseHandler(BaseHTTPRequestHandler):
         except (SelectionError, ValueError, OSError) as error:
             self._send_json({'ok': False, 'error': str(error)}, 400)
         else:
+            if self.data.get("canvas"):
+                try:
+                    generate(
+                        self.proj,
+                        self.data,
+                        self.index_name,
+                        expected_stage=self.expected_stage,
+                    )
+                except (OSError, UnicodeError, SelectionError) as error:
+                    result["canvasSynced"] = False
+                    result["canvasError"] = str(error)
+                else:
+                    result["canvasSynced"] = True
             self._send_json(result)
 
     def log_message(self, *args):
         pass
 
 
-def serve(proj, data, port, index_name='index.html'):
+def serve(proj, data, port, index_name='index.html', expected_stage=None):
     handler = type('ProjectShowcaseHandler', (ShowcaseHandler,), {
         'service': SelectionService(proj, data), 'proj': proj,
+        'data': data, 'expected_stage': expected_stage,
         'session_token': secrets.token_urlsafe(32), 'index_name': index_name,
     })
     httpd = HTTPServer(('127.0.0.1', port), handler)
@@ -680,6 +994,16 @@ def main():
     parser.add_argument("--out", default=None,
                         help="Output HTML filename (default: index.html, or _quick_review.html in --quick mode).")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument(
+        "--init",
+        action="store_true",
+        help="Initialize the persistent eight-stage canvas without overwriting an existing showcase.json.",
+    )
+    parser.add_argument(
+        "--stage",
+        choices=CANVAS_STAGE_IDS,
+        help="Require this production-canvas stage and verify HTML freshness with --check.",
+    )
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--serve", action="store_true")
     parser.add_argument("--port", type=int, default=8000)
@@ -691,8 +1015,10 @@ def main():
                         help="Open the generated HTML in the default browser.")
     parser.add_argument("--expected-revision", help="Reject --apply when current manifest hashes differ")
     args = parser.parse_args()
-    if args.check and (args.apply or args.serve or args.quick):
-        parser.error("--check cannot be combined with --apply, --serve, or --quick")
+    if args.check and (args.apply or args.serve or args.quick or args.init):
+        parser.error("--check cannot be combined with --apply, --serve, --quick, or --init")
+    if args.init and (args.apply or args.serve or args.quick or args.contact_sheets or args.stage):
+        parser.error("--init cannot be combined with --apply, --serve, --quick, --contact-sheets, or --stage")
 
     # ---- quick mode ----
     if args.quick:
@@ -715,18 +1041,65 @@ def main():
     proj_path = Path(proj)
     out_name = args.out or "index.html"
     manifest = os.path.join(proj, "showcase.json")
+    if args.init:
+        if os.path.exists(manifest):
+            sys.exit(f"refusing to overwrite existing manifest: {manifest}")
+        data = load_json(CANVAS_TEMPLATE)
+        data["title"] = f"{proj_path.name.replace('-', ' ').title()} Production Canvas"
+        errors = canvas_validation_errors(data, proj_path, "brief-development")
+        if errors:
+            for item in errors:
+                print(f"invalid showcase: {item}")
+            sys.exit(1)
+        manifest_content = (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+        try:
+            prepare_canvas_data(
+                data,
+                proj_path,
+                manifest_bytes=manifest_content,
+                expected_stage="brief-development",
+            )
+        except (OSError, UnicodeError, SelectionError) as error:
+            sys.exit(f"canvas initialization failed: {error}")
+        atomic_write(
+            Path(manifest),
+            manifest_content,
+        )
+        out = generate(
+            proj_path,
+            data,
+            out_name,
+            expected_stage="brief-development",
+        )
+        print(f"initialized {manifest}")
+        print(f"wrote {out} ({out.stat().st_size} bytes)")
+        if args.open:
+            webbrowser.open(f"file://{out.resolve()}")
+        return
     if not os.path.exists(manifest):
         sys.exit(f"missing manifest: {manifest}")
 
     data = load_json(manifest)
+    if data.get("canvas") and not args.stage:
+        sys.exit("production canvas commands require --stage <stage-id>")
 
     missing = validate(data, proj_path)
+    if args.stage or data.get("canvas"):
+        missing.extend(canvas_validation_errors(data, proj_path, args.stage))
     if missing:
         for item in missing:
             print(f"invalid showcase: {item}")
-        if args.check or args.strict or args.apply or args.serve:
+        if args.check or args.strict or args.apply or args.serve or args.stage or data.get("canvas"):
             sys.exit(1)
     if args.check:
+        if args.stage:
+            stale = canvas_sync_errors(data, proj_path, proj_path / out_name, args.stage)
+            if stale:
+                for item in stale:
+                    print(f"invalid showcase: {item}")
+                sys.exit(1)
+            print(f"OK: production canvas is current for {args.stage}")
+            return
         print("OK: all media, prompts, and manifests resolve")
         return
 
@@ -750,20 +1123,34 @@ def main():
             result = SelectionService(proj_path, data).apply(apply_dict, args.expected_revision)
         except (SelectionError, OSError) as error:
             sys.exit(f"selection failed: {error}")
+        if data.get("canvas"):
+            try:
+                generate(proj_path, data, out_name, expected_stage=args.stage)
+            except (OSError, UnicodeError, SelectionError) as error:
+                result["canvasSynced"] = False
+                result["canvasError"] = str(error)
+                print(json.dumps(result))
+                sys.exit(2)
+            result["canvasSynced"] = True
         print(json.dumps(result))
         return
 
     enrich_takes(data, proj_path, generate_sheets=args.contact_sheets)
     if args.contact_sheets:
-        from selection_service import atomic_write
         atomic_write(proj_path / 'showcase.json', (json.dumps(data, indent=2, ensure_ascii=False) + '\n').encode('utf-8'))
 
     if args.serve:
-        generate(proj_path, data, out_name)
-        serve(proj_path, data, args.port, out_name)
+        try:
+            generate(proj_path, data, out_name, expected_stage=args.stage)
+        except (OSError, UnicodeError, SelectionError) as error:
+            sys.exit(f"canvas generation failed: {error}")
+        serve(proj_path, data, args.port, out_name, expected_stage=args.stage)
         return
 
-    out = generate(proj_path, data, out_name)
+    try:
+        out = generate(proj_path, data, out_name, expected_stage=args.stage)
+    except (OSError, UnicodeError, SelectionError) as error:
+        sys.exit(f"canvas generation failed: {error}")
     print(f"wrote {out} ({out.stat().st_size} bytes)")
     if args.open:
         webbrowser.open(f"file://{out.resolve()}")

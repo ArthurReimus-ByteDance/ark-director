@@ -1,5 +1,10 @@
 # Cross-Modality Handoff Contracts
 
+Before each handoff, update the source and destination stage entries in the
+project canvas, regenerate `index.html`, and run the source stage freshness
+check. The receiving stage reads its inputs from that synchronized canvas and
+owning manifests rather than reconstructing state from chat.
+
 ## Canon to storyboard
 
 Pass selected element paths, roles, approval states, hashes, and stable prompt
@@ -31,3 +36,5 @@ known defects. Do not treat `succeeded` as creative approval.
 When a selected element, audio file, storyboard anchor, or exact prompt changes,
 identify every dependent artifact. Return affected downstream artifacts to
 `review`; preserve their files, prompts, task IDs, hashes, and rejection history.
+Update the canvas statuses and regenerate it in the same change so the visible
+dependency state cannot lag behind the manifests.

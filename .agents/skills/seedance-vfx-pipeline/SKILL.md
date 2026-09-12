@@ -1,6 +1,6 @@
 ---
 name: seedance-vfx-pipeline
-description: End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill, the modelark MCP tools, and ffmpeg-side-by-side-comparison to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, save manifest — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
+description: End-to-end pipeline for Seedance video-to-video VFX shot production. Composes the seedance-vfx-prompt skill, the modelark MCP tools, ffmpeg-side-by-side-comparison, and the persistent showcase-html production canvas to take a source clip and change description through a reviewed, saved, manifested asset. Invoke when the user wants to run a full VFX shot — write prompt, submit task, poll, download, compare, and review — rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.
 ---
 
 # Seedance VFX Pipeline
@@ -11,6 +11,13 @@ This skill composes the `seedance-vfx-prompt` skill (prompt writing) with the
 `modelark-mcp` tools (task submission, polling, download) to produce a saved,
 manifested asset following the workspace's `projects/<project>/` directory
 conventions. This is an explicitly declared orchestrator.
+
+Initialize or resume the project `showcase.json`/`index.html` canvas before the
+run. Keep the source clip, exact prompt, references, before/after outputs,
+comparison render, QA, task provenance and selection state together in the
+appropriate `shot-generation` section. Regenerate the canvas after each material
+change and pass `--check --stage shot-generation` before reporting the shot stage
+complete.
 
 > **Version note**: This pipeline runs on **both** Seedance generations.
 > **Default to Seedance 2.5** (`dreamina-seedance-2-5-260628`,
@@ -98,8 +105,10 @@ The workspace's recurring pattern for a text-only before/after VFX demo:
 5. Comparison — if the halves differ mainly in audio (language swap / dialogue
    rewrite), use the staggered one-at-a-time split from
    `ffmpeg-side-by-side-comparison`; otherwise a simultaneous `hstack`.
-6. Manifests — Steps 6–7 of this skill; then set `review`, and only explicit
-   user approval sets `approved`.
+6. Canvas and manifests — complete Steps 6–7, add the source, prompt, outputs,
+   comparison and QA to the project canvas, regenerate/open it, and pass the
+   `shot-generation` freshness check. Then set `review`; only explicit user
+   approval sets `approved`.
 
 ## Inputs
 

@@ -6,6 +6,29 @@ Draft brief and scene breakdown can identify assets before canon exists. Before 
 
 The normal flow is brief → draft breakdown → required canon → optional storyboard → optional requested lip-sync audio → shot generation → review → assembly → delivery. Entry and exit evidence live in film-production's stage/handoff contracts. Stage completion cannot be inferred from filenames.
 
+## Persistent production canvas
+
+Initialize every production project with one `showcase.json` and its generated
+`index.html`. Treat the JSON as the editable source of truth and the HTML as the
+portable production canvas. Keep the canvas cumulative: retain earlier briefs,
+elements, prompts, variants, decisions, rejected outputs and provenance while
+adding the active stage's current sources and results.
+
+Update the canvas after every material change to a brief, breakdown, manifest,
+prompt, element, storyboard, audio asset, video take, selection, assembly,
+review record or deliverable. Each section declares its production stage. The
+canvas must display all eight lifecycle stages, the current status, the exact
+prompt snapshot used for each generated artifact, the referenced elements, and
+the available review/selection state.
+
+Before exiting a stage, regenerate `index.html`, open it for visual review, and
+run `generate_showcase.py <project> --check --stage <stage-id>`. The check must
+match the declared stage and verify that the embedded manifest/source hashes are
+current. A missing, invalid or stale page leaves the stage incomplete.
+`media-review` may provide temporary OS-native viewing only when the HTML surface
+is unavailable or explicitly requested. Record the gap and restore the canvas;
+the fallback never replaces the stage checkpoint.
+
 Defaults are proposed until the user accepts the displayed set. Store each axis with value, source (proposed/defaulted/user_confirmed), and approval evidence when available. Approval persists across turns within its stated scope. A generation request does not approve its result.
 
 Only explicit user choice sets selected_variant or approved. Automated advice uses recommended_variant. A technical success is review. Choosing one take does not implicitly reject every other take. Preserve earlier selections and user-written metadata when updating a bounded field.
@@ -16,7 +39,7 @@ Identify assets using [element-identification.md](element-identification.md). Co
 
 Narrative shots need events, intent, blocking and observable end states. Static character/prop sheets need clear composition and visible design; music/SFX/ambience need a sound arc appropriate to the requested artifact. Do not force story tactics into a static-image or sound-bed prompt.
 
-Screens and typography use approved layout references before production video. Inspect the actual output; reference images do not guarantee pixel-perfect text. Use deterministic finishing when exact copy is required.
+Screens and typography use approved layout references before production video. Inspect the actual output; reference images do not guarantee pixel-perfect text. Use deterministic finishing when exact copy is required. Never ask the model to render overlay text such as captions, taglines, CTAs or end cards; generate text-free footage and add on-screen text in post with FFmpeg or Remotion.
 
 Single-person references should preserve the intended identity and avoid cloning. Clean a sheet only for the requested reference policy or observed duplicate-face defect. Preserve approved visual descriptors and the face anchor; do not infer gender identity from appearance. Visual inspection and model-assisted inspection are evidence, not substitutes for user selection. Unavailable verification remains unresolved.
 

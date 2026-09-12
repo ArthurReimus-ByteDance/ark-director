@@ -65,7 +65,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/blender-to-seedance/SKILL.md",
-      "computedHash": "31bbc73344a0f6c616e8510b3506f9981f69a27a6c341e1415944f544753e924"
+      "computedHash": "b6dcb5057f64fd656906cd76ce3b7f3936c9c4392e1ba64fa05081ba1765eaac"
     },
     "brief-intake": {
       "source": "local",
@@ -101,7 +101,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/film-production/SKILL.md",
-      "computedHash": "110ed54ef11ecb92b9f322332cb37db23de4385b10471dbd9badb29e93670020"
+      "computedHash": "a9286bb9815f6ea48a1e9e68f64e5883de2efb6d1c1767226ba8878764be87da"
     },
     "lark-showcase-aigc": {
       "source": "local",
@@ -113,7 +113,7 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/media-review/SKILL.md",
-      "computedHash": "494504094da72ef5370650559f6b4c73f74838a7ba57dc5cc30b25f855335e3b"
+      "computedHash": "b1064a93a58390f7e29438f4403d133e160f63ac266255794f3432fc5be2c42b"
     },
     "mediabunny": {
       "source": "remotion-dev/skills",
@@ -125,13 +125,13 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/modelark-mcp/SKILL.md",
-      "computedHash": "77b1fcc6e26c4fb86a68351aa4515a595b36bf13e97cd00441be73df816c2088"
+      "computedHash": "7d770e3d5eeb7f1618f3c82e5545cd060353fe5e12c9466ccfa8531e3a302558"
     },
     "prompt-review": {
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/prompt-review/SKILL.md",
-      "computedHash": "5f8d813370ecebcb27195f4074d42617a89d8605f34ff9d568fcabfe9b755f3c"
+      "computedHash": "daefcab5f14e750277885b98e17db6512b569d6d69c3d8ac1c553c3f242f268f"
     },
     "remotion-best-practices": {
       "source": "remotion-dev/skills",
@@ -287,19 +287,19 @@
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedance-vfx-pipeline/SKILL.md",
-      "computedHash": "9444ab72e2322b925a26b9d3ed3bef87d68a64eec098a98f233c99c2ace1025d"
+      "computedHash": "73b826817413653d872377e1424ab0f123ef6dda83f85f2d73a119b94c71dda1"
     },
     "showcase-html": {
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/showcase-html/SKILL.md",
-      "computedHash": "5fc3e699ee0be80a39afaef79987e1f37bf889362c445186d6b5587e0af145dd"
+      "computedHash": "34fc958c655434417adb8eeddc3219dea9980a7b404eaec418da0babf4c30ffb"
     },
     "seedream-character-sheet": {
       "source": "local",
       "sourceType": "local",
       "skillPath": ".agents/skills/seedream-character-sheet/SKILL.md",
-      "computedHash": "5bd97d47ff4b54dfb2d75d9a3f75d9cb51ad12d4f2fb095b6ff9e1fd75475f19"
+      "computedHash": "fca0e101f12e6812874095c0e8945d1268bdfba766ebad15472c4aebed4dc3f6"
     },
     "seedream-character-sheet-cleanup": {
       "source": "local",

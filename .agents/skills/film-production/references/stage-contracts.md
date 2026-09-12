@@ -4,6 +4,24 @@ Use these contracts to determine the next safe stage. A later stage may begin
 only when its entry evidence exists. Keep unavailable future departments as
 explicit gaps rather than fabricating their outputs.
 
+## Canvas checkpoint for every stage
+
+Create the project's `showcase.json` and generated `index.html` during Stage 1.
+Keep all eight stage records in the manifest from initialization onward. Each
+stage adds its sources and stage-tagged sections without deleting prior variants
+or decisions. Exact generation prompts use `promptFile` so their immutable
+snapshot is embedded into the portable page.
+
+Every stage exit additionally requires:
+
+1. the canvas current stage and status match the stage being completed;
+2. the stage shows its inputs, outputs, prompts, bindings and review evidence;
+3. `index.html` has been regenerated and opened after the latest material edit;
+4. `generate_showcase.py <project> --check --stage <stage-id>` passes.
+
+The stage-specific required outputs below describe what the matching canvas
+section must expose. A CLI/OS-player review does not replace this checkpoint.
+
 ## 1. Brief and development
 
 Entry: user intent or an existing `project.md`.
@@ -13,6 +31,7 @@ creative constraints, known rights constraints, budget posture, and unresolved
 questions recorded in `project.md`. Confirmed directorial defaults (structure,
 camera, lens, lighting, grade, pacing, acting, staging, medium, audio) from
 `brief-intake` persisted as a `locked` block in `project.md` frontmatter.
+The canvas embeds or links this brief as the `brief-development` stage source.
 
 Exit: the production objective, constraints, and directorial defaults are clear
 enough to break down.
@@ -25,6 +44,8 @@ assets are required and does not make a prompt ready for production submission.
 
 Required output: scene list, cast, locations, props, dialogue, sound needs,
 continuity states, delivery assumptions, and scene-level acceptance criteria.
+The `scene-breakdown` canvas stage lists every scene/shot manifest and its
+required production-input inventory.
 
 Exit: every planned scene has observable action and an inventory of required
 production inputs, with missing approvals recorded as unresolved.
@@ -46,6 +67,8 @@ Screen-only callers use a locked UI with text-directed movement/dialogue, not
 character sheets as static screen content. Apply the prop threshold rather than
 turning every visible object into a generation requirement. Record missing
 required references before dependent tasks are submitted.
+The `canon-elements` canvas section shows every variant, its exact prompt,
+manifest, recommendation/selection state and downstream role.
 
 Exit: every required canonical element has an approved selected variant, or the
 dependent scene is explicitly marked unresolved. The element list has been
@@ -59,6 +82,7 @@ earlier and stays draft until its input requirements are satisfied.
 
 Required output: beat/panel plan, bound references, prompts, generated panels or
 prompt package, continuity review, provenance, and video-handoff eligibility.
+Expose these together in the `storyboard-visual-plan` canvas stage.
 
 Exit: required panels are approved and all source element hashes remain current,
 or the scene has an explicitly approved direct-to-video path.
@@ -70,6 +94,7 @@ explicitly requested lip-synced dialogue audio.
 
 Required output: exact audio prompt, local audio file, duration, transcript or
 dialogue timing, media inspection, SHA-256, and manifest linkage.
+Expose the audio player, prompt and timing evidence in `audio-preparation`.
 
 Exit: audio duration fits the planned video and dialogue mappings are verified.
 
@@ -91,6 +116,8 @@ Required output: task registry entry, local media, exact prompt snapshot,
 provider metadata, actual media properties, cost fields, SHA-256, semantic QA,
 and `review` status. Resolution is raised only after the current pass is
 approved (final-candidate gate).
+The `shot-generation` stage shows every take, exact prompt, ordered element
+bindings, metadata, inspection result and selection state.
 
 Exit: the user approves a take or requests a bounded revision.
 
@@ -100,6 +127,8 @@ Entry: approved takes and any requested audio assets exist.
 
 Required output: ordered edit, review render, transition and continuity review,
 audio presence check, technical decode QA, and outstanding notes.
+The `assembly-review` stage keeps its approved inputs and comparison renders on
+the same page.
 
 Exit: explicit picture and audio approval. Full editorial, color, and sound-post
 department contracts are future work tracked in the lifecycle specification.
@@ -110,5 +139,6 @@ Entry: approved picture and audio plus a known delivery target.
 
 Required output: inspected master, review proxy if needed, caption or localization
 status, delivery metadata, hashes, and archive pointers.
+The `delivery` stage exposes those files and final approval evidence.
 
 Exit: explicit user approval of the final deliverable.

@@ -31,6 +31,7 @@ Load only the contract relevant to the current stage:
 | Need | Tracked source |
 | --- | --- |
 | Production stages, approval, review, durable submission and QA | [Production policy](.agents/contracts/production-policy.md) |
+| Required stage canvas and HTML freshness checks | [Production canvas](.agents/skills/showcase-html/references/production-canvas.md) |
 | MCP, Ark CLI, Lumina and capability routing | [Routing](.agents/contracts/routing.md) |
 | Canon, props, screens and control references | [Element identification](.agents/contracts/element-identification.md) |
 | File prefixes and numbering | [Asset naming](.agents/contracts/asset-naming.md) |
@@ -99,6 +100,9 @@ references and UI metadata. Do not refresh hashes to hide unexplained changes.
 - Lock exact screen copy/layout with a reference before video. Inspect the
   result; references do not guarantee pixel-perfect text. Use deterministic
   finishing when exact fidelity is required.
+- Do not bake captions, taglines, CTAs, end cards or other overlay text into
+  generated video. Keep generated footage text-free and add on-screen text in
+  post with FFmpeg or Remotion.
 - Preserve exact canonical descriptors where applicable. Prefer positive,
   observable direction; necessary edit-scope exclusions are allowed.
 - Run prompt-review for every generation-bound prompt. Resolve CRITICAL/MAJOR
@@ -113,6 +117,11 @@ references and UI metadata. Do not refresh hashes to hide unexplained changes.
   timeouts. Unknown acceptance holds for reconciliation or explicit retry scope.
 - Save every generated modality locally and record artifact/task IDs, bytes,
   SHA-256, actual media properties and separate estimated/confirmed costs.
+- Create one project `showcase.json` and generated `index.html` at initialization.
+  Keep that production canvas synchronized with briefs, manifests, prompts,
+  elements, audio, video, review evidence, assemblies and delivery state after
+  every material stage change. A stage cannot exit until its
+  `showcase-html --check --stage <stage-id>` freshness check passes.
 - Provider success sets review, not approved. User choice alone approves a
   variant. Preserve other variants and prior history unless explicitly changed.
 - Default image selection sets contain three stochastic samples with identical
@@ -136,6 +145,7 @@ repository maintenance unless explicitly scoped.
 | Location | Contents |
 | --- | --- |
 | `projects/<project>/project.md` | Brief, proposed/confirmed axes, project state |
+| `projects/<project>/showcase.json` and `index.html` | Canonical canvas manifest and synchronized stage review surface |
 | `projects/<project>/task_ids.json` | Single provider-operation registry |
 | `projects/<project>/ref_cache.json` | Content hashes and storage-scoped object keys |
 | `projects/<project>/elements/<element-id>/` | Reusable identity/location/prop manifests and references |
@@ -214,5 +224,9 @@ smoke tests. Provider adapters use mocked contract tests; live paid checks need
 appropriate explicit generation scope. Report pass/fail/not-applicable for
 unit, smoke, lint, type, build/syntax, diff and secrets checks. A missing runtime
 or unavailable tool is not a passing test.
+
+Production-stage verification also runs the project canvas checkpoint from the
+showcase skill. `media-review` is an unavailable-browser or explicitly requested
+OS-player fallback and does not satisfy this checkpoint.
 
 For reviewed skill changes, preview `uv run python .agents/scripts/sync_catalog.py --refresh-integrity`; add `--write` only after inspecting the listed source changes. Catalog summaries determine README rows. This command preserves upstream hash semantics and does not stage or commit files.

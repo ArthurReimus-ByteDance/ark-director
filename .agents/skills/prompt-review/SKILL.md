@@ -36,7 +36,8 @@ Main agent writes/updates prompts
 - After revising a prompt based on generated output feedback.
 
 Do not trigger for:
-- Media review (use `showcase-html --quick`).
+- Media review (project work uses its persistent `showcase-html` canvas; ad-hoc
+  files may use `showcase-html --quick`).
 - Manifest or scene definition edits (those are production metadata, not prompts).
 - Prompts that have already been frozen as prompt snapshots unless the user explicitly
   asks to re-review a frozen snapshot.
@@ -106,7 +107,9 @@ to get its full text.
 
 If reviewing prompts that have not yet been saved to files (drafted inline in
 `shot.md` or `scene.md`), extract the prompt text from the manifest's `prompt:` field
-or inline working copy.
+or inline working copy. Before production submission, freeze the accepted text
+as its immutable `prompt_*.md` snapshot so the calling orchestrator can embed it
+in the current project canvas with `promptFile`.
 
 ### Step 2 — Detect prompt type and load checklist
 
@@ -438,9 +441,10 @@ organized by prompt type with a table of contents at the top for quick navigatio
 
 ## Compose with other skills
 
-- After prompts pass review and generation tasks are submitted, consider composing
-  with `showcase-html` (`--quick` for ad-hoc review, or full `showcase.json` for
-  project-wide review) to review the generated media output.
+- After a production prompt passes, return its snapshot path, request hash,
+  reference bindings and review result to the caller. The caller must update and
+  regenerate the persistent `showcase-html` canvas before submission and again
+  after generated media arrives. `--quick` remains limited to ad-hoc files.
 - For end-to-end production coordination, `film-production` is the production manager.
 - This skill is called by the main agent during prompt-writing work; it does not call
   generation tools itself.

@@ -103,6 +103,26 @@
       "exceptions": []
     },
     {
+      "id": "canvas.stage_current",
+      "severity": "error",
+      "applies_to": [
+        "stage_exit"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "The production canvas declares the stage being completed and exposes its required evidence.",
+      "exceptions": []
+    },
+    {
+      "id": "canvas.snapshot_current",
+      "severity": "error",
+      "applies_to": [
+        "stage_exit"
+      ],
+      "owner_path": ".agents/contracts/production-policy.md",
+      "summary": "The generated HTML matches the current canvas manifest and all referenced local sources.",
+      "exceptions": []
+    },
+    {
       "id": "breakdown.schema",
       "severity": "error",
       "applies_to": [

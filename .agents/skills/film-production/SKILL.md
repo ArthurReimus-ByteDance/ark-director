@@ -1,6 +1,6 @@
 ---
 name: film-production
-description: Orchestrate an AI-assisted film, commercial, music video, or narrative production across brief, development, canon, storyboard, audio, shot generation, review, assembly, and delivery. Use when a request spans multiple scenes or modalities, asks to create or continue a film project, requires coordination between Seedream, Seed Audio, Seedance, Remotion, or FFmpeg, or needs the next safe production step rather than a single prompt. Do not use for an isolated image, audio, video, or editing request that one specialist skill can complete independently.
+description: Orchestrate an AI-assisted film, commercial, music video, or narrative production across brief, development, canon, storyboard, audio, shot generation, review, assembly, and delivery while maintaining one required showcase-html production canvas through every stage. Use when a request spans multiple scenes or modalities, asks to create or continue a film project, requires coordination between Seedream, Seed Audio, Seedance, Remotion, or FFmpeg, or needs the next safe production step rather than a single prompt. Do not use for an isolated image, audio, video, or editing request that one specialist skill can complete independently.
 ---
 
 # Film Production
@@ -15,6 +15,8 @@ evidence and approvals permit.
 - Act as the single manager communicating with the user.
 - Treat project files and manifests as production memory; do not rely on chat
   history alone.
+- Treat the persistent `showcase.json` plus generated `index.html` as the
+  cumulative production canvas used for every stage review and handoff.
 - Delegate modality work by invoking the narrowest applicable project skill.
 - Prefer a deterministic workflow when the next action is known. Use agentic
   judgment for creative choices, contradiction resolution, and review.
@@ -28,8 +30,10 @@ evidence and approvals permit.
 
 1. Resolve the project directory. Search before creating a project, scene,
    element, shot, or same-purpose artifact.
-2. Read `project.md`, `task_ids.json`, relevant element manifests, scene and shot
-   manifests, prompt snapshots, and the latest review decisions.
+2. Read `project.md`, `task_ids.json`, `showcase.json`, relevant element
+   manifests, scene and shot manifests, prompt snapshots, and the latest review
+   decisions. If a production project has no canvas, initialize the eight-stage
+   skeleton before advancing it.
 3. Determine the current stage from recorded artifacts and lifecycle states.
    Do not infer completion from filenames alone.
 4. Identify contradictions, missing inputs, stale dependencies, pending provider
@@ -63,6 +67,7 @@ between modalities.
 | End-to-end Seedance 2.0 VFX shot | `seedance-vfx-pipeline` |
 | Model submission, polling, or artifact access | `modelark-mcp` |
 | Assembly, media transforms, captions, render | appropriate Remotion, FFmpeg, or Mediabunny skill |
+| Persistent stage canvas, review and selection | `showcase-html` |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -81,9 +86,14 @@ For the active stage:
 3. Invoke only the specialists needed for that stage.
 4. Persist exact prompts beside generated media and update the owning manifest.
 5. Inspect actual outputs, not only provider response metadata.
-6. Set outputs to `review` and present material differences, known defects, and
+6. Update the active stage in `showcase.json` with every input, exact prompt,
+   element binding, output, QA result and decision; regenerate and open
+   `index.html`.
+7. Run `generate_showcase.py <project> --check --stage <stage-id>`. A stale or
+   incomplete canvas keeps the stage open.
+8. Set outputs to `review` and present material differences, known defects, and
    the recommended next decision.
-7. Advance only when the stage exit contract is satisfied.
+9. Advance only when the stage exit contract is satisfied.
 
 At the brief/development stage, run `brief-intake` before writing the brief's
 required output: it proposes genre-appropriate defaults per directorial axis
@@ -120,11 +130,11 @@ approved. Preserve rejected history and never overwrite source media.
 
 ## Finish the run
 
-Report the stage reached, artifacts created or changed, review status, provider
-tasks still running, costs when known, unresolved risks, and the next production
-decision. A production run is complete only when its active stage exit contract
-is satisfied; the whole film is complete only after explicit final-delivery
-approval.
+Report the stage reached, artifacts created or changed, canvas path and freshness
+check, review status, provider tasks still running, costs when known, unresolved
+risks, and the next production decision. A production run is complete only when
+its active stage exit contract is satisfied; the whole film is complete only
+after explicit final-delivery approval.
 
 ## Submission recovery
 

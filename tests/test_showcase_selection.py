@@ -36,6 +36,42 @@ class ShowcaseRegressionTests(unittest.TestCase):
     def files(self):
         return {str(path.relative_to(self.root)): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
 
+    def lifecycle_canvas(self):
+        (self.root / 'project.md').write_text('# Project brief\n')
+        (self.root / 'prompt_hero.md').write_text('A precise hero image prompt.\n')
+        stages = []
+        labels = {
+            'brief-development': 'Brief and development',
+            'scene-breakdown': 'Scene and production breakdown',
+            'canon-elements': 'Canon and elements',
+            'storyboard-visual-plan': 'Storyboard and visual plan',
+            'audio-preparation': 'Audio preparation',
+            'shot-generation': 'Shot generation',
+            'assembly-review': 'Assembly and review',
+            'delivery': 'Delivery',
+        }
+        for stage_id in showcase.CANVAS_STAGE_IDS:
+            stage = {'id': stage_id, 'label': labels[stage_id], 'status': 'pending', 'sources': []}
+            if stage_id == 'brief-development':
+                stage.update({'status': 'active', 'sources': [{'path': 'project.md', 'kind': 'brief'}]})
+            stages.append(stage)
+        return {
+            'title': 'Lifecycle canvas fixture',
+            'canvas': {'currentStage': 'brief-development', 'stages': stages},
+            'sections': [{
+                'id': 'concepts',
+                'title': 'Concepts',
+                'stage': 'brief-development',
+                'kind': 'grid',
+                'cards': [{
+                    'type': 'elem',
+                    'media': {'type': 'image', 'src': 'new.png'},
+                    'promptFile': 'prompt_hero.md',
+                    'refs': [{'name': 'Hero canon', 'role': '@Image 1', 'kind': 'img', 'path': 'old.png'}],
+                }],
+            }],
+        }
+
     def test_map_update_preserves_unrelated_fields_comment_quotes_and_body(self):
         result = self.service.apply({'hero': 'new.png'})
         self.assertTrue(result['ok'])
@@ -197,6 +233,96 @@ class ShowcaseRegressionTests(unittest.TestCase):
         probe = {'duration': 1, 'size_bytes': 32, 'width': 16, 'height': 16, 'fps': 24, 'codec': 'h264', 'has_audio': True, 'audio_codecs': ['opus']}
         with patch.object(showcase, '_run_ffprobe', return_value=probe):
             self.assertIn('h264 + opus', showcase._ffprobe_chips(self.root / 'new.png'))
+
+    def test_lifecycle_canvas_embeds_prompts_and_detects_stale_sources(self):
+        data = self.lifecycle_canvas()
+        (self.root / 'showcase.json').write_text(json.dumps(data))
+        output = showcase.generate(self.root, data, 'index.html', expected_stage='brief-development')
+        embedded = showcase.embedded_showcase_data(output)
+        self.assertEqual(embedded['canvasBuild']['currentStage'], 'brief-development')
+        self.assertEqual(embedded['sections'][0]['cards'][0]['prompt'], 'A precise hero image prompt.\n')
+        self.assertEqual(embedded['canvas']['stages'][0]['counts']['media'], 2)
+        self.assertEqual(embedded['canvas']['stages'][0]['counts']['prompts'], 1)
+        self.assertEqual(showcase.canvas_sync_errors(data, self.root, output, 'brief-development'), [])
+        (self.root / 'prompt_hero.md').write_text('A changed prompt.\n')
+        self.assertIn('stale', showcase.canvas_sync_errors(data, self.root, output, 'brief-development')[0])
+
+    def test_lifecycle_canvas_requires_ordered_stages_and_expected_checkpoint(self):
+        data = self.lifecycle_canvas()
+        data['canvas']['stages'].pop()
+        errors = showcase.canvas_validation_errors(data, self.root, 'canon-elements')
+        self.assertTrue(any('stage mismatch' in error.lower() for error in errors))
+        self.assertTrue(any('all eight production stages' in error for error in errors))
+
+    def test_lifecycle_canvas_requires_prompt_files_and_reference_paths(self):
+        data = self.lifecycle_canvas()
+        card = data['sections'][0]['cards'][0]
+        card['prompt'] = (self.root / 'prompt_hero.md').read_text()
+        del card['promptFile']
+        del card['refs'][0]['path']
+        errors = showcase.canvas_validation_errors(data, self.root, 'brief-development')
+        self.assertTrue(any('require promptFile' in error for error in errors))
+        self.assertTrue(any('reference requires' in error for error in errors))
+
+    def test_stage_check_is_read_only_and_rejects_stale_html(self):
+        data = self.lifecycle_canvas()
+        (self.root / 'showcase.json').write_text(json.dumps(data))
+        missing_stage = subprocess.run([
+            sys.executable,
+            str(SCRIPTS / 'generate_showcase.py'),
+            str(self.root),
+        ], check=False, capture_output=True, text=True)
+        self.assertNotEqual(missing_stage.returncode, 0)
+        self.assertIn('require --stage', missing_stage.stderr)
+        generate = subprocess.run([
+            sys.executable,
+            str(SCRIPTS / 'generate_showcase.py'),
+            str(self.root),
+            '--stage',
+            'brief-development',
+        ], check=False, capture_output=True, text=True)
+        self.assertEqual(generate.returncode, 0, generate.stderr)
+        before = self.files()
+        check = subprocess.run([
+            sys.executable,
+            str(SCRIPTS / 'generate_showcase.py'),
+            str(self.root),
+            '--check',
+            '--stage',
+            'brief-development',
+        ], check=False, capture_output=True, text=True)
+        self.assertEqual(check.returncode, 0, check.stderr)
+        self.assertEqual(before, self.files())
+        (self.root / 'project.md').write_text('# Changed project brief\n')
+        stale = subprocess.run([
+            sys.executable,
+            str(SCRIPTS / 'generate_showcase.py'),
+            str(self.root),
+            '--check',
+            '--stage',
+            'brief-development',
+        ], check=False, capture_output=True, text=True)
+        self.assertNotEqual(stale.returncode, 0)
+        self.assertIn('stale', stale.stdout)
+
+    def test_init_creates_canvas_once_without_overwriting(self):
+        (self.root / 'showcase.json').unlink()
+        (self.root / 'project.md').write_text('# New project\n')
+        command = [
+            sys.executable,
+            str(SCRIPTS / 'generate_showcase.py'),
+            str(self.root),
+            '--init',
+        ]
+        first = subprocess.run(command, check=False, capture_output=True, text=True)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        data = json.loads((self.root / 'showcase.json').read_text())
+        self.assertEqual(data['canvas']['currentStage'], 'brief-development')
+        self.assertEqual(len(data['canvas']['stages']), 8)
+        original = (self.root / 'showcase.json').read_bytes()
+        second = subprocess.run(command, check=False, capture_output=True, text=True)
+        self.assertNotEqual(second.returncode, 0)
+        self.assertEqual((self.root / 'showcase.json').read_bytes(), original)
 
 
 if __name__ == '__main__':

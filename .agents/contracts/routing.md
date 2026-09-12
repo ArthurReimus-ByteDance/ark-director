@@ -9,7 +9,8 @@
 | User explicitly chooses Lumina | Author copy-paste prompts in chat; do not generate through MCP/CLI or create production files unless requested |
 | Prompt composition only | Relevant independent prompt skill; no asset-generation or production-lock ceremony for a writing-only task |
 | Multi-scene production | `film-production`; declared orchestrators route specialist work |
-| Media review | `showcase-html`; `media-review` for an explicitly requested OS player or unavailable browser |
+| Production stage review | Required persistent `showcase-html` canvas; update and freshness-check it at every stage |
+| Ad-hoc media comparison | `showcase-html --quick`; `media-review` only for an explicitly requested OS player or unavailable browser |
 | Mermaid system/process diagram | `design-doc-mermaid` when available; cinematic blocking requests use `tig-blocking-map` |
 
 ## Capability evidence

@@ -13,13 +13,20 @@ HTML.
 | `kicker` | string | no | Small uppercase eyebrow above the title. |
 | `lede` | string | no | One-paragraph description under the title. |
 | `badges` | array | no | `{label, value}` pills (e.g. model, resolution). |
+| `canvas` | object | production projects | Lifecycle stage rail and source inventory. See [production-canvas.md](production-canvas.md). |
 | `sections` | array | yes | Ordered section list. |
 | `footer` | string | no | One-line footer text. |
 
+`canvasBuild` is generated and embedded in `index.html`; never author it in
+`showcase.json`. It records the current stage, manifest, source, template and
+renderer hashes, snapshot hash, and generation timestamp used by
+`--check --stage`.
+
 ## Section
 
-Common fields: `id`, `title`, `icon` (emoji), `iconBg` (CSS color), `count`,
-`desc`, and one of four `kind`s.
+Common fields: `id`, `title`, `stage`, `icon` (emoji), `iconBg` (CSS color),
+`count`, `desc`, and one of four `kind`s. `stage` is required when the top-level
+`canvas` object is present and must use one of its fixed production stage IDs.
 
 ### `kind: "grid"` (Elements / Videos)
 
@@ -48,8 +55,9 @@ Card fields:
 | `title` | string | Card title. |
 | `sub` | string | Sub-line (usually the filename). |
 | `chips` | string[] | Meta chips (resolution, duration, size). |
-| `refs` | array | `{name, role, kind}` — "Elements used" list. `kind` is `vid`/`img`/`aud`. |
+| `refs` | array | `{name, role, kind, path}` — "Elements used" list. `kind` is `vid`/`img`/`aud`; production canvases require the project-relative `path` so reference content participates in freshness checks. |
 | `prompt` | string | Prompt text, rendered in a `<pre>`. |
+| `promptFile` | string | Preferred for generated assets. Project-relative immutable prompt snapshot; the generator embeds its exact contents into `prompt` and rejects a differing inline value. |
 | `id` | string | **Selection key** — the asset's stable id (e.g. `lucky-lion`, or `lockup` for a multi-asset brand kit). Present only on selectable cards. Multiple variant cards may share one `id`. |
 | `manifest` | string | Relative path to the element manifest this asset writes its selection back to (e.g. `elements/lucky-lion/character.md`). |
 | `field` | string | Which frontmatter field the selection writes: `selected_variant` (default) or `selected_variants` (map). |
@@ -92,7 +100,7 @@ so already-locked variants show as selected.
       "stageClass": "before",
       "stageTitle": "T2V · Seedance 2.5",
       "stageSub": "Optional sub-line.",
-      "prompt": "Exact prompt text…",
+      "promptFile": "scenes/scene-01/s01_sh010/prompt_s01_sh010_t01_v01.md",
       "media": { "type": "video", "src": "scenes/…/before.mp4" },
       "meta": "1280×720 · 6.0s · 8.0 MB"
     }
@@ -186,9 +194,15 @@ writes back to `shot.md`. Each scene becomes one takes group.
 
 **Selection:** When a take carries `id` + `manifest` + `filename`, the renderer adds a "Pick winner" button. In `--serve` mode, clicking it marks a choice; pressing Save writes `selected_variant: <filename>` into the shot's `shot.md` frontmatter. The selection flows through the same `/api/select` endpoint as element variants — no separate API.
 
+The generator embeds `promptFile` content into the HTML, so the prompt remains
+visible when the page is opened directly with `file://`.
+
 **Synchronized playback:** Each takes group has a "Play all" button that starts all videos in the group simultaneously, and a "Pause all" button. This lets you compare motion side-by-side in real time.
 
-## Minimal example
+## Minimal ad-hoc example
+
+This compact form is for non-project comparison pages. Production projects add
+the complete `canvas` object from [production-canvas.md](production-canvas.md).
 
 ```json
 {
@@ -197,9 +211,9 @@ writes back to `shot.md`. Each scene becomes one takes group.
   "lede": "One base shot re-lensed through five focal lengths.",
   "badges": [{ "label": "Model", "value": "dreamina-seedance-2-5-260628" }],
   "sections": [
-    { "id": "elements", "title": "Elements", "icon": "🖼️", "kind": "grid", "mediaOnly": true, "cards": [] },
-    { "id": "videos", "title": "Videos", "icon": "🎬", "kind": "grid", "cards": [] },
-    { "id": "combined", "title": "Combined", "icon": "🧩", "kind": "panel", "media": { "type": "video", "src": "combined.mp4" }, "caption": "" }
+    { "id": "elements", "title": "Elements", "stage": "canon-elements", "icon": "🖼️", "kind": "grid", "mediaOnly": true, "cards": [] },
+    { "id": "videos", "title": "Videos", "stage": "shot-generation", "icon": "🎬", "kind": "grid", "cards": [] },
+    { "id": "combined", "title": "Combined", "stage": "assembly-review", "icon": "🧩", "kind": "panel", "media": { "type": "video", "src": "combined.mp4" }, "caption": "" }
   ],
   "footer": "Generated with Seedance 2.5."
 }

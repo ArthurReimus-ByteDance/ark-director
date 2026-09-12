@@ -130,28 +130,28 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 
 1. **Clone the repo** and open it in your agent-compatible editor.
 2. **Set the environment variables** above in a `.env` file (gitignored).
-3. **Start a project** — create `projects/<your-project>/project.md` with your brief, cast, and locations.
-4. **Build Elements** — use the `seedream-*` skills to generate canonical character, location, and prop sheets under `elements/`.
-5. **Break into scenes and shots** — write `scene.md` and `shot.md` manifests.
+3. **Start a project and its canvas** — create `projects/<your-project>/project.md`, the eight-stage `showcase.json`, and generated `index.html`.
+4. **Break into scenes and shots** — write `scene.md` and `shot.md` manifests and update the canvas inventory.
+5. **Build Elements** — use the `seedream-*` skills to generate canonical character, location, and prop sheets under `elements/`, then add their variants and exact prompts to the canvas.
 6. **Generate** — use the `seedance-*` and `seed-audio-*` skills to author prompts, then submit via the MCP tools.
 7. **Assemble** — use the `ffmpeg-*` skills to concatenate approved takes with crossfades and mix audio.
-8. **Review** — use the `showcase-html` skill to review generated assets in-browser (use `--quick <file paths>` for ad-hoc comparison, or full `showcase.json` for project-wide review with synchronized playback, contact sheets, and pick-winner selection).
+8. **Review throughout** — after every stage, update and regenerate the same `showcase-html` production canvas, open it in-browser, and pass `--check --stage <stage-id>`. Use `--quick` only for ad-hoc files outside a tracked project.
 
 ---
 
 ## Skills
 
-The workspace ships with **59 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
+The workspace ships with **59 skills** across 13 categories. Independent skills package creative and tooling capabilities; declared orchestrators compose them. Installed bundles and operational contracts ship with the repository.
 
 ### Production Orchestration
 
 | Skill | Description |
 |---|---|
-| **film-production** | Master orchestrator for multi-scene, multi-modality productions. Advances one production stage at a time (brief → development → canon → storyboard → audio → shot generation → review → assembly → delivery), delegates modality-specific work to specialist skills, and preserves explicit human approval at creative locks and handoffs. |
+| **film-production** | Orchestrates multi-scene, multi-modality production one stage at a time while keeping a required HTML production canvas synchronized for review and handoff. |
 | **template-factory** | Reverse-engineer a reference video into reproducible AIGC while synchronizing every stage in the project HTML canvas. |
 | **brief-intake** | Shape intent-led briefs and distinct exploratory treatments; derive applicable directing choices and preserve confirmed decisions. |
 | **prompt-review** | Review and fix prompts written for BytePlus generative models (Seedance, Seed Audio, Seedream) against the repo's skill best practices using a sub-agent review pipeline. |
-| **media-review** | Thin CLI fallback for opening generated media (images and videos) for the user to visually review on macOS when no browser is available. |
+| **media-review** | Emergency OS-player fallback when the required HTML/browser review surface is unavailable. |
 | **blender-to-seedance** | End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. |
 
 ### Seedance — Video Prompting
@@ -177,7 +177,7 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **seedance-vfx-prompt** | Write structured or compact Seedance 2.0 video-to-video VFX prompts using the @Video N / @Image N reference grammar (or the compact @source / @creature shorthand), the three-level VFX taxonomy (world swap, element change, handheld cinematic showcase), embedded lighting with preserve-vs-relight integration recipe, layered space, timing triggers,. |
-| **seedance-vfx-pipeline** | End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. |
+| **seedance-vfx-pipeline** | Run a complete Seedance video-to-video VFX shot and keep its source, prompt, outputs, comparison, and QA synchronized in the project canvas. |
 
 ### Seedream — Image Prompting
 
@@ -265,7 +265,7 @@ The workspace ships with **59 skills** across 13 categories. Skills are the cano
 | Skill | Description |
 |---|---|
 | **lark-showcase-aigc** | Orchestrates ffmpeg-scene-transitions, lark-demo-doc-builder, lark-doc, lark-wiki, lark-drive, and design-doc-mermaid to build enterprise-facing Lark documents that showcase AIGC (AI-generated content) with prompts, results, and inline media. |
-| **showcase-html** | Build a self-contained local HTML review page for a project's generated media. |
+| **showcase-html** | Maintain one synchronized HTML production canvas across every project stage. |
 
 ---
 

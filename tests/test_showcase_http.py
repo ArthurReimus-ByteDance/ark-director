@@ -12,6 +12,7 @@ showcase = fixtures.showcase
 
 class ShowcaseHTTPTests(unittest.TestCase):
     files = fixtures.ShowcaseRegressionTests.files
+    lifecycle_canvas = fixtures.ShowcaseRegressionTests.lifecycle_canvas
     def setUp(self):
         fixtures.ShowcaseRegressionTests.setUp(self)
         handler = type('TestHandler', (showcase.ShowcaseHandler,), {
@@ -77,6 +78,25 @@ class ShowcaseHTTPTests(unittest.TestCase):
         for path in ('/../outside.md', '/%2e%2e/outside.md', '/.selection.lock'):
             status, _, _ = self.request('GET', path)
             self.assertEqual(status, 404)
+
+    def test_selection_save_refreshes_production_canvas(self):
+        data = self.lifecycle_canvas()
+        card = data['sections'][0]['cards'][0]
+        card.update({'id': 'hero', 'manifest': 'shot.md'})
+        (self.root / 'showcase.json').write_text(json.dumps(data))
+        handler = self.server.RequestHandlerClass
+        handler.service = fixtures.selection.SelectionService(self.root, data)
+        handler.data = data
+        handler.expected_stage = 'brief-development'
+        showcase.generate(self.root, data, 'index.html', expected_stage='brief-development')
+        _, _, body = self.request('GET', '/api/session')
+        snapshot = json.loads(body)
+        payload = json.dumps({'selections': {'hero': 'new.png'}, 'expected_revision': snapshot['revision']})
+        headers = {'Content-Type': 'application/json', 'Origin': self.origin, 'X-Showcase-Token': self.token}
+        status, _, body = self.request('POST', '/api/select', payload, headers)
+        self.assertEqual(status, 200, body)
+        self.assertTrue(json.loads(body)['canvasSynced'])
+        self.assertEqual(showcase.canvas_sync_errors(data, self.root, self.root / 'index.html', 'brief-development'), [])
 
 
 if __name__ == '__main__':

@@ -1,0 +1,75 @@
+{
+  "title": "Production Canvas",
+  "kicker": "AI Director",
+  "lede": "Persistent project canvas for stage status, sources, prompts, media, review, and selection.",
+  "badges": [],
+  "canvas": {
+    "currentStage": "brief-development",
+    "stages": [
+      {
+        "id": "brief-development",
+        "label": "Brief and development",
+        "status": "active",
+        "summary": "Capture the production objective, constraints, and directing choices.",
+        "sources": [
+          {
+            "path": "project.md",
+            "kind": "brief",
+            "label": "Project brief"
+          }
+        ]
+      },
+      {
+        "id": "scene-breakdown",
+        "label": "Scene and production breakdown",
+        "status": "pending",
+        "summary": "Inventory scenes, shots, cast, locations, props, dialogue, and sound needs.",
+        "sources": []
+      },
+      {
+        "id": "canon-elements",
+        "label": "Canon and elements",
+        "status": "pending",
+        "summary": "Review recurring characters, locations, props, screens, cards, and audio elements.",
+        "sources": []
+      },
+      {
+        "id": "storyboard-visual-plan",
+        "label": "Storyboard and visual plan",
+        "status": "pending",
+        "summary": "Review shot geography, boards, prompts, continuity, and video eligibility.",
+        "sources": []
+      },
+      {
+        "id": "audio-preparation",
+        "label": "Audio preparation",
+        "status": "pending",
+        "summary": "Review requested dialogue, music, effects, timing, and audio inspection evidence.",
+        "sources": []
+      },
+      {
+        "id": "shot-generation",
+        "label": "Shot generation",
+        "status": "pending",
+        "summary": "Compare takes with exact prompts, ordered references, provenance, and QA.",
+        "sources": []
+      },
+      {
+        "id": "assembly-review",
+        "label": "Assembly and review",
+        "status": "pending",
+        "summary": "Review approved inputs, edits, continuity, transitions, and sound.",
+        "sources": []
+      },
+      {
+        "id": "delivery",
+        "label": "Delivery",
+        "status": "pending",
+        "summary": "Inspect masters, proxies, localization, metadata, hashes, and approval.",
+        "sources": []
+      }
+    ]
+  },
+  "sections": [],
+  "footer": "Generated from showcase.json. Update the manifest and regenerate after every material stage change."
+}

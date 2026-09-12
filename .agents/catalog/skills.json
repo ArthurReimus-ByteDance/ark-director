@@ -93,7 +93,7 @@
     },
     "blender-to-seedance": {
       "kind": "orchestrator",
-      "description": "End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 viewport-style clip, uploads it, and submits a video-to-video task where the previz is the locked motion and camera master and the prompt only dresses the world (characters, locations, materials, style). Composes the blender-* skills (build), seedance-prompt-25 blockout grammar (prompt), modelark-mcp (submit/poll/download), and seedance-vfx-pipeline's save/manifest pattern. This is an orchestrator skill: it delegates the build to the blender-* skills, the grammar to seedance-prompt-25, and submission to modelark-mcp. Use whenever the user wants to direct a shot from 3D \u2014 \"blockout to video\", \"graybox previz to Seedance\", \"3D to Seedance\", \"previz the camera then render\", \"Blender blocking to Seedance\" \u2014 or wants camera, cuts, and timing locked down before spending video credits.",
+      "description": "End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video. Builds a graybox previz in Blender (primitives, color-coded proxies, spline camera), renders it to a 24fps MPEG-4 viewport-style clip, uploads it, and submits a video-to-video task where the previz is the locked motion and camera master and the prompt only dresses the world (characters, locations, materials, style). Composes the blender-* skills (build), seedance-prompt-25 blockout grammar (prompt), modelark-mcp (submit/poll/download), and seedance-vfx-pipeline's save/manifest pattern. This is an orchestrator skill: it delegates the build to the blender-* skills, the grammar to seedance-prompt-25, submission to modelark-mcp, and persistent stage review to showcase-html. Use whenever the user wants to direct a shot from 3D \u2014 \"blockout to video\", \"graybox previz to Seedance\", \"3D to Seedance\", \"previz the camera then render\", \"Blender blocking to Seedance\" \u2014 or wants camera, cuts, and timing locked down before spending video credits.",
       "readme_summary": "End-to-end pipeline that turns a Blender blockout into a Seedance 2.5 video.",
       "dependencies": [],
       "source_revision": "workspace",
@@ -147,8 +147,8 @@
     },
     "film-production": {
       "kind": "orchestrator",
-      "description": "Orchestrate an AI-assisted film, commercial, music video, or narrative production across brief, development, canon, storyboard, audio, shot generation, review, assembly, and delivery. Use when a request spans multiple scenes or modalities, asks to create or continue a film project, requires coordination between Seedream, Seed Audio, Seedance, Remotion, or FFmpeg, or needs the next safe production step rather than a single prompt. Do not use for an isolated image, audio, video, or editing request that one specialist skill can complete independently.",
-      "readme_summary": "Master orchestrator for multi-scene, multi-modality productions. Advances one production stage at a time (brief \u2192 development \u2192 canon \u2192 storyboard \u2192 audio \u2192 shot generation \u2192 review \u2192 assembly \u2192 delivery), delegates modality-specific work to specialist skills, and preserves explicit human approval at creative locks and handoffs.",
+      "description": "Orchestrate an AI-assisted film, commercial, music video, or narrative production across brief, development, canon, storyboard, audio, shot generation, review, assembly, and delivery while maintaining one required showcase-html production canvas through every stage. Use when a request spans multiple scenes or modalities, asks to create or continue a film project, requires coordination between Seedream, Seed Audio, Seedance, Remotion, or FFmpeg, or needs the next safe production step rather than a single prompt. Do not use for an isolated image, audio, video, or editing request that one specialist skill can complete independently.",
+      "readme_summary": "Orchestrates multi-scene, multi-modality production one stage at a time while keeping a required HTML production canvas synchronized for review and handoff.",
       "dependencies": [],
       "source_revision": "workspace",
       "upstream_hash": null,
@@ -165,8 +165,8 @@
     },
     "media-review": {
       "kind": "leaf",
-      "description": "Thin CLI fallback for opening generated media (images and videos) for the user to visually review on macOS when no browser is available. For all normal review workflows, prefer the `showcase-html` skill (`--quick` for ad-hoc file comparison, or full `showcase.json` for project review with synchronized playback, contact sheets, and variant selection). This skill is only needed in environments without a browser, or as a quick `open` command when the user explicitly says \"just open these files\".",
-      "readme_summary": "Thin CLI fallback for opening generated media (images and videos) for the user to visually review on macOS when no browser is available.",
+      "description": "Emergency CLI fallback for opening generated images or videos in macOS when HTML/browser review is unavailable, or when the user explicitly requests an OS-native player. Never use it as production-stage review evidence: project workflows require the synchronized showcase-html canvas and freshness check.",
+      "readme_summary": "Emergency OS-player fallback when the required HTML/browser review surface is unavailable.",
       "dependencies": [],
       "source_revision": "workspace",
       "upstream_hash": null,
@@ -183,7 +183,7 @@
     },
     "modelark-mcp": {
       "kind": "tooling",
-      "description": "Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, video, and 3D models (including Seedance 2.5, Hyper3D, Hitem3d, BytePlus VOD AI MediaKit enhancement, video transcoding, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance and 3D tasks, upload reference media, and fetch persisted artifacts.",
+      "description": "Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, video, and 3D models (including Seedance 2.5, Hyper3D, Hitem3d, BytePlus VOD AI MediaKit enhancement, transcoding, subtitle burn-in/removal, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage asynchronous tasks, upload reference media, and fetch persisted artifacts.",
       "readme_summary": "Guide for using the ModelArk Seed Multimodal MCP server to generate or edit images, audio, video, and 3D models (including Seedance 2.5, Hyper3D, Hitem3d, BytePlus VOD AI MediaKit enhancement, video transcoding, and voice/background audio separation), understand images and videos through Seed 2.1, transcribe speech to text, manage Seedance and 3D.",
       "dependencies": [],
       "source_revision": "workspace",
@@ -408,8 +408,17 @@
     },
     "seedance-vfx-pipeline": {
       "kind": "orchestrator",
-      "description": "End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production. Composes the seedance-vfx-prompt skill, the modelark MCP tools, and ffmpeg-side-by-side-comparison to take a source clip and a change description through to a saved, manifested asset. Invoke when the user wants to run a full VFX shot \u2014 write prompt, submit task, poll, download, save manifest \u2014 rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.",
-      "readme_summary": "End-to-end pipeline for Seedance 2.0 video-to-video VFX shot production.",
+      "description": "End-to-end pipeline for Seedance video-to-video VFX shot production. Composes the seedance-vfx-prompt skill, the modelark MCP tools, ffmpeg-side-by-side-comparison, and the persistent showcase-html production canvas to take a source clip and change description through a reviewed, saved, manifested asset. Invoke when the user wants to run a full VFX shot \u2014 write prompt, submit task, poll, download, compare, and review \u2014 rather than just write a prompt. Supports both Seedance 2.0 and 2.5; default to 2.5 (omni_reference_task_type=edit) for full-duration edits.",
+      "readme_summary": "Run a complete Seedance video-to-video VFX shot and keep its source, prompt, outputs, comparison, and QA synchronized in the project canvas.",
+      "dependencies": [],
+      "source_revision": "workspace",
+      "upstream_hash": null,
+      "overlay_notes": null
+    },
+    "seedance-restoration": {
+      "kind": "leaf",
+      "description": "Write Seedance 2.5 video-to-video restoration prompts that remove film grain, video noise, black and white scratch lines, vertical and horizontal scratches, hairlines, streaks, dust, dirt, flicker, and compression artifacts from aged, damaged, or archival footage while preserving every person, object, action, composition, camera movement, and timing. Use whenever the user asks to restore, clean, denoise, or repair old, aged, or archival footage, remove grain or noise, erase scratch lines or film damage, or \"clean up\" damaged film through the Seedance generative-edit route. Prompt-composition only; the caller owns submission and the generation lifecycle.",
+      "readme_summary": "Write Seedance 2.5 video-to-video restoration prompts that remove film grain, noise, scratch lines, dust, and flicker from aged or archival footage while preserving the shot.",
       "dependencies": [],
       "source_revision": "workspace",
       "upstream_hash": null,
@@ -480,8 +489,8 @@
     },
     "showcase-html": {
       "kind": "tooling",
-      "description": "Build a self-contained local HTML review page for a project's generated media. Turns the project's elements (images, audio, base footage), videos, and prompts into a polished dark-mode gallery with color-coded cards, an \"elements used\" list per video, before/after comparison tables, and a combined grid/side-by-side view. Generates a data-driven page from a single showcase.json manifest plus an embedded template (no external assets), and optionally composes a combined-view MP4 with FFmpeg. Also supports locking variant selections back into element manifests via a local server (--serve) with a timestamped activity log. Use whenever the user wants an HTML review page, a media showcase or gallery, a before/after comparison page, a combined grid view, or a local template to preview generated assets, their prompts, and pick winning variants.",
-      "readme_summary": "Build a self-contained local HTML review page for a project's generated media.",
+      "description": "Build and maintain a self-contained HTML production canvas for generated-media projects. Keep briefs, stage status, elements, prompts, references, images, audio, video takes, selections, review evidence, assemblies, and deliverables synchronized in one data-driven page throughout every production stage. Also supports ad-hoc comparison pages and locking variants back into manifests. Use for every project production review or lifecycle checkpoint, and whenever the user asks for an HTML gallery, showcase, canvas, before/after comparison, combined view, or local interface for reviewing assets and choosing variants.",
+      "readme_summary": "Maintain one synchronized HTML production canvas across every project stage.",
       "dependencies": [],
       "source_revision": "workspace",
       "upstream_hash": null,
