@@ -142,7 +142,7 @@ BYTEPLUS_SEED_AUDIO_API_KEY=your_seed_audio_key  # Seed Audio
 
 ## Skills
 
-The workspace ships with **58 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
+The workspace ships with **59 skills** across 13 categories. Skills are the canonical way to package reusable content recipes — they compose MCP tools rather than calling the Ark API directly.
 
 ### Production Orchestration
 
@@ -171,6 +171,7 @@ The workspace ships with **58 skills** across 13 categories. Skills are the cano
 | **seedance-motion-design** | Writes production-grade Seedance 2.5 motion-design and motion-graphics prompts for marketing deliverables — launch videos, motion-on-footage explainers, hypermotion product ads, 3D flythroughs, 2D explainers, editorial explainers, logo reveals, kinetic type, and data-driven explainers. Every on-screen word, number, chart, logo, or UI screen is authored as a Seedream reference image first, then animated as a plate by Seedance. |
 | **seedance-music-video** | Writes production-grade music-video prompts: picks a video format (performance, narrative, conceptual, lyric, visualizer, hybrid), maps song sections to a visual plan, directs beat-synced cuts and camera, drives native audio or audio-first lip-sync, and locks a per-genre visual style. Orchestrator for the music-video layer: delegates every other directorial axis to its owning preset skill (see `docs/seedance-reference.md`). |
 | **seedance-graybox-world** | Writes Seedance 2.5 prompts for the Blender gray look — an untextured gray graybox/blockout 3D world with matcap-style shading, ambient-occlusion depth, and a neutral gray viewport background, like Blender's Solid viewport. Use when gray IS the desired final look, not just a previs reference. |
+| **seedance-restoration** | Write Seedance 2.5 video-to-video restoration prompts that remove film grain, noise, scratch lines, dust, and flicker from aged or archival footage while preserving the shot. |
 
 ### Seedance — VFX
 
