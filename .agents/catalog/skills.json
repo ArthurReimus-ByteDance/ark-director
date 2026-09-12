@@ -201,7 +201,7 @@
     },
     "remotion-best-practices": {
       "kind": "vendored",
-      "description": "Best practices for Remotion",
+      "description": "Router for all Remotion skills",
       "readme_summary": "Best practices for building Remotion video applications.",
       "dependencies": [],
       "source_revision": null,

@@ -7,10 +7,6 @@ metadata:
 
 ## FFmpeg in Remotion
 
-> Outside a Remotion project, prefer the workspace `ffmpeg` skill with bare
-> `ffmpeg`/`ffprobe`. The `npx remotion` wrappers below apply only inside a
-> Remotion project.
-
 `ffmpeg` and `ffprobe` do not need to be installed. They are available via the `npx remotion ffmpeg` and `npx remotion ffprobe`:
 
 ```bash
@@ -27,7 +23,11 @@ You have 2 options for trimming videos:
 ```tsx
 import {Video} from '@remotion/media';
 
-<Video src={staticFile('video.mp4')} trimBefore={5 * fps} trimAfter={10 * fps} />;
+<Video
+  src={staticFile('video.mp4')}
+  trimBefore={5 * fps}
+  trimAfter={10 * fps}
+/>;
 ```
 
 2. Use the FFmpeg command line. You MUST re-encode the video to avoid frozen frames at the start of the video. Only use this if you need a standalone trimmed file (e.g. for upload or external use).

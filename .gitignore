@@ -1,18 +1,22 @@
 # Generated assets - never commit binary outputs (audio un-ignored for quick Ctrl+P access)
-# **/scenes/**/*.mp4
-# **/scenes/**/*.mov
-# **/scenes/**/*.avi
-# **/scenes/**/*.mkv
-# **/scenes/**/*.webm
-# !**/scenes/**/*.wav
-# !**/scenes/**/*.mp3
-# **/library/**/*.mp4
-# **/library/**/*.mov
-# **/library/**/*.avi
-# **/library/**/*.mkv
-# **/library/**/*.webm
-# !**/library/**/*.wav
-# !**/library/**/*.mp3
+**/scenes/**/*.mp4
+**/scenes/**/*.mov
+**/scenes/**/*.avi
+**/scenes/**/*.mkv
+**/scenes/**/*.webm
+!**/scenes/**/*.wav
+!**/scenes/**/*.mp3
+**/library/**/*.mp4
+**/library/**/*.mov
+**/library/**/*.avi
+**/library/**/*.mkv
+**/library/**/*.webm
+!**/library/**/*.wav
+!**/library/**/*.mp3
+
+/projects
+/plans
+/docs
 
 # Environment
 .env
